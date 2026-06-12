@@ -1,0 +1,878 @@
+---
+title: |
+  Evaluation des hypothèses de base du Chapitre 1 sur les données transactionnelles Decentraland sur Opensea
+author: Aurélien Yannick Simo Fotso
+output:
+  html_notebook:
+    toc: yes
+    toc_float: yes
+    toc_depth: 4
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+Dans ce document, nous examinons via les données la vraisemblance des hypothèses de base du chapitre 1, à partir des données d'offre et de demande spontanées de parcelles effectuées sur la place de marché NFT, Opensea.
+
+# Préparation des données
+
+## Chargement des données
+
+Nous chargeons premièrement la base de données. Elle comprend:
+
+* **Les offres spontanées et ventes** de parcelles de septembre 2024 au mai 2026;
+* **Les demandes spontanées** de parcelles de septembre 2024 à mai 2026;
+* **Les prix plancher** quotidiens des parcelles de 2022 à mai 2026;
+* **Les données de localisation** de l'ensemble des parcelles Decentraland négociables;
+* **Les prix journaliers des cryptomonnaies** utilisées pour la vente de parcelles.
+
+```{r}
+# Memory cleaning
+rm(list = ls())
+
+# Set working directory
+setwd("C:/Users/aysif/OneDrive - Université Laval/Documents/Recherche/C1/Explore")
+```
+
+```{r}
+library(readxl)
+library(lubridate)
+library(readr)
+library(dplyr)
+
+# Listings & Sales
+ListingSales <- read_excel(
+  "../Donnees/Opensea.xlsx",
+  col_types = c(
+    "text", "text", "text", "text", "date", "date", "date", "text", "text", 
+    "text", "text", "text", "text", "text", "text", "text", "text", "text", 
+    "text", "text", "numeric", "numeric", "text", "text", "numeric", "numeric", 
+    "text", "text", "text", "text", "text"
+  )
+)
+# Timezone correction of dates columns
+ListingSales$update_date <- as.POSIXct(format(ListingSales$update_date), tz = "America/New_York")
+attr(ListingSales$update_date, "tzone") <- "UTC"
+ListingSales$expiration_date <- as.POSIXct(format(ListingSales$expiration_date), tz = "America/New_York")
+attr(ListingSales$expiration_date, "tzone") <- "UTC"
+ListingSales$date <- as.POSIXct(format(ListingSales$date), tz = "America/New_York")
+attr(ListingSales$date, "tzone") <- "UTC"
+
+# Unsolicited requests for plots
+# Bids of `owned` (private) parcels.
+Bids <- read_csv(
+  "../Donnees/BidsAll.csv",  
+  col_types = cols(
+    asset_id = col_character(), date = col_datetime(format = "%Y-%m-%dT%H:%M:%SZ"), 
+    start_date = col_datetime(format = "%Y-%m-%dT%H:%M:%SZ"), 
+    expiration_date = col_datetime(format = "%Y-%m-%dT%H:%M:%SZ")
+  )
+)
+# Bids of all listed parcels (include some non private - districts - parcels)
+BidsL <- read_excel(
+  "../Donnees/Bids_opl_Opensea.xlsx", 
+  col_types = c(
+    "text", "text", "text", "text", "date", "text", "text", "text", 
+    "text", "numeric", "numeric", "text", "date", "date"
+  )
+)
+# Merge bids databases
+BidsA <- rbind(Bids |> mutate(src="p"), BidsL |> mutate(src="l"))
+BidsA <- BidsA |>
+  distinct(asset_id, date, bidder, amount, payment_ccy, .keep_all = T) |>
+  group_by(asset_id, date, bidder, amount, payment_ccy) |>
+  mutate(
+    ct = n()
+  ) |>
+  ungroup() |>
+  arrange(dplyr::desc(ct)) |>
+  select(-ct, -src)
+Bids <- BidsA
+rm(list = c("BidsL", "BidsA")) 
+
+# Parcels floor prices
+FloorPrices <- read_csv(
+  "../Donnees/FloorPrices_Opensea.csv", 
+  col_types = cols(
+    date = col_datetime(format = "%Y-%m-%dT%H:%M:%S%z"), 
+    symbol = col_character()
+  )
+)
+
+# Parcels spatial prices
+Locations <- read_excel(
+  "../Donnees/LocationsFull.xlsx", 
+  col_types = c(
+    "numeric", "numeric", "text", "text", "text", "text", "text", "numeric", "numeric", "numeric", "numeric",
+    "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "text", "numeric",
+    "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric",
+    "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", 
+    "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", 
+    "numeric", "numeric", "numeric", "text", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", 
+    "numeric", "numeric", "numeric", "numeric", "numeric", "text"
+  )
+)
+
+# Cryptocurrencies prices
+library(quantmod)
+cryptos <- c("ETH")
+CryptosPrices <- getSymbols(
+  paste(cryptos, "USD", sep = "-"), 
+  src = "yahoo", 
+  from = "2024-09-01", 
+  to = "2026-05-16", 
+  auto.assign = F, 
+  verbose = T
+)
+```
+
+
+## Nettoyage de la base de données des demandes spontanées de parcelles
+
+Les demandes spontanées de parcelles (`bids`) désignent les offres initiées par des acheteurs désireux d'acquérir une parcelle donnée, qu'elle soit listée ou pas. Contrairement aux réponses suite à un listing de parcelles, les demandes spontanées sont des signalement d'intention d'achat à un prix fixé par l'acheteur.
+
+Sur les places de marché NFT, on observe un grand nombre de demandes spontanées de parcelles comparé aux offres spontanées. En effet, des individus ou des bots peuvent envoyer des demandes spontanées en masse visant des NFT appartenant à une collection (projet particulier, à l'exemple de Decentraland) particulière, ou posseant des caractéristiques particulières. 
+
+Decentraland ne déroge pas à la règle. Les données de demandes spontanées de parcelles dont nous disposons consignent toutes les demandes spontanées de parcelles faites entre le 16 septembre 2024 et le 15 mai 2026. Cela représente plus de 1 300 000 demandes, contre environ 30 000 offres spontanées sur la même période. Nous devons donc nettoyer la base de données de l'activité des bots et des demandeurs compulsifs.
+
+
+```{r}
+library(dplyr)
+```
+
+```{r}
+Bids <- as_tibble(Bids)
+str(Bids)
+```
+
+### Stratégie de nettoyage de la base de données des demandes spontanées
+
+Notre stratégie de filtrage de l'activité des bots consiste à évaluer pour chaque bidder (acheteur potentiel).
+
+* le nombre de demandes spontanées sur chaque mois;
+* le nombre de parcelles demandées sur chaque mois;
+* le nombre de demandes moyen par parcelle sur chaque mois, 
+
+Ensuite, nous déciderons de purger la base de données des valeurs extrêmes à droite de l'une ou l'autre des quantités ci dessus.
+
+En effet, les bots et les demandeurs compulsifs ont tendance à envoyer des demandes en lots de parcelles répondant à des caractéristiques particulières (proximité à telle ou telle autre aménité), contrairement aux demandeurs normaux, dont l'activité de demande est moins massive.
+
+### Nettoyage effectif
+
+```{r}
+# Bids database treatment
+summ_bids <- Bids %>%
+  mutate(
+    month = lubridate::month(date), # Create month variable column
+    year = lubridate::year(date) # Create year variable column
+  ) %>%
+  group_by(year, month, bidder, asset_id) %>% # Group data by month, bidder and parcel_id
+  summarise(
+    total_bids = n() # Count total number of bids relative to a triplet (month, bidder, parcel_id)
+  ) %>%
+  ungroup() %>% # Relax group
+  group_by(year, month, bidder) %>% # Group by month and bidder
+  summarise(
+    avg_monthly_bids = mean(total_bids, na.rm=T), # Count average bids per parcel for a bidder on a month
+    tot_monthly_bids = sum(total_bids, na.rm=T), # Count total bids for a bidder on a month
+    nb_parcels_bidden = n() # Count number of parcels bidden for a bidder on a month
+  ) %>%
+  ungroup() # Relax group
+```
+
+```{r}
+summ_bids
+```
+
+Ramenons les données sur une échelle plus globale sur la totalité de l'horizon temporel.
+
+```{r}
+summ_bids_w <- summ_bids |>
+  group_by(bidder) |> # Group by bidder
+  summarise(
+    tot_bids = sum(tot_monthly_bids, na.rm = T), # Sum of total monthly bids over time
+    nb_parcels = sum(nb_parcels_bidden, na.rm = T), # Sum of nb of parcels bidden on months over time
+    avg_monthly_bids = mean(avg_monthly_bids, na.rm = T) # Average value of monthly bids per parcel over time
+  ) |>
+  ungroup() |> # Relax group
+  arrange(dplyr::desc(nb_parcels)) # Render table by desc order of nb_parcels
+```
+
+
+```{r fig.height=4, fig.width=10}
+par(mfrow = c(1, 2))
+boxplot(summ_bids_w$nb_parcels, main = "Boxplot of Number of monthly bidden parcels")
+boxplot(summ_bids_w$avg_monthly_bids, main = "Boxplot of Average monthly bids over time")
+```
+
+Les boites à moustache révèlent un nombre important d'outliers à droite pour la moyenne des demandes mensuelles de parcelles et sur le nombre de parcelles demandées par acheteur potentiel. Nous pensons que ces outliers représentent les bots et les demandeurs compulsifs. Nous allons donc les éliminer.
+
+```{r}
+summ_bids <- summ_bids |> 
+  group_by(year, month) |> # Group by month
+  mutate(
+    avg_monthly_bids_out = avg_monthly_bids >= quantile(avg_monthly_bids, probs=0.75) + 1.5*IQR(avg_monthly_bids, na.rm = T), # Dummy variable (1 if avg_monthly_bids >= Outlier Upper Bound based on IQR, 0 otherwise)
+    nb_parcels_bidden_out = nb_parcels_bidden >= quantile(nb_parcels_bidden, probs=0.75) + 1.5*IQR(nb_parcels_bidden, na.rm = T), # Dummy variable (1 if avg_monthly_bids >= Outlier Upper Bound based on IQR, 0 otherwise),
+    bidder_out = as.numeric(avg_monthly_bids_out | nb_parcels_bidden_out), # Dummy variable (1 if at least one of the two variables above is one, 0 otherwise). Will be used to identify bidder to remove from database
+    avg_monthly_bids_out = as.numeric(avg_monthly_bids_out),
+    nb_parcels_bidden_out = as.numeric(nb_parcels_bidden_out)
+  ) |>
+  ungroup()
+```
+
+
+```{r}
+# Get bots and compulsive bidders (based on dummy variables defined above)
+bidder_to_remove <- unique(summ_bids$bidder[which(summ_bids$bidder_out == 1)])
+
+# Extract bids made by bidders which are not bots and compulsive bidders
+FilteredBids <- Bids |>
+  filter(!(bidder %in% bidder_to_remove))
+
+# Print Filtered Bids database structure
+str(FilteredBids)
+```
+
+### Résultat du nettoyage
+
+Sur un peu moins d'1 550 000 demandes spontanées, nous avons environ 63 000 demandes spontanées non issues de bots ou de demandeurs compulsifs.
+
+
+## Lien Localisation - Attention
+
+### Construction de la base de données
+
+Nous mesurons l'attention suscitée par une parcelle par la quantité de demande spontanées sur cette parcelle. A partir de la base de données filtrée des demandes spontanées, nous allons construire deux bases de données :
+
+* Une base de données des demandes spontanées totales sur l'horizon temporelle;
+* Une base de données des demandes spontanées mensuelles.
+
+Nous considérons pour chaque base de données deux mesures d'attention:
+
+* Le nombre de demandes spontanées;
+* Le nombre de demandeurs spontanées distincts.
+
+```{r}
+library(tidyr)
+library(data.table)
+
+# Database of all bids per parcel over time (suffix `w` = Whole)
+flt_bids_w <- FilteredBids |>
+  group_by(asset_id, bidder) |> # Group by parcel_id and bidder
+  summarise(
+    n_bids = n() # Count number of bids for a pair (parcel_id, bidder)
+  ) |>
+  ungroup() |> # Relax group
+  group_by(asset_id) |> # Group by parcel_id
+  summarise(
+    n_bids = sum(n_bids, na.rm=T), # Count total number of bids on parcel_id
+    n_bidders = n() # Count total number of distinct bidders
+  ) |>
+  ungroup() |> # Relax group
+  left_join( # Join with Locations database
+    Locations |> 
+      select( # Take only some columns in locations database
+        TOKEN_ID, TYPE, DIST_PLAZA_central, DIST_NRS_PLAZA, NAME_NRS_PLAZA, DIST_ROAD, 
+        DIST_NRS_DISTRICT_CAT, NAME_NRS_DISTRICT_CAT
+      ) |>
+      mutate(
+        IN_DISTRICT = as.numeric(TYPE == "district") # Infer is parcel is in a district or not
+      ) |>
+      rename(
+        asset_id = TOKEN_ID, # Parcel_id
+        IDX = IN_DISTRICT, # Parcel is in district ?
+        DPC = DIST_PLAZA_central, # Distance to central plaza
+        DPX = DIST_NRS_PLAZA, # Distance to neareat peripheral plaza
+        NPX = NAME_NRS_PLAZA, # Name of nearest peripheral plaza
+        DRD = DIST_ROAD, # Distance to road
+        DDX = DIST_NRS_DISTRICT_CAT, # Distance to nearest district
+        NDX = NAME_NRS_DISTRICT_CAT # Category of nearest ditrict
+      ) |>
+      select(-TYPE),
+    by = "asset_id"
+  )
+
+# Database of all bids per parcel per month (suffix `t` = Temporal)
+flt_bids_t <- FilteredBids |>
+  mutate(
+    month = lubridate::floor_date(date, unit = "month") # Create month variable columns
+  ) |>
+  group_by(month, asset_id, bidder) |> # Group by month, parcel_id and bidder
+  summarise(
+    n_bids = n() # Count number of bids for a triplet (month, parcel_id, bidder)
+  ) |> 
+  ungroup() |> # Relax group
+  group_by(month, asset_id) |> # Group by month and parcel_id
+  summarise(
+    n_bids = sum(n_bids, na.rm=T), # Count total number of bids on parcel_id on a month
+    n_bidders = n() # Count total number of distinct bidders on a month
+  ) |>
+  ungroup() |> # Relax group
+  right_join( # Join with a panel of all (month, parcel_id) pairs, to avoid missing data of monthly (month, parcel_id) bids
+    as_tibble(
+      data.table::CJ(
+        month = seq( # Sequence of months starting from min database date to max database date
+          from = lubridate::floor_date(min(FilteredBids$date), unit = "month"),
+          to = lubridate::floor_date(max(FilteredBids$date), unit = "month"),
+          by = "month"
+        ),
+        asset_id = unique(FilteredBids$asset_id) # Unique values of parcel_id
+      )
+    ),
+    by = c("month", "asset_id")
+  ) |>
+  mutate( # Put 0 for missing data of monthly (month, parcel_id) bids
+    n_bids = replace_na(n_bids, 0L), 
+    n_bidders = replace_na(n_bidders, 0L),
+    d_bid = as.numeric(n_bids > 0) # Dummy variable (is 1 if there is a bid for the parcel on a month, 0 otherwise)
+  ) |>
+  left_join( # Join with Locations database
+    Locations |> 
+      select( # Take only some columns in locations database
+        TOKEN_ID, TYPE, DIST_PLAZA_central, DIST_NRS_PLAZA, NAME_NRS_PLAZA, DIST_ROAD, 
+        DIST_NRS_DISTRICT_CAT, NAME_NRS_DISTRICT_CAT
+      ) |> 
+      mutate(
+        IN_DISTRICT = as.numeric(TYPE == "district") # Infer is parcel is in a district or not
+      ) |>
+      rename(
+        asset_id = TOKEN_ID, # Parcel_id
+        IDX = IN_DISTRICT, # Parcel is in district ?
+        DPC = DIST_PLAZA_central, # Distance to central plaza
+        DPX = DIST_NRS_PLAZA, # Distance to neareat peripheral plaza
+        NPX = NAME_NRS_PLAZA, # Name of nearest peripheral plaza
+        DRD = DIST_ROAD, # Distance to road
+        DDX = DIST_NRS_DISTRICT_CAT, # Distance to nearest district
+        NDX = NAME_NRS_DISTRICT_CAT # Category of nearest ditrict
+      ) |>
+      select(-TYPE),
+    by = "asset_id"
+  )
+
+```
+
+
+```{r}
+str(flt_bids_w) 
+```
+
+
+```{r}
+str(flt_bids_t)
+```
+
+
+### Régressions
+
+```{r}
+source("./models.R")
+```
+
+#### Localisation - Demandes spontanées totales
+
+Nous régressons le nombre de demandes spontanées totales (par parcelle) sur les variables de localisation.
+
+```{r}
+# Explained variable: `n_bids` = Number of bids for a parcel
+# Regressors:
+# - `DPC`: Distance to Central Plaza
+# - `DPX`: Distance to closest Peripheral Plaza
+# - `NPX`: Name of Peripheral Plaza (north, south, east, west, north-east, south-east, north-west, south-west)
+# - `DRD`: Distance to Road
+# - `DDX`: Distance to closest District
+# - `IDX`: Is Parcel a District Parcel ?
+
+res = lm_model(
+  flt_bids_w,
+  Y = c("n_bids"),
+  X = c("DPC", "DPX", "NPX", "DRD", "DDX", "IDX")
+)
+summary(res$model)
+```
+
+Les régresseurs significatifs sont :
+
+* **La proximité au plaza périphérique sud**: Effet **Positif** sur l'attention (Nombre de demandes spontanées);
+* **La distance à la route**: Effet **Négatif** sur l'attention (Nombre de demandes spontanées);
+* **L'inclusion dans un district**: Effet **Négatif** sur l'attention (Nombre de demandes spontanées);
+
+Plus une parcelle est proche du sud, d'une route, et non incluse dans un district, plus l'attention (mesurée par le nombre de demandes spontanées de potentiels acheteurs) sera forte.
+
+
+#### Localisation - Demandeurs distincts total
+
+Nous régressons le nombre de demandeurs distincts total (par parcelle) sur les variables de localisation.
+
+```{r}
+# Explained variable: `n_bidders` = Number of distinct bidders for a parcel
+# Regressors:
+# - `DPC`: Distance to Central Plaza
+# - `DPX`: Distance to closest Peripheral Plaza
+# - `NPX`: Name of Peripheral Plaza (north, south, east, west, north-east, south-east, north-west, south-west)
+# - `DRD`: Distance to Road
+# - `DDX`: Distance to closest District
+# - `IDX`: Is Parcel a District Parcel ?
+
+res = lm_model(
+  flt_bids_w,
+  Y = c("n_bidders"),
+  X = c("DPC", "DPX", "NPX", "DRD", "DDX", "IDX")
+)
+summary(res$model)
+```
+
+Les régresseurs significatifs sont :
+
+* **La distance au plaza central**: Effet **Positif** sur l'attention (Nombre de demandeurs distincts);
+* **La distance au plaza périphérique le plus proche**: Effet **Négatif** sur l'attention (Nombre de demandeurs distinctss);
+* **La proximité aux plazas périphérique nord-ouest, sud et sud-est (diagonale sécondaire)**: Effets **tous Positif** sur l'attention (Nombre de demandeurs distincts);
+* **La distance à la route**: Effet **Négatif** sur l'attention (Nombre de demandeurs distincts);
+* **L'inclusion dans un district**: Effet **Positif** sur l'attention (Nombre de demandeurs distincts);
+
+Plus une parcelle est éloignée du centre, proche des plazas nord-ouest, sud et sud-est, proche d'une route, et incluse dans un district, plus l'attention (mesurée par le nombre de demandeurs distincts) sera forte.
+
+
+#### Localisation - Demandes spontanées mensuelles
+
+```{r}
+# Explained variable: `n_bids` = Number of bids for a parcel on a month
+# Regressors:
+# - `DPC`: Distance to Central Plaza
+# - `DPX`: Distance to closest Peripheral Plaza
+# - `NPX`: Name of Peripheral Plaza (north, south, east, west, north-east, south-east, north-west, south-west)
+# - `DRD`: Distance to Road
+# - `DDX`: Distance to closest District
+# - `IDX`: Is Parcel a District Parcel ?
+# Regression Type : Panel Fixed-Effects
+# Fixed Effects: Temporal (Month)
+# Error Clustered By: Month
+
+res = felp_model(
+  flt_bids_t,
+  Y = c("n_bids"),
+  X = c("DPC", "DPX", "NPX", "DRD", "DDX", "IDX"),
+  # X = c("DPC", "DPX", "NPX", "DRD", "DDX", "NDX"),
+  fe = c("month"),
+  cl = c("month")
+)
+res
+```
+
+Au seuil de **10%**, les régresseurs significatifs sont :
+
+* **La distance au plaza périphérique le plus proche**: Effet **Négatif** sur l'attention (Nombre de demandes spontanées);
+* **La proximité aux plazas périphérique sud et sud-est**: Effets **tous Positif** sur l'attention (Nombre de demandes spontanées);
+* **La distance à la route**: Effet **Négatif** sur l'attention (Nombre de demandes spontanées);
+
+Plus une parcelle est proche des plazas sud et sud-est, proche d'une route, plus l'attention (Nombre de demandes spontanées mensuelles) sera forte.
+
+
+
+#### Localisation - Demandeurs uniques mensuels
+
+```{r}
+# Explained variable: `n_bidders` = Number of distinct bidders for a parcel on a month
+# Regressors:
+# - `DPC`: Distance to Central Plaza
+# - `DPX`: Distance to closest Peripheral Plaza
+# - `NPX`: Name of Peripheral Plaza (north, south, east, west, north-east, south-east, north-west, south-west)
+# - `DRD`: Distance to Road
+# - `DDX`: Distance to closest District
+# - `IDX`: Is Parcel a District Parcel ?
+# Regression Type : Panel Fixed-Effects
+# Fixed Effects: Temporal (Month)
+# Error Clustered By: Month
+
+res = felp_model(
+  flt_bids_t,
+  Y = c("n_bidders"),
+  X = c("DPC", "DPX", "NPX", "DRD", "DDX", "IDX"),
+  # X = c("DPC", "DPX", "NPX", "DRD", "DDX", "NDX"),
+  fe = c("month"),
+  cl = c("month")
+)
+summary(res)
+```
+
+
+Au seuil de **10%**, les régresseurs significatifs sont :
+
+* **La proximité aux plazas périphérique nord-est et sud-est**: Effets **tous Positif** sur l'attention (Nombre de demandeurs distincts);
+
+Plus une parcelle est proche des plazas nord-est et sud-est, plus l'attention (mesurée par le nombre de demandeurs distincts) sera forte.
+
+
+#### Localisation - Demande existante mensuelle
+
+```{r}
+# Explained variable: `d_bid` = Dummy variable (1 if parcel has been bidden in a month, 0 otherwise)
+# Regressors:
+# - `DPC`: Distance to Central Plaza
+# - `DPX`: Distance to closest Peripheral Plaza
+# - `NPX`: Name of Peripheral Plaza (north, south, east, west, north-east, south-east, north-west, south-west)
+# - `DRD`: Distance to Road
+# - `DDX`: Distance to closest District
+# - `IDX`: Is Parcel a District Parcel ?
+# Regression Type : Panel Fixed-Effects
+# Fixed Effects: Temporal (Month)
+# Error Clustered By: Month
+
+res = felogit_model(
+  flt_bids_t,
+  Y = c("d_bid"),
+  X = c("DPC", "DPX", "NPX", "DRD", "DDX", "IDX"),
+  # X = c("DPC", "DPX", "NPX", "DRD", "DDX", "NDX"),
+  fe = c("month"),
+  cl = c("month")
+)
+summary(res)
+```
+
+
+Les régresseurs significatifs sont :
+
+* **La proximité aux plazas périphériques nord et nord-est**: Effets **tous Positif** sur l'attention (Demande existante sur un mois);
+
+Plus une parcelle est proche des plazas nord et nord-est, plus l'attention (mesurée par l'existence de la demande de parcelle sur un mois) sera forte.
+
+### Conclusion
+
+Nous notons globalement, contrairement à ce quoi l'on aurait pu s'attendre, que l'éloignement d'une parcelle au centre augmente l'attention portée sur elle. Une parcelle localisée au sud de la carte attire plus d'attention totale, tandis qu'une parcelle localisée au nord attire plus d'attention mensuelle. En outre, quelque soit la position de la parcelle, sa proximité à la route augmente l'attention portée sur elle.
+
+
+
+## Lien Localisation - Liquidité
+
+Nous considérons comme mesure de liquidité, le Time-On-Market, déjà présente dans la base de données des listings et des ventes
+
+### Construction de la base de données 
+
+```{r}
+# Database of Sales related to listed parcels
+flt_sales <- ListingSales |>
+  filter(type == "sale" & !is.na(ref_shared_id)) |> # Select sales related to listings
+  select(asset_id, ref_ttf) |> # Extract only asset_id and TOM columns
+  left_join( # Join with Locations database
+    Locations |> 
+      select( # Take only some columns in locations database
+        TOKEN_ID, TYPE, DIST_PLAZA_central, DIST_NRS_PLAZA, NAME_NRS_PLAZA, DIST_ROAD, 
+        DIST_NRS_DISTRICT_CAT, NAME_NRS_DISTRICT_CAT
+      ) |> 
+      mutate(
+        IN_DISTRICT = as.numeric(TYPE == "district") # Infer is parcel is in a district or not
+      ) |>
+      rename(
+        asset_id = TOKEN_ID, # Parcel_id
+        IDX = IN_DISTRICT, # Parcel is in district ?
+        DPC = DIST_PLAZA_central, # Distance to central plaza
+        DPX = DIST_NRS_PLAZA, # Distance to neareat peripheral plaza
+        NPX = NAME_NRS_PLAZA, # Name of nearest peripheral plaza
+        DRD = DIST_ROAD, # Distance to road
+        DDX = DIST_NRS_DISTRICT_CAT, # Distance to nearest district
+        NDX = NAME_NRS_DISTRICT_CAT # Category of nearest ditrict
+      ) |>
+      # mutate(
+      #   DPC = log1p(DPC), # Log-transform distances
+      #   DPX = log1p(DPX),
+      #   DRD = log1p(DRD),
+      #   DDX = log1p(DDX)
+      # ) |>
+      select(-TYPE),
+    by = "asset_id"
+  ) |>
+  #filter(!is.na(DPC)) |>
+  rename(tom = ref_ttf) # Time on market
+```
+
+
+### Régressions
+
+```{r}
+source("./models.R")
+
+# Explained variable: `tom` = Time On Market
+# Regressors:
+# - `DPC`: Distance to Central Plaza
+# - `DPX`: Distance to closest Peripheral Plaza
+# - `NPX`: Name of Peripheral Plaza (north, south, east, west, north-east, south-east, north-west, south-west)
+# - `DRD`: Distance to Road
+# - `DDX`: Distance to closest District
+# - `IDX`: Is Parcel a District Parcel ?
+
+res = lm_model(
+  flt_sales,
+  Y = c("tom"),
+  X = c("DPC", "DPX", "DRD", "DDX", "NPX", "IDX")
+)
+summary(res$model)
+```
+
+A un seuil de **10%**, les régresseurs significatifs sont :
+
+* **La distance au plaza central**: Effet **Positif** sur la liquidité (Time on Market);
+* **La distance au plaza périphérique le plus proche**: Effet **Négatif** sur la liquidité (Time on Market);
+* **La proximité à un plaza périphérique** (quelqu'il soit): Effet **Négatif** sur la liquidité (Time on Market);
+* **L'inclusion à un district**: Effet **Négatif** sur la liquidité (Time on Market);
+
+Plus une parcelle est éloignée du centre et proche d'un plaza périphérique, plus elle se vendra vite. 
+
+```{r}
+hist(flt_bids_w$DPC, main = "Distance to Central Plaza Histogram", xlab = "Distance to central Plaza")
+```
+
+Nous pouvons voir sur l'histogramme ci-dessous qu'une forte proportion des parcelles de notre échantillon sont éloignées du centre (distance supérieure à 20-25, distance implicite de téléportation de Goldberg et al.). Les parcelles proches du centre font certainement moins l'objet d'offres et de demande sur Opensea.
+
+De plus, une parcelle incluse dans un district se vendra plus vite qu'une parcelle non incluse dans un district.
+
+
+## Lien Localisation - Attention - Liquidité
+
+### Construction de la base de données
+
+Nous allons régresser la liquidité sur l'attention et la localisation. Pour cela, nous avons besoin de construire pour chaque vente, les mesures d'attention à la date de la vente. Nous partirons sur trois mesures d'attention:
+
+* **Le nombre de demandeurs distincts** de la parcelle dans les **30 jours précédant** la date de la vente;
+* **L'existence de la demande** de la parcelle dans les **30 jours précédant** la date de la vente: c'est une variable binaire, qui vaut 1 si la parcelle a fait l'objet d'une demande spontanée dans les 30 jours précédant la date de la vente.
+
+```{r}
+# Construction of "Liquidity - Attention - Localisation" Database
+lal_sales <- ListingSales |> # Sales database
+  filter(type == "sale" & !is.na(ref_shared_id)) |> # Select sales related to listings
+  mutate(
+    filter_date_start = lubridate::floor_date(date - days(30), unit = "day"), # Create 30 previous-day window (Window Start)
+    filter_date_end = lubridate::floor_date(date, unit = "day") # Create 30 previous-day window (Window End)
+  ) |>
+  rename(
+    sale_date = date # Rename sale date variable (to prevent ambiguity when we will join sales database with Bids database)
+  ) |>
+  select( # Select only important variables
+    asset_id, # Parcel ID
+    sale_date,# Sale date
+    ref_ttf,  # Time on market
+    filter_date_start, # 30 previous-day window start
+    filter_date_end # 30 previous-day window end
+  ) |>
+  left_join( # Join sales database with bids (attention) database
+    FilteredBids |>
+      select(asset_id, date, bidder) |> # Select only important variable in attention database
+      rename( # Rename columns for join
+        bid_date = date, # Attention date
+        bid_asset_id = asset_id # Parcel ID
+      ),
+    by = join_by(
+      asset_id == bid_asset_id, # Join on Parcel ID
+      filter_date_start <= bid_date, # Join also when attention date is in 30 previous-day (sales) window
+      filter_date_end > bid_date
+    )
+  ) |>
+  group_by(asset_id, sale_date, bidder) |> # Group by parcel id, sale date, bidder
+  summarise(
+    ref_ttf = first(ref_ttf),  # Get time on market
+    n_bids_30d = sum(!is.na(bid_date)) # Count number of bids placed by `bidder` on `parcel_id` in the 30 previous-day window preceding sale date
+  ) |>
+  ungroup() |> # Relax group
+  group_by(asset_id, sale_date) |> # Group by parcel id, sale date
+  summarise(
+    ref_ttf = first(ref_ttf), # Get time on market
+    n_bidders_30d = sum(n_bids_30d > 0), # Count total number of unique bidders on `parcel_id` in the 30 previous-day window preceding sale date
+    n_bids_30d = sum(n_bids_30d), # Count total number of bids placed on `parcel_id` in the 30 previous-day window preceding sale date
+    .groups = "drop"
+  ) |>
+  mutate(
+    is_bidden_30d = factor(as.numeric(n_bids_30d > 0), levels = c("0", "1"), labels = c("NO", "YES")) # Dummy variable (is 1 if a bid was placed on parcel_id in 30 previous-day window preceding sale date, 0 otherwise)
+  ) |>
+  ungroup() |> # Relax group
+  rename(
+    tom = ref_ttf, # Good name for time on variable
+    date = sale_date # Good name for sale date
+  ) |>
+  left_join( # Join with Locations database
+    Locations |> 
+      select( # Take only some columns in locations database
+        TOKEN_ID, TYPE, DIST_PLAZA_central, DIST_NRS_PLAZA, NAME_NRS_PLAZA, DIST_ROAD, 
+        DIST_NRS_DISTRICT_CAT, NAME_NRS_DISTRICT_CAT
+      ) |> 
+      mutate(
+        IN_DISTRICT = as.numeric(TYPE == "district") # Infer is parcel is in a district or not
+      ) |>
+      rename(
+        asset_id = TOKEN_ID, # Parcel_id
+        IDX = IN_DISTRICT, # Parcel is in district ?
+        DPC = DIST_PLAZA_central, # Distance to central plaza
+        DPX = DIST_NRS_PLAZA, # Distance to neareat peripheral plaza
+        NPX = NAME_NRS_PLAZA, # Name of nearest peripheral plaza
+        DRD = DIST_ROAD, # Distance to road
+        DDX = DIST_NRS_DISTRICT_CAT, # Distance to nearest district
+        NDX = NAME_NRS_DISTRICT_CAT # Category of nearest ditrict
+      ) |>
+      select(-TYPE),
+    by = "asset_id"
+  )
+```
+
+```{r}
+str(lal_sales)
+```
+
+
+### Régressions
+
+#### Liquidité en fonction de l'attention
+
+Nous régressons la liquidité sur les mesures d'attention.
+
+```{r}
+# Explained variable: `tom` = Time On Market
+# Regressors:
+# - `is_bidden_30d`: Is There a bid placed on the parcel in the 30 previous days preceding sale date ?
+
+res = lm_model(
+  lal_sales,
+  Y = c("tom"),
+  X = c("is_bidden_30d")
+)
+summary(res$model)
+```
+
+**De manière contre-intuitive**, si la parcelle a été demandée dans les 30 jours précédant la date de la vente, alors **son temps sur le marché est augmenté**.
+
+
+```{r}
+# Explained variable: `tom` = Time On Market
+# Regressors:
+# - `n_bidders_30d`: Number of unique bidders on the parcel in the 30 previous days preceding sale date
+
+res = lm_model(
+  lal_sales,
+  Y = c("tom"),
+  X = c("n_bidders_30d")
+)
+summary(res$model)
+```
+
+**De manière contre-intuitive**, plus l'attention suscitée autour de la parcelle (mesurée par le nombre de demandeurs distincts de la parcelle dans les 30 jours précédant la date de la vente) est grande, **plus son temps sur le marché est grand**.
+
+
+#### Liquidité en fonction de l'attention et de la localisation
+
+Nous régressons la liquidité sur la localisation et les mesures d'attention.
+
+```{r}
+# Explained variable: `tom` = Time On Market
+# Regressors:
+# - `is_bidden_30d`: Is There a bid placed on the parcel in the 30 previous days preceding sale date ?
+# - `DPC`: Distance to Central Plaza
+# - `DPX`: Distance to closest Peripheral Plaza
+# - `NPX`: Name of Peripheral Plaza (north, south, east, west, north-east, south-east, north-west, south-west)
+# - `DRD`: Distance to Road
+# - `DDX`: Distance to closest District
+# - `IDX`: Is Parcel a District Parcel ?
+
+res = lm_model(
+  lal_sales,
+  Y = c("tom"),
+  X = c("is_bidden_30d", "DPC", "DPX", "DRD", "NPX", "IDX")
+)
+summary(res$model)
+```
+
+L'effet de l'attention (mesurée par l'existence d'un bid sur la parcelle dans les 30 jours précédant la vente) sur la liquidité est le même que précédemment. De plus, les effets de la localisation sont maintenus en présence de l'attention.
+
+
+```{r}
+# Explained variable: `tom` = Time On Market
+# Regressors:
+# - `n_bidders_30d`: Number of unique bidders on the parcel in the 30 previous days preceding sale date
+# - `DPC`: Distance to Central Plaza
+# - `DPX`: Distance to closest Peripheral Plaza
+# - `NPX`: Name of Peripheral Plaza (north, south, east, west, north-east, south-east, north-west, south-west)
+# - `DRD`: Distance to Road
+# - `DDX`: Distance to closest District
+# - `IDX`: Is Parcel a District Parcel ?
+
+res = lm_model(
+  lal_sales,
+  Y = c("tom"),
+  X = c("n_bidders_30d", "DPC", "DPX", "DRD", "NPX", "IDX")
+)
+summary(res$model)
+```
+
+L'effet de l'attention (mesurée par le nombre de demandeurs distincts de la parcelle dans les 30 jours précédant la date de la vente) sur la liquidité est le même que précédemment. De plus, les effets de la localisation sont maintenus en présence de l'attention.
+
+
+### Conclusion
+
+Il semblerait que l'attention déprécie la liquidité de la parcelle. Une explication possible pourrait être la suivante: plus l'attention (mesurée par la demande) sur la parcelle est forte, plus le détenteur de la parcelle met du temps à se décider à accepter une réponse reçue à l'offre spontanée (et donc à boucler la vente). A contrario, le détenteur d'une parcelle non demandée (qui n'a pas fait l'objet d'attention) accepte rapidement une réponse à l'offre spontanée, certainement par FOMO (Fear Of Missing Out).
+
+En outre, il se peut que la mesure utilisée pour l'attention soit ontologiquement de nature à provoquer l'effet observé. En effet, demande et offre sont liées. Comme dit précédemment, le détenteur d'une parcelle demandée peut se permettre de ne pas boucler rapidement une vente car se disant que les acheteurs ne manqueront pas, tandis que le détenteur d'une parcelle non demandée veut rapidement conclure, au risque de laisser partir l'acheteur.
+
+Pour tirer parti de la demande comme mesure d'attention, il serait peut-être intéressant d'exclure de l'analyse les parcelles non demandées, et mesurer la différence de liquidité entre les parcelles faiblement demandées (2-3 demandeurs uniques) et fortement demandées (plus de 3 demandeurs uniques). Peut-être que l'effet observé subsistera, auquel cas faudra-t'il soit réfléchir sur une autre mesure de l'attention, soit partir sur une base de données moins problématique.
+
+En effet, la base de données utilisée dans cet exercice, dont la source est Opensea, ne fournit des données qu'à partir de septembre 2024 jusqu'à nos jours. Cette période est une période morte, dont l'activité transactionnelle est faible et potentiellement non représentative de la dynamique sur la totalité de la durée de vie des métavers decentralisés, depuis 2020. De plus, les demandes spontannées issues de Opensea sont énormément bruitées car polluées par l'activité des bots. Nous avons certes opéré un filtrage, mais aucun test formel de celui n'a été fait pour s'assurer que le filtrage n'est ni trop exclusif ni trop permissif.
+
+La marketplace officielle de Decentraland, offre la possibilité d'obtenir les données des listings, bids et ventes de parcelles à partir de la blockchain. Toutes les opérations issus de cette marketplace sont écrites dans la blockchain, ce qui rend impossible la pollution des bids par les bots car placer des milliers de bids deviendrait couteux en frais de transactions blockchain. De plus, la marketplace officielle de Decentraland est la première place de marché utilisée par les habitants du métavers pour s'échanger les biens de l'univers virtuel. Les autres marketplace (Opensea / Rarible) sont plus utilisés par les personnes qui fréquentent très peu voire pas du tout le métavers, et essentiellement (je présume ici) à des fins spéculatives car Opensea et Rarible sont les deux marketplace NFT (plus généralement) les plus gros.
+
+
+## NEXT STEPS 20/05/2026
+
+* **Exclure les parcelles non demandées dans l'analyse précédente**
+* **Télécharger les données Decentraland Marketplace**
+* **Télécharger les historiques de modification de parcelles** et les utiliser comme proxy de l'attention: **Plus une parcelle fait l'objet de modifications, plus son détenteur l'utilise et l'exploite, et donc on suppose que c'est parce qu'il y a intérêt, et donc plus elle attire l'attention des visiteurs** Bien que Kawai et al. montrent que les parcelles les plus modifiées sont les moins listées, on pourrait inclure dans cet analyse une composante spatiale (pour une parcelle vendue, attention = nombre de parcelles modifiées dans un périmètre précis, sur 30 derniers jours).
+
+
+## Exclusion des parcelles non demandées
+
+Nous allons exclure des analyses précédentes les parcelles qui n'ont pas été demandées. Ainsi, nous nous focalisation sur l'attention portée sur les parcelles demandées. Nous créons une variable binaire à partir du nombre de demandeurs uniques d'une parcelle, qui vaut:
+
+* 0 si le nombre de demandeurs uniques est inférieur ou égal à un seuil fixé (exemple 1 ou 2). Cela signifie que l'attention portée sur cette parcelle est faible.
+* 1 si le nombre de demandeurs uniques est supérieur au seuil précédent. Cela signifie que l'attention portée sur la parcelle est forte.
+
+Le seuil sera choisi de manière à séparer l'ensemble des parcelles en deux groupes presque d'égals effectifs.
+
+### Lien Localisation - Attention
+
+A faire...
+
+### Lien Localisation - Attention - Liquidité
+
+#### Base de données
+
+```{r}
+hist(lal_sales$n_bidders_30d[lal_sales$is_bidden_30d == "YES"], main = NULL)
+```
+
+L'histogramme ci-dessous nous suggère de choisir le seuil d'attention pour la dichotomie Attention forte / Attention faible à 1.
+
+```{r}
+lal_sales2 <- lal_sales |>
+  filter(is_bidden_30d == "YES") |>
+  mutate(
+    attention = factor(as.numeric(n_bidders_30d > 2), levels = c("0", "1"), labels = c("WEAK", "STRONG"))
+  )
+```
+
+
+#### Liquidité en fonction de l'attention
+
+Nous régressons la liquidité sur les mesures d'attention.
+
+```{r}
+# Explained variable: `tom` = Time On Market
+# Regressors:
+# - `attention`: Is Attention on parcel in the 30 previous days Weak or Strong (Based on N_bidders <= 1 or not) ?
+
+res = lm_model(
+  lal_sales2,
+  Y = c("tom"),
+  X = c("attention")
+)
+summary(res$model)
+```
+
+**De manière contre-intuitive**, si la parcelle a été demandée dans les 30 jours précédant la date de la vente, alors **son temps sur le marché est augmenté**.
+
+
+
+
+
