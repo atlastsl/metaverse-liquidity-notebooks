@@ -1,1 +1,3 @@
 .RData
+/.quarto/
+**/*.quarto_ipynb

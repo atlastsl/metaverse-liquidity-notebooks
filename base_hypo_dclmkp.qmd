@@ -29,18 +29,17 @@ bibliography: references.bib
 
 La littérature en économie urbaine rapporte deux principaux mécanismes par lesquels la localisation détermine la liquidité des parcelles de terrain:
 
-* **Les coûts de recherche**: porté par la théorie sur les modèles de recherche et d'appariement qui postulent que le vendeur et l'acheteur d'un terrain et plus généralement d'un bien immobilier s'engagent dans un effort de recherche bilatérale dont les frictions ou les coûts augmente avec la distance aux aménités. Un bien mieux situé est plus visible, plus facile à trouver, attire plus d'acjeteurs potentiels, et donc bénéficie d'un taux d'appariement plus élevé. Les frictions de recherche déprécient la liquidité entraînant mécaniquement une relation négative entre la distance aux aménités et la liquidité des parcelles.
+- **Les coûts de recherche**: porté par la théorie sur les modèles de recherche et d'appariement qui postulent que le vendeur et l'acheteur d'un terrain et plus généralement d'un bien immobilier s'engagent dans un effort de recherche bilatérale dont les frictions ou les coûts augmente avec la distance aux aménités. Un bien mieux situé est plus visible, plus facile à trouver, attire plus d'acjeteurs potentiels, et donc bénéficie d'un taux d'appariement plus élevé. Les frictions de recherche déprécient la liquidité entraînant mécaniquement une relation négative entre la distance aux aménités et la liquidité des parcelles.
 
-* **L'asymétrie d'information**: porté par la théorie sur les modèles d'asymétrie d'information qui postulent que la localisation agit sur la liquidité par l'intermédiaire de l'écart informationnel entre vendeur et acheteur, lequel étant d'autant plus important que la distance aux aménités est grande. Un bien mieux situé réduit l'incertitude de l'acheteur sur la qualité, ce qui facilite la transaction.
+- **L'asymétrie d'information**: porté par la théorie sur les modèles d'asymétrie d'information qui postulent que la localisation agit sur la liquidité par l'intermédiaire de l'écart informationnel entre vendeur et acheteur, lequel étant d'autant plus important que la distance aux aménités est grande. Un bien mieux situé réduit l'incertitude de l'acheteur sur la qualité, ce qui facilite la transaction.
 
-Dans le monde réel, ces deux canaux opèrent simultanément et sont pratiquement impossible à dissocier empiriquement, car un quartier central est à la fois plus *visible* et mieux *connu* de tous. 
+Dans le monde réel, ces deux canaux opèrent simultanément et sont pratiquement impossible à dissocier empiriquement, car un quartier central est à la fois plus *visible* et mieux *connu* de tous.
 
 Dans les métavers, où la distance agit de manière analogue au monde réel comme facteur déterminant des prix des parcelles, même en présence de téléportation, l'on s'attend naturellement à ce qu'il en soit de même pour la liquidité. Toutefois, les canaux par lesquels la localisation détermine la liquidité s'avèrent inopérants dans le métavers: les frictions de recherche sont quasi-nuls car toutes les parcelles à vendre bénéficient du même niveau de *visibilité* et d'*information disponible* par/pour les potentiels acheteurs.
 
 Ainsi, la question à laquelle se veut répondre ce travail est la suivante :
 
 ***La localisation a-t-elle une influence sur la liquidité des parcelles virtuelles, et si oui, par quel mécanisme cette influence se transmet-elle ?***
-
 
 ## Contribution
 
@@ -52,13 +51,11 @@ Le métavers nous offre donc un cadre idéal permettant d'isoler l'attention seu
 
 ***l'exhibition de l'attention, prise isolement (des coûts de recherche et de l'asymétrie d'information), comme intermédiaire entre la liquidité et la localisation.***
 
-
 # Feuille de route
 
 Pour formaliser la médiation des effets de la localisation sur la liquidité immobilière virtuelle par l'attention, il est primordial avant toute chose d'examiner la validité de ce postulat par un examen empirique sur les transactions immobilières des parcelles de métavers. Le présent document constitue une feuille de travail complète de cet examen empirique sur les données de transactions immobilières des parcelles du métavers Decentraland. Plus bas dans ce document, sera donnée une description complète des données utilisées.
 
 C'est de la validité de l'examen empirique que nous partirons ensuite vers une formalisation théorique et une généralisation, à partir des modèles existants, du rôle médiateur de l'attention entre la localisation et la liquidité immobilière.
-
 
 # Examen empirique
 
@@ -66,46 +63,49 @@ C'est de la validité de l'examen empirique que nous partirons ensuite vers une 
 
 L'hypothèse principale sous-jacente à notre question de recherche est:
 
-***La localisation détermine la liquidité des parcelles virtuelles par l'intermédiaire de l'attention***. 
+***La localisation détermine la liquidité des parcelles virtuelles par l'intermédiaire de l'attention***.
 
-Comme stipulé précédemment, dans le métavers, les frictions de recherche sont quasi nulles: toutes les offres de parcelles (listings) sont postées sur des plateformes aux allures de marketplace, consultables instantanément et filtrables par localisation. La *visibilité* des parcelles à vendre par les acheteurs et la *mise sur le marché* de celles-ci par les vendeurs sont les mêmes pour toutes les parcelles. De plus, l'écart informationnel entre vendeurs et acheteurs est quasi nul: toutes les caractéristiques intrinsèques des parcelles à vendre sont inscrite dans la blockchain et visibles par tous. 
+Comme stipulé précédemment, dans le métavers, les frictions de recherche sont quasi nulles: toutes les offres de parcelles (listings) sont postées sur des plateformes aux allures de marketplace, consultables instantanément et filtrables par localisation. La *visibilité* des parcelles à vendre par les acheteurs et la *mise sur le marché* de celles-ci par les vendeurs sont les mêmes pour toutes les parcelles. De plus, l'écart informationnel entre vendeurs et acheteurs est quasi nul: toutes les caractéristiques intrinsèques des parcelles à vendre sont inscrite dans la blockchain et visibles par tous.
 
 Si comme nous l'envisageons, la localisation demeure un déterminant de la liquidité, cela implique l'existence d'un troisième médiateur, **l'attention**, occulté en économie urbaine par les deux premiers, mais identifiable dans le métavers où frictions de recherche et asymétrie d'information n'existent pas. Pour reprendre l'argument de [@goldberg2024land] et l'étendre à la liquidité, la localisation ne facilite pas la transaction entre le vendeur et l'acheteur par le taux d'appariement ou l'écart information, mais détermine directement le flux d'attention vers la parcelle, car les parcelles bien situées captent naturellement plus de visiteurs/trafic dans le monde virtuel, ce qui accroit l'intérêt d'achat indépendamment de tout autre chose.
 
 De cette hypothèse principale, nous dégageons les hypothèses testables empiriquement suivantes, regroupées en deux groupes:
 
-* **Groupe A: Médiation causale Localisation → Attention → Liquidité:** Les hypothèses de ce groupe supposent l'obtention d'une mesure d'attention par parcelle.
+- **Groupe A: Médiation causale Localisation → Attention → Liquidité:** Les hypothèses de ce groupe supposent l'obtention d'une mesure d'attention par parcelle.
 
   - ::: {#hyp-1}
     ***H1: La localisation influence positivement la liquidité:*** C'est l'hypothèse de base. Même si cela semble être une formalité, il est primordial de s'assurer qu'elle tient, à savoir qu'une une parcelle mieux située se vend plus facilement qu'une parcelle moins bien située.
     :::
+
   - ::: {#hyp-2}
     ***H2: La localisation influence positivement l'attention portée sur une parcelle:*** Une parcelle mieux située suscitera plus d'attention qu'une parcelle moins bien située.
     :::
+
   - ::: {#hyp-3}
     ***H3: L'attention influence positivement la liquidité:*** Une parcelle suscitant plus d'attention que les autres se vendra plus facilement qu'une parcelle suscitant moins d'attention.
     :::
+
   - ::: {#hyp-4}
-    ***H4: L'attention  absorbe l'effet de la localisation sur la liquidité:*** Si l'attention transmet l'effet de la localisation sur la liquidité, alors ce dernier est atténué voire devient non significatif lorsque dans une régression de la liquidité sur la localisation, l'on contrôle pour l'attention.
+    ***H4: L'attention absorbe l'effet de la localisation sur la liquidité:*** Si l'attention transmet l'effet de la localisation sur la liquidité, alors ce dernier est atténué voire devient non significatif lorsque dans une régression de la liquidité sur la localisation, l'on contrôle pour l'attention.
     :::
 
-
-
-* **Groupe B: Prédictions discriminantes du modèle de l'attention:** Les hypothèses de ce groupe portent sur des conséquences attendues du modèle de l'attention comme médiateur entre localisation et liquidité, contre celles attendues des modèles d'appariement ou d'asymétrie d'information. 
+- **Groupe B: Prédictions discriminantes du modèle de l'attention:** Les hypothèses de ce groupe portent sur des conséquences attendues du modèle de l'attention comme médiateur entre localisation et liquidité, contre celles attendues des modèles d'appariement ou d'asymétrie d'information.
 
   - ::: {#hyp-5}
-    ***H5:Forme fonctionnelle du lien localisation - liquidité:*** Les médiateurs classiques (frictions de recherche, asymétrie d'information) impliquent une relation linéaire ou éventuellement concave entre la localisation (distance aux aménités) et la liquidité: l'effet est stable avec la distance ou s'aggrave légèrement. Alors que si l'attention est le médiateur, la liquidité chute fortement dès les valeurs d'éloignement aux aménités, pour se stabiliser en plateau. Celà tient de la décroissance exponentielle du flux d'attention (de visiteurs) avec la distance aux aménités. Ainsi, il est attendu une **décroissance fortement convexe* (de type exponentielle négative) de la liquidité en fonction de la localisation.
+    ***H5:Forme fonctionnelle du lien localisation - liquidité:*** Les médiateurs classiques (frictions de recherche, asymétrie d'information) impliquent une relation linéaire ou éventuellement concave entre la localisation (distance aux aménités) et la liquidité: l'effet est stable avec la distance ou s'aggrave légèrement. Alors que si l'attention est le médiateur, la liquidité chute fortement dès les valeurs d'éloignement aux aménités, pour se stabiliser en plateau. Celà tient de la décroissance exponentielle du flux d'attention (de visiteurs) avec la distance aux aménités. Ainsi, il est attendu une \*\*décroissance fortement convexe\* (de type exponentielle négative) de la liquidité en fonction de la localisation.
     :::
+
   - ::: {#hyp-6a}
     ***H6A: Interaction Localisation × attention globale:*** Dans un modèle de recherche et d'appariemment classique, une augmentation du niveau d'intérêt global pour le marché diminue l'écart de liquidité entre parcelles selon leur localisation. Par contre, dans un monde où seul l'attention sert d'intermédiaire entre la localisation et la liquidité, une augmentation du niveau d'attention globale crée une surconcentration spatiale de celle-ci, ce qui entraîne une augmentation du *différentiel* de liquidité entre celles-ci. Ainsi, dans une regréssion avec la liquidité en variable dépendante, le modèle d'attention prédirait un coefficient d'interaction entre la localisation et le niveau d'intérêt global positif.
     :::
+
   - ::: {#hyp-6b}
     ***H6B: Comportement en période de bulle:*** Il existe un niveau d'intérêt global du métavers au delà duquel la surconcentration spatiale évoquée dans l'hypothèse [H6A](#hyp-6a) diminue puis disparaît. Ce niveau d'intérêt global peut être interprété comme le niveau d'intérêt global au délà duquel l'on considère que le marché immobilier virtuel s'apparente à une bulle spéculative. Dans cet état, [@kawai2025anatomy] ont montré que la localisation ne détermine plus les prix. Nous conjecturons également que dans cet état, la localisation ne détermine plus la liquidité. En effet, en régime spéculatif, l'attention cesse d'être spatialement concentrée, car les motivations des acheteurs deviennent majoritairement spéculative. Cette prédiction contraste avec celle formulée par les modèles classiques où, même en régime spéculatif, la localisation demeure un prédicteur de la liquidité, bien que dans une moindre mesure. Les figures @fig-h6-rlw, @fig-h6-mtv, et @fig-h6-comp illustrent schématiquement les hypothèses [H6A](#hyp-6a) et [H6B](#hyp-6b).
     :::
+
   - ::: {#hyp-7}
     ***H7: Attention et offre de parcelles:*** La liquidité étant également tributaire de l'offre de parcelle disponible, le modèle d'attention prédit que la localisation affecte l'offre de parcelles disponible par l'intermédiaire de l'attention. En effet, pour un spéculateur de parcelles, la valeur d'option de lister une parcelle bien située est supérieure à celle de lister une parcelle moins bien située. Ainsi, le modèle d'attention prédit une relation *causale* positive entre localisation - attention - offre de parcelles, ou simplement une relation positive entre localisation et offre de parcelles et une autre entre attention et offre de parcelles. Il est essentiel ici d'indexer uniquement les *spéculateurs* car les détenteurs de parcelles ont diverses motivations de détention [@ante2023digital], et peuvent ainsi être classés en deux groupes: les spéculateurs (court-termistes) et les conservateurs (long-termistes). Le listing de parcelles bien situées est plus avantageux uniquement pour les détenteurs court-termistes.
     :::
-
 
 ```{r fig.width=10, fig.height=4}
 #| label: fig-h6-rlw
@@ -118,7 +118,6 @@ plot(x, y=0.8-0.5*x, xaxt="n", yaxt='s', type="l", ylim=c(0,1), xlab="Localisati
 plot(x, y=1-0.3*x, xaxt="n", yaxt='s', type="l", ylim=c(0,1), xlab="Localisation", ylab="Liquidity", main="Régime spéculatif", cex.lab = 1.6, cex.main = 1.6)
 ```
 
-
 ```{r fig.width=10, fig.height=4}
 #| label: fig-h6-mtv
 #| fig-cap: "Lien Localisation - Liquidité dans le métavers"
@@ -129,7 +128,6 @@ plot(x, y=0.28/(x^(0.7)+0.4), xaxt="n", yaxt='s', type="l", ylim=c(0,1), xlab="L
 plot(x, y=(1/3)/(x^(0.6)+(1/3)), xaxt="n", yaxt='s', type="l", ylim=c(0,1), xlab="Localisation", ylab="Liquidity", main="Régime d'attention globale forte", cex.lab = 1.6, cex.main = 1.6)
 plot(x, y=0.5 + runif(length(x), min=-0.05, max=0.05), xaxt="n", yaxt='s', type="l", ylim=c(0,1), xlab="Localisation", ylab="Liquidity", main="Régime spéculatif", cex.lab = 1.6, cex.main = 1.6)
 ```
-
 
 ```{r}
 #| label: fig-h6-comp
@@ -223,31 +221,29 @@ ggplot() +
   )
 ```
 
-
 ## Bases de données
 
 ### Architecture urbaine du métavers
 
 Le métavers Decentraland constitue sans doute le terrain le plus propice à l'examen empirique qui nous occupe. [Decentraland](https://decentraland.org) est un univers virtuel en 3D de taille finie, dont l'espace total est divisé en 92 576 parcelles de forme carré, de taille 16m $\times$ 16m. L'architecture urbaine de Decentraland se décline en quatre couches:
 
-* **Les plaza**: Elles désignent les principaux pôles d'attraction dans l'univers virtuel. Il s'agit concrètement de **9** zones carrés de 20 parcelles de côté, reparties uniformément dans le monde virtuel avec **une** au centre, et **8** aux quatre points cardinaux et sur leurs diagonales. Les plaza sont les principaux lieux de socialisation dans le métavers, et particulièrement la plaza centrale qui est le point d'apparition par défaut des visiteurs qui se connectent dans le métavers.
+- **Les plaza**: Elles désignent les principaux pôles d'attraction dans l'univers virtuel. Il s'agit concrètement de **9** zones carrés de 20 parcelles de côté, reparties uniformément dans le monde virtuel avec **une** au centre, et **8** aux quatre points cardinaux et sur leurs diagonales. Les plaza sont les principaux lieux de socialisation dans le métavers, et particulièrement la plaza centrale qui est le point d'apparition par défaut des visiteurs qui se connectent dans le métavers.
 
-* **Les routes**: Elles désignent les axes de circulation (piétonne ou par tramway) dans le métavers. 
+- **Les routes**: Elles désignent les axes de circulation (piétonne ou par tramway) dans le métavers.
 
-* **Les districts**: Les districts sont des quartiers gouvernées par des communautés dans Decentraland. Les districts sont des lieux de concentration de personnes aux sensibilités et affinités avec une thématique particulière (gaming, nft, investment, fashion, art, education, etc...), à l'exemple des pages, forums et autres communautés que l'on peut trouver sur des réseaux sociaux. Au lancement du métavers Decentraland, des appels à candidatures pour la création de districts ont été lancées, les districts ont été créés pré-lancement sur la base des candidatures acceptées, et n'ont plus été modifiées de quelque façon que ce soit jusqu'aujourd'hui.
+- **Les districts**: Les districts sont des quartiers gouvernées par des communautés dans Decentraland. Les districts sont des lieux de concentration de personnes aux sensibilités et affinités avec une thématique particulière (gaming, nft, investment, fashion, art, education, etc...), à l'exemple des pages, forums et autres communautés que l'on peut trouver sur des réseaux sociaux. Au lancement du métavers Decentraland, des appels à candidatures pour la création de districts ont été lancées, les districts ont été créés pré-lancement sur la base des candidatures acceptées, et n'ont plus été modifiées de quelque façon que ce soit jusqu'aujourd'hui.
 
-* **Les parcelles libres**: Les parcelles libres sont les parcelles ne faisant pas partie de plazas, de routes ou de districts. Ce sont les parcelles que les investisseurs et visiteurs du métavers peuvent acheter, vendre, ou exploiter. Sur 92 576 parcelles au total, seules 44 480 sont des parcelles libres, soit un peu moins de la moitié. Toutefois, nous observons sur le marché qu'il existe certaines parcelles de districts qui sont négociées.
-
+- **Les parcelles libres**: Les parcelles libres sont les parcelles ne faisant pas partie de plazas, de routes ou de districts. Ce sont les parcelles que les investisseurs et visiteurs du métavers peuvent acheter, vendre, ou exploiter. Sur 92 576 parcelles au total, seules 44 480 sont des parcelles libres, soit un peu moins de la moitié. Toutefois, nous observons sur le marché qu'il existe certaines parcelles de districts qui sont négociées.
 
 ### Marché immobilier du métavers
 
 Decentraland est un métavers décentralisé, dont les titres de propriétés des parcelles virtuelles sont encodés dans la blockchain Ethereum, sous forme de [NFT](https://eips.ethereum.org/EIPS/eip-721). Il a été annoncé en 2017 pour un lancement en 2018 s'étant déroulé en trois phases:
 
-* **Une levée de fonds + Une première vente aux enchères (Auction 1)**: De Novembre 2017 à Décembre 2018, des investisseurs intéressés par cette curiosité à la fois technologique et financière étaient invités à acquerir le jeton (ou token) de gouvernance de Decentraland, le **MANA**, et s'en servir pour participer à une vente aux enchères de parcelles, organisées par la fondation Decentraland. 
+- **Une levée de fonds + Une première vente aux enchères (Auction 1)**: De Novembre 2017 à Décembre 2018, des investisseurs intéressés par cette curiosité à la fois technologique et financière étaient invités à acquerir le jeton (ou token) de gouvernance de Decentraland, le **MANA**, et s'en servir pour participer à une vente aux enchères de parcelles, organisées par la fondation Decentraland.
 
-* **Une seconde vente aux enchères (Auction 2)**: S'étalant du 14 au 23 Décembre 2018, et semblable à la première, l'objectif de cette enchère était d'écouler les stocks de parcelles restants de la première enchère. Ces deux enchères représentent ce que nous désignerons dans la suite de ce document par **marché immobilier primaire** du métavers.
+- **Une seconde vente aux enchères (Auction 2)**: S'étalant du 14 au 23 Décembre 2018, et semblable à la première, l'objectif de cette enchère était d'écouler les stocks de parcelles restants de la première enchère. Ces deux enchères représentent ce que nous désignerons dans la suite de ce document par **marché immobilier primaire** du métavers.
 
-* **Un lancement public du métavers en Février 2020**: La levée de fonds ayant permis d'acquérir avec de fonds pour supporter le projet, celui-ci a vu son implémentation se finaliser durant l'année 2019 pour un lancement officiel grand public du métavers en février 2020. 
+- **Un lancement public du métavers en Février 2020**: La levée de fonds ayant permis d'acquérir avec de fonds pour supporter le projet, celui-ci a vu son implémentation se finaliser durant l'année 2019 pour un lancement officiel grand public du métavers en février 2020.
 
 L'année 2019 a notamment vu le mise en ligne de la **marketplace** officielle Decentraland, de laquelle il était possible de vendre et d'acheter les biens virtuels de l'univers, dont entre autres les parcelles. Sur cette marketplace, les détenteurs de parcelles pouvaient déjà mettre en vente leur parcelles, et les potentiels acheteurs pouvaient consulter les parcelles mises en vente et les acheter. De plus, ces derniers pouvaient également proposer une contre-offre à une parcelle listée, ou faire une demande spontanée d'achat d'une parcelle non offerte. Par ailleurs, les titres de propriété des parcelles Decentraland étant des NFTs, il était déjà possible d'observer des 2019 des parcelles listées ou demandées sur des marketplaces NFTs populaires tels [Opensea](https://opensea.com), [Rarible](https://rarible.com), ou [LooksRare](https://looksrare.com). Ces plateformes représentent ce que nous désignerons dans la suite de ce document par **marché immobilier secondaire** du métavers.
 
@@ -255,12 +251,11 @@ De plus, le métavers Decentraland, donne la possibilité aux détenteurs de par
 
 [@goldberg2024land] et [@yencha2023spatial] montrent l'existence d'une prime de localisation dans la valorisation des parcelles dans les marchés primaires. [@kawai2025anatomy] montrent que l'existence de cette prime de localisation en marché secondaire en période normale, et surtout son inexistence en régime spéculatif.
 
-
 ### Bases de données
 
 Nous avons collecté les données de transactions immobilières Decentraland des marchés primaire et secondaire. Comme énoncé précédemment, il existe deux marchés primaires (les deux enchères) et plusieurs marchés secondaires. Avant d'expliciter le processus de collecte de données, il est important de discuter des caractéristiques de chaque marché, duquel sont collectées des données transactionnelles.
 
-**Première enchère (Marché primaire): ** Durant la première enchère de prélancement du métavers, les acheteurs intéressés étaient invités à faire des offres de prix pour les parcelles vendues. Les acheteurs pouvaient également annuler une offre précédemment faite ou l'écraser par une nouvelle offre. Chaque offre de prix faite ou annulée, était enregistrée dans la blockchain. Les offres victorieuses étaient également enregistrées dans la blockchain. Ainsi, il est possible de collecter via la blockchain l'historique complet des offres effectuées durant la première enchère.
+**Première enchère (Marché primaire):** Durant la première enchère de prélancement du métavers, les acheteurs intéressés étaient invités à faire des offres de prix pour les parcelles vendues. Les acheteurs pouvaient également annuler une offre précédemment faite ou l'écraser par une nouvelle offre. Chaque offre de prix faite ou annulée, était enregistrée dans la blockchain. Les offres victorieuses étaient également enregistrées dans la blockchain. Ainsi, il est possible de collecter via la blockchain l'historique complet des offres effectuées durant la première enchère.
 
 **Seconde enchère (Marché primaire):** Le déroulement de la seconde enchère est semblable à la première. La différence se situe au niveau de l'accès aux données, notamment sur les offres faites ou annulée. Seules les offres victorieuses étaient enregistrées dans la blockchain, sans mention de la date à laquelle l'offre fût faite, et donc aucune possibilité d'inférer la durée sur le marché d'une parcelle listée.
 
@@ -273,23 +268,22 @@ Nous avons collecté les données de transactions immobilières Decentraland des
 Le tableau @tbl-dcl-markets-specs résume les données transactionnelles qu'il est possible de collecter via la blockchain pour chaque marché.
 
 ::: {#tbl-dcl-markets-specs}
-|Marché|Type|Offres|Demandes|Ventes|Time On Market|
-|------|----|-----|-------|------|--------------|
-|Auction 1|Primaire|OUI|OUI|OUI|OUI|
-|Auction 2|Primaire| | |OUI| |
-|Dcl Marketplace V1|Secondaire|OUI|OUI|OUI|OUI|
-|Dcl Marketplace V2|Secondaire| | |OUI|OUI|
-|Other Marketplaces|Secondaire| | |OUI| |
+| Marché             | Type       | Offres | Demandes | Ventes | Time On Market |
+|--------------------|------------|--------|----------|--------|----------------|
+| Auction 1          | Primaire   | OUI    | OUI      | OUI    | OUI            |
+| Auction 2          | Primaire   |        |          | OUI    |                |
+| Dcl Marketplace V1 | Secondaire | OUI    | OUI      | OUI    | OUI            |
+| Dcl Marketplace V2 | Secondaire |        |          | OUI    | OUI            |
+| Other Marketplaces | Secondaire |        |          | OUI    |                |
 
 Données accessibles via la blockchain pour chaque marché immobilier Decentraland.
 :::
 
 Nous avons collecté toutes les données transactionnelles accessibles via la blockchain pour chaque marché, à savoir les offres, les demandes et les ventes de parcelles. Nous comptons environ **440 000 transactions immobilières** au total, s'étalant de Mars 2018 à Mai 2026.
 
-Concernant les autres marketplaces, bien que les données de listings soient incomplètes, il est possible d'en collecter celles qui peuvent être collectées pour compléter les *Time On Market* relatives aux offres de parcelles collectés. Nous avons collecté les offres de parcelles Opensea, accessibles à partir d'octobre 2024 jusqu'à Mai 2026, soit environ **16 000 transactions**. 
+Concernant les autres marketplaces, bien que les données de listings soient incomplètes, il est possible d'en collecter celles qui peuvent être collectées pour compléter les *Time On Market* relatives aux offres de parcelles collectés. Nous avons collecté les offres de parcelles Opensea, accessibles à partir d'octobre 2024 jusqu'à Mai 2026, soit environ **16 000 transactions**.
 
 Nous avons également collecté les données spatiales des parcelles Decentraland, soit les distances aux principaux points d'intérêt du métavers à savoir le plaza central, les huit plaza périphériques, la route, et les districts. Decentraland compte un cinquantaine de districts réparties selon 11 thématiques. Nous avons collecté les distances à tous les districts, aux districts le plus proche selon la thématique.
-
 
 ### Mesures de localisation, de liquidité et d'attention
 
@@ -297,34 +291,32 @@ Dans un premier temps, nous utiliserons le **time-on-marking** comme unique mesu
 
 Nous emploierons deux principales mesures d'attention:
 
-* **Le nombre de demandes faites sur la parcelle** sur les 30 jours précédant la date de listing, excluant la date de listing;
-* **Le nombre de demandeurs uniques de la parcelle** sur les 30 jours précédant la date de listing, excluant la date de listing.
+- **Le nombre de demandes faites sur la parcelle** sur les 30 jours précédant la date de listing, excluant la date de listing;
+- **Le nombre de demandeurs uniques de la parcelle** sur les 30 jours précédant la date de listing, excluant la date de listing.
 
 Les parcelles listées étant plus susceptibles que les parcelles non listées de recevoir des demandes, nous déclinons chacune des mesures d'attention en trois versions:
 
-* **La version brute**: qui correspond pour chacune des mesures au nombre stipulé;
-* **La version normalisée aux jours de listing**: qui correspond pour chacune des mesures à la moyenne de celle-ci par unité de temps (en jours) où la parcelle a été listée;
-* **La version normalisée aux jours de non listing**: qui correspond pour chacune des mesures à la moyenne de celle-ci par unité de temps (en jours) où la parcelle n'a pas été listée.
+- **La version brute**: qui correspond pour chacune des mesures au nombre stipulé;
+- **La version normalisée aux jours de listing**: qui correspond pour chacune des mesures à la moyenne de celle-ci par unité de temps (en jours) où la parcelle a été listée;
+- **La version normalisée aux jours de non listing**: qui correspond pour chacune des mesures à la moyenne de celle-ci par unité de temps (en jours) où la parcelle n'a pas été listée.
 
 La mesure brute est biaisé par le nombre de jours de listing. Une parcelle peut faire l'objet d'un grand nombre de demandes pour deux raisons: soit elle suscite de l'attention réelle de potentiels acheteurs, soit elle juste plus accessible sur le site marketplace. En effet, sur ces sites, la page d'accueil laisse généralement voir en priorité les parcelles mises en vente, et non celles non listées. En normalisant, nous obtenons une mesure plus fidèle à l'attention seule suscitée par la parcelle.
-
 
 ### Résultats préliminaires
 
 Nous avions déjà, dans un document (note) de travail précédente (Voir [ici](https://very-aquamarine-ikgebhah.edgeone.app/#Commentaire_-_Discussion_mesure_de_l%E2%80%99attention)), examiné les hypothèses [H1](#hyp-1), [H2](#hyp-2), [H3](#hyp-3) et [H4](#hyp-4) à partir des données de transactions (offres, demandes et ventes) initiées à partir de la marketplace [Opensea](https://opensea.com). Les données s'étalaient d'octobre 2024 à mai 2026. Les données sur les offres étant particulièrement bruitées, nous avions dû les nettoyer en éliminant les offres faites par des demandeurs dont les nombres de demandes mensuelles étaient anormalement élevés. Les résultats obtenus sur les hypothèses mentionnées sont les suivantes. La mesure utilisée était le *nombre de demandeurs uniques normalisée*.
 
-* **[H1](#hyp-1) Lien Localisation - Liquidité**: ***La localisation influence significativement la liquidité***. Toutefois l'effet noté est faible: ce sont principalement l'inclusion dans un district (effet positif) et la localisation de la parcelle aux zones sud, sud-ouest et ouest (effet négatif) qui affectent la liquidité.
+- [**H1**](#hyp-1) **Lien Localisation - Liquidité**: ***La localisation influence significativement la liquidité***. Toutefois l'effet noté est faible: ce sont principalement l'inclusion dans un district (effet positif) et la localisation de la parcelle aux zones sud, sud-ouest et ouest (effet négatif) qui affectent la liquidité.
 
-* **[H2](#hyp-2) Lien Localisation - Attention**: ***La localisation influence significativement l'attention***. Ici aussi, l'effet noté n'est pas très fort. Seule l'inclusion a un district apparaît avoir un effet positif sur l'attention suscitée par une parcelle, quelque soit la mesure normalisée évaluée.
+- [**H2**](#hyp-2) **Lien Localisation - Attention**: ***La localisation influence significativement l'attention***. Ici aussi, l'effet noté n'est pas très fort. Seule l'inclusion a un district apparaît avoir un effet positif sur l'attention suscitée par une parcelle, quelque soit la mesure normalisée évaluée.
 
-* **[H3](#hyp-3) Lien Attention - Liquidité**: ***L'attention influence significativement la liquidité***. L'effet est significatif à moins de $1\%$, avec des $R^2$ de $35\%$ (nombre de demandes normalisé par jour de listings) et $45\%$ (nombre de demandeurs uniques normalisé par jour de listings) lorsque l'attention est le seul régresseur.
+- [**H3**](#hyp-3) **Lien Attention - Liquidité**: ***L'attention influence significativement la liquidité***. L'effet est significatif à moins de $1\%$, avec des $R^2$ de $35\%$ (nombre de demandes normalisé par jour de listings) et $45\%$ (nombre de demandeurs uniques normalisé par jour de listings) lorsque l'attention est le seul régresseur.
 
-* **[H4](#hyp-4) Chaîne Localisation - Attention - Liquidité**: ***L'attention ne semble pas être le canal de transmission entre la localisation et la liquidité***. Dans des régressions de la liquidité sur la localisation, lorsque l'on contrôle pour l'attention, la localisation demeure significative.
+- [**H4**](#hyp-4) **Chaîne Localisation - Attention - Liquidité**: ***L'attention ne semble pas être le canal de transmission entre la localisation et la liquidité***. Dans des régressions de la liquidité sur la localisation, lorsque l'on contrôle pour l'attention, la localisation demeure significative.
 
-En conclusion, les résultats sur la base de données issue de la marketplace Opensea ne valident pas l'hypothèse [H4](#hyp-4). Plusieurs raisons possibles à celà: soit l'hypothèse est fausse, soit, malgré le soin appliqué au nettoyage des données, celles-ci, notamment les demandes, demeurent encore légèrement bruitées. De plus, la période examinée (fin 2024 à 2026) est une période manifestée par un intérêt général très bas pour les métavers, et pour les projets autour de la cryptomonnaie en général. 
+En conclusion, les résultats sur la base de données issue de la marketplace Opensea ne valident pas l'hypothèse [H4](#hyp-4). Plusieurs raisons possibles à celà: soit l'hypothèse est fausse, soit, malgré le soin appliqué au nettoyage des données, celles-ci, notamment les demandes, demeurent encore légèrement bruitées. De plus, la période examinée (fin 2024 à 2026) est une période manifestée par un intérêt général très bas pour les métavers, et pour les projets autour de la cryptomonnaie en général.
 
 Un examen sur les périodes pré 2021 (avant la bulle, lancement du métavers), 2021-2022 (bulle crypto, nft, métavers), et fin 2022-mi 2024 (post bulle, chute d'intérêt et/ou retour progressif à la normale - 2020). est nécessaire pour conclure sur les hypothèses [H1](#hyp-1), [H2](#hyp-2), [H3](#hyp-3) et [H4](#hyp-4).
-
 
 ## Statistiques descriptives
 
@@ -363,14 +355,13 @@ kable(
 ) |> kable_styling() |> row_spec(nrow(TxSummary), bold = T) |> column_spec(1, width = "10%") |> column_spec(2:6, width = "18%")
 ```
 
-Le tableau @tbl-summ-1 montre l'évolution de l'offre, de la demande et des ventes de parcelles Decentraland sur première version de la marketplace officielle du métavers. 
+Le tableau @tbl-summ-1 montre l'évolution de l'offre, de la demande et des ventes de parcelles Decentraland sur première version de la marketplace officielle du métavers.
 
-La période d'avant le lancement grand public du métavers apparait comme étant la période la plus riche en activité transactionnelle. L'activité se tempère après le lancement, pour rebondir substantiellement en début 2021, fin 2021 et début 2022. Ces deux dernières périodes marquent notamment la période de bulle métavers identifiée par [@kawai2025anatomy]. Après l'éclatement de la bulle autour du troisième trimestre de 2022, l'activité chute drastiquement pour ne plus remonter jusqu'à nos jours. 
+La période d'avant le lancement grand public du métavers apparait comme étant la période la plus riche en activité transactionnelle. L'activité se tempère après le lancement, pour rebondir substantiellement en début 2021, fin 2021 et début 2022. Ces deux dernières périodes marquent notamment la période de bulle métavers identifiée par [@kawai2025anatomy]. Après l'éclatement de la bulle autour du troisième trimestre de 2022, l'activité chute drastiquement pour ne plus remonter jusqu'à nos jours.
 
 Le temps de conversion des offres en ventes suit une tendance similaire. Très faible avant le lancement en 2022, il augmente progressivement après, puis retombe légèrement durant la période de bulle en 2021. Après l'éclatement de la bulle, sa tendance devient haussière jusqu'à nos jours.Il est également intéressant de noter que la tendance baissière de la demande de parcelle sur l'ensemble de l'horizon temporel est plus prononcée que celle de l'offre de parcelles.
 
 Enfin, l'activité transactionnelle sur la V1 Marketplace Decentraland cesse brutalement dès 2025. Cela concorde avec les résultats du tableau @tbl-summ-2, vers un switch de l'activité transaction vers la V2 Marketplace Decentraland et autres marketplaces.
-
 
 ### Decentraland Marketplace V2 + Autres
 
@@ -415,7 +406,6 @@ Les ventes sur les autres marketplace NFT suivent une tendance contraire à cell
 
 A contrario, l'activité transaction sur la marketplace V2 de Decentraland peine à vraiment décoller depuis 2025.
 
-
 ### Prix d'offres et de ventes
 
 ```{r}
@@ -449,10 +439,9 @@ kable(
 
 Le tableau @tbl-summ-3 montre l'évolution des prix médians d'offres et de ventes des parcelles Decentraland sur tous les marchés: les versions 1 et 2 de la marketplace officielle, et les autres marketplaces NFT.
 
-Les prix de ventes affichent la même tendance. Partant entre 500 et 1000 USD en 2019 et 2020, ils connaissent une hausse significative dès 2021, atteignant la barre des 5000 USD au premier trimestre de cette année. Ils culminent entre 15 et 16 mille en fin 2021 - début 2022 sur la marketplace officielle, et entre 13 et 14 mille ailleurs dans la même période, puis chutent après l'éclatement de la bulle jusqu'à atteindre 100 à 300 USD en 2025, et moins de 100 USD en 2026. 
+Les prix de ventes affichent la même tendance. Partant entre 500 et 1000 USD en 2019 et 2020, ils connaissent une hausse significative dès 2021, atteignant la barre des 5000 USD au premier trimestre de cette année. Ils culminent entre 15 et 16 mille en fin 2021 - début 2022 sur la marketplace officielle, et entre 13 et 14 mille ailleurs dans la même période, puis chutent après l'éclatement de la bulle jusqu'à atteindre 100 à 300 USD en 2025, et moins de 100 USD en 2026.
 
 Concernant les prix d'offres, l'on remarque qu'ils sont toujours supérieurs aux prix de vente quelque soit la période. Cela signifie que les parcelles sont vendues à des prix inférieurs au prix de demande des détenteurs, vraisemblablement car les parcelles listées trop chère ne sont pas converties en ventes.
-
 
 ### Activité transactionnelle (Volume)
 
@@ -489,32 +478,27 @@ Le tableau @tbl-summ-4 montre l'évolution des volumes de ventes des parcelles D
 
 La tendance des prix s'observe également sur les volumes de transactions. La période 2021-Q4, 2021-Q1 est la période avec la plus forte activité transactionnelle. Avant cette période, l'activité sur la marketplace officielle était supérieure à celle sur les autres marketplaces, tandis qu'après la bulle, le rapport s'inverse. De plus, ce tableau confirme le fait que l'activité sur la marketplace Decentraland V2 peine à décoller depuis 2025.
 
-
 ### Conclusion
 
 Ces statistiques descriptives nous renseigne principalement sur l'existence de cinq principales phases de la vie du métavers Decentraland depuis sa création:
 
-* **Phase 1 *prélancement public* (2019)**: S'étalant du dernier trimestre de 2018 à celui de 2019, elle est caractérisée un grand nombre d'offres, de demandes, de ventes et un temps sur le marché relativement parmi les plus courts de toute l'histoire du métavers. De plus, la marketplace officielle (version 1) domine en termes d'activité transactionnelle, et les prix (offres et vente) sont encore relativement bas.
+- **Phase 1 *prélancement public* (2019)**: S'étalant du dernier trimestre de 2018 à celui de 2019, elle est caractérisée un grand nombre d'offres, de demandes, de ventes et un temps sur le marché relativement parmi les plus courts de toute l'histoire du métavers. De plus, la marketplace officielle (version 1) domine en termes d'activité transactionnelle, et les prix (offres et vente) sont encore relativement bas.
 
-* **Phase 2 *lancement public* (2020)**: S'étalant sur toute l'année 2020, elle se caractérise par un maintient des tendances et une stabilité des prix de l'année précédente, une légère baisse d'activité transactionnelle en termes de nombre de transactions, et également par une augmentation de la part de marché des autres marketplaces. De plus, les temps de conversion des offres en ventes augmentent significativement par rapport à l'année précédente.
+- **Phase 2 *lancement public* (2020)**: S'étalant sur toute l'année 2020, elle se caractérise par un maintient des tendances et une stabilité des prix de l'année précédente, une légère baisse d'activité transactionnelle en termes de nombre de transactions, et également par une augmentation de la part de marché des autres marketplaces. De plus, les temps de conversion des offres en ventes augmentent significativement par rapport à l'année précédente.
 
-* **Phase 3 *Euphorie* (2021-Q1 à 2022-Q1)**: S'étalant sur l'entièreté de l'année 2021 et sur le premier trimestre de 2022, elle est caractérisée par une remontée de l'activité transactionnelle en termes de nombre et de volume de transactions, un montée galopante des prix, une diminution des temps de conversions, et une constance de l'augmentation de la part de marché des autres marketplaces.
+- **Phase 3 *Euphorie* (2021-Q1 à 2022-Q1)**: S'étalant sur l'entièreté de l'année 2021 et sur le premier trimestre de 2022, elle est caractérisée par une remontée de l'activité transactionnelle en termes de nombre et de volume de transactions, un montée galopante des prix, une diminution des temps de conversions, et une constance de l'augmentation de la part de marché des autres marketplaces.
 
-* **Phase 4 *Chute* (2022-2023)**: S'étalant sur deux années, elle est caractérisée par une première année de chute spectaculaire en termes d'activités transactionnelle et de liquidité. Les autres marketplaces commencent également à prendre l'ascendant sur la marketplace officielle de Decentraland. La deuxième année se caractérise par une chute de l'activité moins marquée qu'en première année.
+- **Phase 4 *Chute* (2022-2023)**: S'étalant sur deux années, elle est caractérisée par une première année de chute spectaculaire en termes d'activités transactionnelle et de liquidité. Les autres marketplaces commencent également à prendre l'ascendant sur la marketplace officielle de Decentraland. La deuxième année se caractérise par une chute de l'activité moins marquée qu'en première année.
 
-* **Phase 5 *Désert* (2024 à nos jours)**: Depuis la chute en 2022-2023, le métavers Decentraland traverse (et ressemble de plus en plus) un désert. L'activité transactionnelle est au plus bas, la liquidité atteint ses pires scores, et la seconde version de la marketplace officielle peine à décoller. Toutefois, il est à noter depuis 2024 une légère augmentation des prix de ventes de parcelles sur les autres marketplaces.
+- **Phase 5 *Désert* (2024 à nos jours)**: Depuis la chute en 2022-2023, le métavers Decentraland traverse (et ressemble de plus en plus) un désert. L'activité transactionnelle est au plus bas, la liquidité atteint ses pires scores, et la seconde version de la marketplace officielle peine à décoller. Toutefois, il est à noter depuis 2024 une légère augmentation des prix de ventes de parcelles sur les autres marketplaces.
 
 Nous précéderons dans la prochaine section à l'examen empirique des hypothèses formulés en section [3.1](#testable-hypothesis) dans un premier temps sur les données d'activité transactionnelle en phase **Phase 2 *lancement public* (2020)**, de laquelle nous partirons pour inférer l'évolution de la dynamique de liquidité sur l'ensemble de l'horizon temporel. Nous optons pour la *phase 2* car elle représente une phase de stabilité du métavers, de nouveauté et d'espoir pour les investisseurs, dans laquelle nous subodorons que l'activité transactionnelle ne soit pas motivée par la spéculation ou le désespoir. De plus, étant une phase dans laquelle le métavers est *neuf*, nous subodorons également que la répartition spatiale des parcelles négociées soit homogène.
-
 
 # Examen empirique en période de phase 2 (2020)
 
 *La suite ici...*
 
-
-
 # Réferences {.unnumbered}
 
 ::: {#refs}
 :::
-
