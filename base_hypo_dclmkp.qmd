@@ -482,21 +482,1027 @@ La tendance des prix s'observe également sur les volumes de transactions. La p�
 
 Ces statistiques descriptives nous renseigne principalement sur l'existence de cinq principales phases de la vie du métavers Decentraland depuis sa création:
 
-- **Phase 1 *prélancement public* (2019)**: S'étalant du dernier trimestre de 2018 à celui de 2019, elle est caractérisée un grand nombre d'offres, de demandes, de ventes et un temps sur le marché relativement parmi les plus courts de toute l'histoire du métavers. De plus, la marketplace officielle (version 1) domine en termes d'activité transactionnelle, et les prix (offres et vente) sont encore relativement bas.
+- **Phase 1 *Finalisation du développement et lancement de la version bêta fermée* (Octobre 2018 à Février 2020)**: Au cours de cette phase, bien qu'il n'était pas encore possible d'explorer le monde virtuel, une version bêta fermée de celui-ci était en cours de test, et surtout, la carte du monde virtuel était déjà consultable. C'est ce qui explique l'activité des marchés secondaires de parcelles virtuelles à cette période,caractérisée un grand nombre d'offres, de demandes, de ventes et un temps sur le marché relativement parmi les plus courts de toute l'histoire du métavers. De plus, la marketplace officielle (version 1) domine en termes d'activité transactionnelle, et les prix (offres et vente) sont encore relativement bas. 
 
-- **Phase 2 *lancement public* (2020)**: S'étalant sur toute l'année 2020, elle se caractérise par un maintient des tendances et une stabilité des prix de l'année précédente, une légère baisse d'activité transactionnelle en termes de nombre de transactions, et également par une augmentation de la part de marché des autres marketplaces. De plus, les temps de conversion des offres en ventes augmentent significativement par rapport à l'année précédente.
+- **Phase 2 *Lancement public* (Février 2020 à Décembre 2020)**: Le 20 février 2020, le métavers Decentraland est lancé officiellement. Il est possible pour n'importe qui, de visiter le monde virtuel via une application web. A partir de cette date, nous observons une baisse de l'activité en termes de nombre de transactions, mais aucun changement significatif du volume de transactions. De plus, les parcelles se vendent moins vite par rapport à la phase 1. Enfin, on observe un début d'activité transactionnelle sur les places de marché alternatives.
 
-- **Phase 3 *Euphorie* (2021-Q1 à 2022-Q1)**: S'étalant sur l'entièreté de l'année 2021 et sur le premier trimestre de 2022, elle est caractérisée par une remontée de l'activité transactionnelle en termes de nombre et de volume de transactions, un montée galopante des prix, une diminution des temps de conversions, et une constance de l'augmentation de la part de marché des autres marketplaces.
+- **Phase 3 *Euphorie - Bulle crypto/métavers* (Janvier 2021 à Décembre 2021)**: L'année 2021 est marquée par une explosion de la popularité des cryptomonnaies et de tous les projets technologiques qui y gravitent. C'est d'ailleurs l'année où la société Facebook se renomme en Meta, et manifeste son intérêt au développement des métavers. Ainsi, profitant de cet engouement général autour des métavers, Decentraland a vu son marché immobilier connaître sa première expansion notable: les ventes et la liquidité s'apprécient par rapport aux années précédentes, tant sur la marketplace officielle que sur les places de marché alternatives, qui rattrapent en terme de volume la marketplace officielle
 
-- **Phase 4 *Chute* (2022-2023)**: S'étalant sur deux années, elle est caractérisée par une première année de chute spectaculaire en termes d'activités transactionnelle et de liquidité. Les autres marketplaces commencent également à prendre l'ascendant sur la marketplace officielle de Decentraland. La deuxième année se caractérise par une chute de l'activité moins marquée qu'en première année.
+- **Phase 4 *Récession - Eclatement de la bulle* (2022-2023)**: La bulle crypto/métavers éclate début 2022, aidée par de nombreux scandales autour des projets cryptos (dont la faillite de FTX, pour ne citer que celui qui a causé le plus de dégâts). Decentraland n'est pas en reste: l'activité transactionnelle chute drastiquement; en fin d'année 2022, les ventes retrouvent leurs niveaux de 2020 (soit entre 40 et 50 fois moins qu'en fin 2021) et la liquidité se détériore pour atteindre ses pires scores depuis le lancement du monde virtuel. L'année 2023 se caractérise par une stabilité de l'activité au plus bas, et une détérioration encore plus forte de la liquidité. De plus, les places de marché alternatives dominent désormais la marketplace officielle.
 
-- **Phase 5 *Désert* (2024 à nos jours)**: Depuis la chute en 2022-2023, le métavers Decentraland traverse (et ressemble de plus en plus) un désert. L'activité transactionnelle est au plus bas, la liquidité atteint ses pires scores, et la seconde version de la marketplace officielle peine à décoller. Toutefois, il est à noter depuis 2024 une légère augmentation des prix de ventes de parcelles sur les autres marketplaces.
+- **Phase 5 *Désert - Période morte dans le métavers* (2024 à nos jours)**: Depuis la récession de 2022-2023, l'activité transactionnelle dans le métavers Decentraland n'est plus remontée. Dans la marketplace officielle, elle est stagnante en 2024, et chute drastiquement dès 2025 et le lancement de la nouvelle marketplace officielle. Par contre, dans les places de marchés alternatives, on observe une légère tendance haussière en 2024 et une plus grande en 2025 en termes de nombre de transactions, mais une tendance baissière légère et stable depuis 2024 en termes de volume. Decentraland semble de plus en plus désert, proche de la mort.
 
-Nous précéderons dans la prochaine section à l'examen empirique des hypothèses formulés en section [3.1](#testable-hypothesis) dans un premier temps sur les données d'activité transactionnelle en phase **Phase 2 *lancement public* (2020)**, de laquelle nous partirons pour inférer l'évolution de la dynamique de liquidité sur l'ensemble de l'horizon temporel. Nous optons pour la *phase 2* car elle représente une phase de stabilité du métavers, de nouveauté et d'espoir pour les investisseurs, dans laquelle nous subodorons que l'activité transactionnelle ne soit pas motivée par la spéculation ou le désespoir. De plus, étant une phase dans laquelle le métavers est *neuf*, nous subodorons également que la répartition spatiale des parcelles négociées soit homogène.
+Dans les prochaines sections, nous précéderons dans la prochaine section à l'examen empirique des hypothèses formulés en section [3.1](#testable-hypothesis) dans un premier temps sur les données d'activité transactionnelle en phases **1 et 2** (de 2019 à 2020). Ensuite, nous examinerons l'évolution dans le temps de la liquidité, notamment en phases **3 et 4**, puis en phase **5**. 
 
-# Examen empirique en période de phase 2 (2020)
+<!--de laquelle nous partirons pour inférer l'évolution de la dynamique de liquidité sur l'ensemble de l'horizon temporel. Nous optons pour la *phase 2* car elle représente une phase de stabilité du métavers, de nouveauté et d'espoir pour les investisseurs, dans laquelle nous subodorons que l'activité transactionnelle ne soit pas motivée par la spéculation ou le désespoir. De plus, étant une phase dans laquelle le métavers est *neuf*, nous subodorons également que la répartition spatiale des parcelles négociées soit homogène.-->
 
-*La suite ici...*
+
+
+# Examen empirique en phases 1 et 2 (2019 - 2020)
+
+Dans cette section, nous procédons à l'examen empirique des hypothèses [H1](#hyp-1), [H2](#hyp-2), [H3](#hyp-3) et [H4](#hyp-4) à partir des données transactionnelles de la marketplace officielle de Decentraland sur les années 2019 et 2020.
+
+
+## Hypothèse [H1](#hyp-1): Lien localisation - attention { #emp-anl-1920-h1 }
+
+### Construction de la base de données
+
+Nous considérons l'ensemble des parcelles demandées en 2019 et 2020, soit 5324 parcelles. Nous répartissons la période d'étude en 8 trimestres, pour lesquels pour chaque parcelle, nous calculons les trois mesures d'attention:
+
+* **La demande en période de listing**: La parcelle a-t'elle été demandée pendant les périodes du trimestre durant lesquelles elle était listée ?
+* **La demande en période de non listing**: La parcelle a-t'elle été demandée pendant les périodes du trimestre durant lesquelles elle n'était pas listée ?
+* **La demande sur le trimestre entier**: La parcelle a-t'elle été demandée pendant le trimestre ?
+
+Des histogrammes des mesures d'attention laissent apparaitre une prédominance d'un nombre nul de demandes de parcelles. Ainsi, pour plus de finesse dans l'analyse, nous transformons les mesures d'attention en variables binaires.
+
+### Régression Attention sur Localisation
+
+Pour chacune des mesures d'attention, nous effectuons neuf régressions: une régression panel avec comme les trimestres en effets fixes, et 8 régressions trimestrielles. Nous considérons les variables de localisation suivantes: 
+
+* **DPC**: Distance au plaza central;
+* **DPX**: Distance au plaza périphérique le plus proche;
+* **DRD**: Distance à la route la plus proche;
+* **DDX**: Distance au district le plus proche.
+
+De plus, pour les mesures d'attention sur trimestre entier, nous incluons comme régresseur une variable de contrôle binaire, qui indique si la parcelle a été listée durant le trimestre en question. En effet, en considérant une mesure d'attention indépendante du listing de la parcelle, une parcelle listée est plus susceptible de recevoir des demandes (car plus visible sur la marketplace) qu'une parcelle non listée.
+
+**Régressions panels des trois mesures**
+
+Le tableau @tbl-h1-2019-2020-panels-res présente les résultats des régressions panels des mesures d'attention binaires sur la localisation. 
+
+- La colonne 1 porte sur l'attention mesurée en période de listing dans les trimestres. Seules les parcelles listées au moins une fois dans tous les trimestres sont concernées. 
+- La colonne 2 porte sur l'attention mesurée en période de non listing dans les trimestres. Seules les parcelles ayant été hors du marché au moins une fois dans tous les trimestres sont concernées. 
+- La colonne 3 porte sur l'attention globale (listing + hors listing) dans les trimestres. Toutes les parcelles sont concernées.
+
+Lorsque l'attention est mesurée en période de listing, nous contrôlons pour le prix de listing moyen, car celui-ci peut influencer la demande (une parcelle listée trop chère aura probablement moins de demandes/contre-offre en retour). Lorsque l'attention est mesurée sur le trimestre entier sans distinction de période de listing/non listing, nous contrôlons pour la présence de la parcelle sur le marché au moins une fois dans le trimestre, car celle-ci peut influencer la demande (une parcelle sur le marché est plus susceptible d'être demandée).
+
+```{r}
+#| label: tbl-h1-2019-2020-panels-res
+#| tbl-cap: "Lien Attention - Localisation (2019-2020)<br>Régressions panels avec trimestres comme effets fixes."
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+source("./models.R")
+
+lat_db <- readRDS(file = "lat_db_2019_2020_va.RDS")
+ys <- c("asks_li_30d", "asks_ul_30d", "asks_ll_30d")
+models_names <- c("Listing Periods Attention", "Non Listing Periods Attention", "Whole Quarter Attention")
+
+results <- vector(mode = "list", length = length(ys))
+for (i in seq_along(ys)) {
+  regs <- c("DPC", "DPX", "DRD", "DDX")
+  if (i == 1) {
+    regs <- c(regs, "Lvalue")
+  } else if (i == 3) {
+    regs <- c(regs, "Listed")
+  }
+  
+  filter_parcel_by <- NULL
+  if (i == 1) {
+    filter_parcel_by <- "ndays_li_30d"
+  } else if (i == 2) {
+    filter_parcel_by <- "ndays_ul_30d"
+  }
+  parcels <- NULL
+  if (!is.null(filter_parcel_by)) {
+    for (y in c(2019, 2020)) {
+      for (q in 1:4) {
+        ps <- lat_db |> 
+          filter(lubridate::quarter(date) == q, lubridate::year(date) == y, .data[[filter_parcel_by]] > 0)
+        ps <- unique(ps$asset_id)
+        if (is.null(parcels)){
+          parcels <- ps
+        } else {
+          parcels <- parcels[parcels %in% ps]
+        }
+      }
+    }
+  }
+  
+  db <- lat_db |>
+    mutate(
+      asks_dummy = as.numeric(.data[[ys[i]]] > 0), 
+      quarter = paste0("Q", lubridate::quarter(date), "-", lubridate::year(date)),
+      Listed = factor(as.numeric(ndays_li_30d > 0), levels = c(0, 1), labels=c("No", "Yes")),
+      Lvalue = log1p(if_else(!is.na(mvalue_li_30d), mvalue_li_30d, past_value))
+    )
+  if (!is.null(parcels)) {
+    db <- db |> filter(asset_id %in% parcels)
+  }
+  res = felogit_model(
+    db,
+    Y = c("asks_dummy"),
+    X = regs,
+    fe = c("quarter"),
+    cl = c("quarter")
+  )
+  results[[i]] = res
+}
+names(results) <- models_names
+
+modelsummary(results, stars = TRUE, statistic = "p.value")
+```
+
+Pour toutes les mesures d'attention, l'éloignement à la route et au district le plus proche ont des effets négatifs sur l'attention. L'éloignement au centre est significativement négatif uniquement lorsque l'attention est mesurée en période de non listing. Par contre, l'éloignement aux plaza périphérique n'est significatif pour aucune mesure de l'attention. En somme, la localisation (la proximité) par rapport aux routes, district et plaza central a un effet positif sur l'attention.
+
+<!-- Par ailleurs, la localisation affecte plus significativement l'attention lorsque celle-ci est mesurée par la demande en période de non listing: les coefficients de localisation sont tous significatifs et de signe négatif, et le $R^2$ de la régression est meilleur par rapport aux autres mesures d'attention. Vérifions cela en faisant une analyse trimestre par trimestre. -->
+
+
+**Régressions trimestrielles des trois mesures**
+
+Nous régressons chaque mesure d'attention sur les variables de localisation.
+
+**Régressions trimestrielles Localisation - Attention en période de listing**
+
+Le tableau @tbl-h1-2019-2020-quaterly-res-1 présente les résultats des régressions trimestrielles de l'attention mesurée en période de listing sur la localisation. En période de listing, l'attention pouvant être influencée par la prix de listing de la parcelle, nous intégrons celui-ci comme variable de contrôle (après l'avoir transformé en logarithme). De plus, nous régressons uniquement sur les données des parcelles ayant été listées au moins une fois dans le trimestre concerné (raison pour laquelle dans le tableau résultat, les nombres d'observations sont faibles).
+
+```{r}
+#| label: tbl-h1-2019-2020-quaterly-res-1
+#| tbl-cap: "Lien Attention - Localisation (2019-2020) par trimestre<br> L'attention est mesurée par l'indicatrice de demande en période de listing"
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(gt)
+source("./models.R")
+
+lat_db <- readRDS(file = "lat_db_2019_2020_va.RDS")
+ys <- 2019:2020
+qs <- 1:4
+
+glance_custom.glm <- function(x, ...) {
+  ll_model <- as.numeric(logLik(x))
+  ll_null  <- -0.5 * x$null.deviance
+  mcfadden_r2 <- 1 - (ll_model / ll_null)
+  data.frame("mcfadden" = mcfadden_r2)
+}
+
+# 2. Fixed layout map (Notice the lowercase "raw" names)
+my_gof <- list(
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "mcfadden", "clean" = "McFadden R2", "fmt" = 3),
+  list("raw" = "logLik",   "clean" = "Log Lik.",    "fmt" = 2),
+  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+)
+
+results <- vector(mode = "list", length = length(qs)*length(ys))
+rnames <- c()
+k <- 1
+for (i in seq_along(ys)) {
+  for (j in seq_along(qs)) {
+    res = logit_model(
+      lat_db |> 
+        mutate(quarter = quarter(date), year = year(date)) |> 
+        filter(quarter == qs[j], year == ys[i]) |> 
+        filter(ndays_li_30d > 0) |>
+        mutate(Lvalue = log(mvalue_li_30d)) |>
+        #mutate(list_dummy = as.numeric(ndays_li_30d > 0)) |>
+        filter(if_all(c("Lvalue"), ~ filter_outliers(.x))) |>
+        mutate(asks_dummy = as.numeric(asks_li_30d > 0)),
+      Y = c("asks_dummy"),
+      X = c("DPC", "DPX", "DRD", "DDX", "Lvalue")
+    )
+    results[[k]] = res
+    rnames <- c(rnames, paste0("Q", qs[j], "-", ys[i]))
+    k <- k+1
+  }
+}
+names(results) <- rnames
+
+modelsummary(results, stars = TRUE, gof_map = my_gof, statistic = "p.value", output = "gt") |>
+  tab_options(table.font.size = px(16))
+```
+
+Lorsque l'attention est mesurée sur les périodes de listing, tous les coefficients de distance significatifs sont négatifs. Cela suggère que la proximité aux aménités augmente l'attention suscitée par une parcelle. 
+
+**Régressions trimestrielles Localisation - Attention en période de non listing**
+
+Le tableau @tbl-h1-2019-2020-quaterly-res-2 présente les résultats des régressions trimestrielles de l'attention mesurée en période de non listing sur la localisation. Nous régressons uniquement sur les données de parcelles ayant été hors du marché (non listée) au moins une fois durant le trimestre.
+
+```{r}
+#| label: tbl-h1-2019-2020-quaterly-res-2
+#| tbl-cap: "Lien Attention - Localisation (2019-2020) par trimestre<br> L'attention est mesurée par l'indicatrice de demande en période de listing"
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(gt)
+source("./models.R")
+
+lat_db <- readRDS(file = "lat_db_2019_2020_va.RDS")
+ys <- 2019:2020
+qs <- 1:4
+
+glance_custom.glm <- function(x, ...) {
+  ll_model <- as.numeric(logLik(x))
+  ll_null  <- -0.5 * x$null.deviance
+  mcfadden_r2 <- 1 - (ll_model / ll_null)
+  data.frame("mcfadden" = mcfadden_r2)
+}
+
+# 2. Fixed layout map (Notice the lowercase "raw" names)
+my_gof <- list(
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "mcfadden", "clean" = "McFadden R2", "fmt" = 3),
+  list("raw" = "logLik",   "clean" = "Log Lik.",    "fmt" = 2),
+  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+)
+
+results <- vector(mode = "list", length = length(qs)*length(ys))
+rnames <- c()
+k <- 1
+for (i in seq_along(ys)) {
+  for (j in seq_along(qs)) {
+    res = logit_model(
+      lat_db |> 
+        mutate(quarter = quarter(date), year = year(date)) |> 
+        filter(quarter == qs[j], year == ys[i]) |> 
+        filter(ndays_ul_30d > 0) |>
+        #mutate(nl_dummy = as.numeric(ndays_ul_30d > 0)) |>
+        mutate(asks_dummy = as.numeric(asks_ul_30d > 0)),
+      Y = c("asks_dummy"),
+      X = c("DPC", "DPX", "DRD", "DDX")
+    )
+    results[[k]] = res
+    rnames <- c(rnames, paste0("Q", qs[j], "-", ys[i]))
+    k <- k+1
+  }
+}
+names(results) <- rnames
+
+modelsummary(results, stars = TRUE, gof_map = my_gof, statistic = "p.value", output = "gt") |>
+  tab_options(table.font.size = px(16))
+```
+
+
+Les effets des distances au district le plus proche et à la route sont globalement significatifs et négatifs. Quant aux distances aux plazas, 5 sur 8 sont significatifs pour le plaza périphérique le plus proche, dont 3 négatifs, et 4 sur 8 sont significatifs et négatifs pour le plaza central.
+
+
+**Régressions trimestrielles Localisation - Attention globale trimestrielle**
+
+Le tableau @tbl-h1-2019-2020-quaterly-res-3 présente les résultats des régressions trimestrielles de l'attention mesurée de manière globale sur le trimestre. Dans ces régressions, nous contrôlons pour la présence sur le marché de la parcelle, car une parcelle sur le marché (à vendre) est plus susceptible de recevoir des demandes.
+
+```{r}
+#| label: tbl-h1-2019-2020-quaterly-res-3
+#| tbl-cap: "Lien Attention - Localisation (2019-2020) par trimestre<br> L'attention est mesurée par l'indicatrice de demande en période de listing"
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(gt)
+source("./models.R")
+
+lat_db <- readRDS(file = "lat_db_2019_2020_va.RDS")
+ys <- 2019:2020
+qs <- 1:4
+
+glance_custom.glm <- function(x, ...) {
+  ll_model <- as.numeric(logLik(x))
+  ll_null  <- -0.5 * x$null.deviance
+  mcfadden_r2 <- 1 - (ll_model / ll_null)
+  data.frame("mcfadden" = mcfadden_r2)
+}
+
+# 2. Fixed layout map (Notice the lowercase "raw" names)
+my_gof <- list(
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "mcfadden", "clean" = "McFadden R2", "fmt" = 3),
+  list("raw" = "logLik",   "clean" = "Log Lik.",    "fmt" = 2),
+  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+)
+
+results <- vector(mode = "list", length = length(qs)*length(ys))
+rnames <- c()
+k <- 1
+for (i in seq_along(ys)) {
+  for (j in seq_along(qs)) {
+    res = logit_model(
+      lat_db |> 
+        mutate(quarter = quarter(date), year = year(date), mvalue_li_30d = replace_na(mvalue_li_30d, 0L)) |> 
+        filter(quarter == qs[j], year == ys[i]) |> 
+        mutate(
+          asks_dummy = as.numeric(asks_ll_30d > 0), 
+          Listed = factor(as.numeric(ndays_li_30d > 0), levels = c(0, 1), labels=c("No", "Yes")),
+          Lvalue = log1p(if_else(!is.na(mvalue_li_30d), mvalue_li_30d, past_value)),
+          # cListed = if_else(
+          #   ndays_li_30d == 0,
+          #   "No",
+          #   if_else(
+          #     Lvalue < quantile(Lvalue[Lvalue > 0], 0.75),
+          #     "Price<q75",
+          #     if_else(
+          #       Lvalue < quantile(Lvalue[Lvalue > 0], 0.9),
+          #       "Price<q90",
+          #       "Price>=q90"
+          #     )
+          #   )
+          # ),
+          # Listed = factor(cListed, levels = c("No", "Price<q75", "Price<q90", "Price>=q90"))
+        ),
+      Y = c("asks_dummy"),
+      X = c("DPC", "DPX", "DRD", "DDX", "Listed")
+    )
+    results[[k]] = res
+    rnames <- c(rnames, paste0("Q", qs[j], "-", ys[i]))
+    k <- k+1
+  }
+}
+names(results) <- rnames
+
+modelsummary(results, stars = TRUE, gof_map = my_gof, statistic = "p.value", output = "gt") |>
+  tab_options(table.font.size = px(16))
+```
+
+
+Les effets des distances sur l'attention sont moindres par rapport aux régressions précédentes, mais demeurent majoritairement significatifs et négatifs.
+
+
+**Conclusion Lien Localisation - Attention**
+
+Globalemement, la proximité aux zones d'intérêt a un effet positif sur l'attention suscitée par une parcelle, quelque soit la manière dont celle-ci est mesurée. Lorsque l'attention est mesurée en période de listing, les effets sont plus forts. Toitefois, lorsqu'elle est mesurée de manière globale, les effets sont moins forts mais le pouvoir explicatif des modèles est plus fort.
+
+<!-- Les conclusions globales restent les mêmes que celles établies précédemment, lorsque l'attention est mesurée par les demandes en période de non listing. De plus, les modèles ont des $R^2$ globalement plus élevées que ceux des modèles avec attention mesurée en période de listing ou non listing. -->
+
+
+## Hypothèse [H2](#hyp-2): Lien localisation - liquidité
+
+### Construction de la base de données
+
+Nous partons de l'ensemble des listings en phases 1 et 2 du métavers, soit de 2019 à 2020. Nous construisons deux mesures de liquidité :
+
+* **Le time-on-market (tom)**: qui désigne le temps de conversion des listings en ventes pour les parcelles vendues à la suite d'un listing;
+* **Le listing-sale-rate (lsr)**: qui désigne le taux de conversion ou la probabilité de conversion de listings en ventes. Pour cette mesure, nous considérons uniquement l'ensemble constitué des listings vendues ou expirés. Les listings annulés (soit manuellement par le vendeur, soit par un transfert ou une vente ne provenant pas d'un listing) sont exclus.
+
+
+### Régressions Liquidité sur Localisation
+
+Nous incluons le log du prix de listing comme variable de contrôle, car elle peut avoir un effet sur la liquidité. En effet, une parcelle listée plus chère par rapport aux prix du moment peut être moins liquide et inversément.
+
+**Régressions Time-on-market Localisation**
+
+Le tableau @tbl-h2-2019-2020-quaterly-res-tom présente les résultats des régressions trimestrielles de la liquidité mesurée par le time-on-market sur la localisation.
+
+```{r}
+#| label: tbl-h2-2019-2020-quaterly-res-tom
+#| tbl-cap: "Lien Liquidité - Localisation (2019-2020) par trimestre<br> La liquidité est mesurée par le time-on-market"
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(gt)
+source("./models.R")
+
+llq_db <- readRDS(file = "llq_db_2019_2020.RDS")
+
+ys <- 2019:2020
+qs <- 1:4
+results <- vector(mode = "list", length = length(qs)*length(ys))
+rnames <- c()
+k <- 1
+for (i in seq_along(ys)) {
+  for (j in seq_along(qs)) {
+    res = lm_model(
+      llq_db |> 
+        mutate(quarter = quarter(date), year = year(date)) |> 
+        filter(quarter == qs[j], year == ys[i], status == "filled") |> 
+        mutate(
+          lvalue = log1p(value),
+          ltom = log(tom)
+        ) |>
+        filter(if_all(c("ltom", "lvalue"), ~ filter_outliers(.x))),
+      Y = c("ltom"),
+      X = c("DPC", "DPX", "DRD", "DDX", "lvalue")
+    )
+    results[[k]] = res$model
+    rnames <- c(rnames, paste0("Q", qs[j], "-", ys[i]))
+    k <- k+1
+  }
+}
+names(results) <- rnames
+
+modelsummary(results, stars = TRUE, statistic = "p.value", output = "gt") |>
+  tab_options(table.font.size = px(16))
+```
+
+La distance à la route et la distance au district le plus proche ont globalement des effets négatifs (positifs) sur la liquidité (time-on-market). Les effets de la distance au plaza périphérique le plus proche sont mitigés: ils sont non significatifs de 2019 jusqu'au deuxième trimestre de 2020, puis significatif négatif en Q3-2020 (proximité dépréciant la liquidité) et enfin significatif positif en Q4-2020 (proximité appréciant la liquidité). Le constat est globalement le même pour la distance au centre: à savoir deux trimestres à effets significatifs positifs contre deux trimestres à effets significatifs négatifs.
+
+En somme, les distances à la route et au district le plus proche sont les mesures de localisation affectant significativement la liquidité dans le bon sens, à savoir que la proximité améliore la liquidité.
+
+**Régressions Listing-sale-rate Localisation**
+
+Le tableau @tbl-h2-2019-2020-quaterly-res-lsr présente les résultats des régressions trimestrielles de la liquidité mesurée par le listing-sale-rate (probabilité de vente) sur la localisation.
+
+```{r}
+#| label: tbl-h2-2019-2020-quaterly-res-lsr
+#| tbl-cap: "Lien Liquidité - Localisation (2019-2020) par trimestre<br> La liquidité est mesurée par le listing-sale-rate (Probabilité de vente)"
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(gt)
+source("./models.R")
+
+glance_custom.glm <- function(x, ...) {
+  ll_model <- as.numeric(logLik(x))
+  ll_null  <- -0.5 * x$null.deviance
+  mcfadden_r2 <- 1 - (ll_model / ll_null)
+  data.frame("mcfadden" = mcfadden_r2)
+}
+
+# 2. Fixed layout map (Notice the lowercase "raw" names)
+my_gof <- list(
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "mcfadden", "clean" = "McFadden R2", "fmt" = 3),
+  list("raw" = "logLik",   "clean" = "Log Lik.",    "fmt" = 2),
+  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+)
+
+llq_db <- readRDS(file = "llq_db_2019_2020.RDS")
+ys <- 2019:2020
+qs <- 1:4
+results <- vector(mode = "list", length = length(qs)*length(ys))
+rnames <- c()
+
+k <- 1
+for (i in seq_along(ys)) {
+  for (j in seq_along(qs)) {
+    res = logit_model(
+      llq_db |> 
+        mutate(quarter = quarter(date), year = year(date)) |> 
+        filter(quarter == qs[j], year == ys[i]) |>
+        filter(status == "filled" | status == "expired") |>
+        mutate(
+          lvalue = log1p(value),
+          Sold = as.numeric(status == "filled")
+        ) |>
+        filter(if_all(c("lvalue"), ~ filter_outliers(.x))),
+      Y = c("Sold"),
+      X = c("DPC", "DPX", "DRD", "DDX", "lvalue")
+    )
+    results[[k]] = res
+    rnames <- c(rnames, paste0("Q", qs[j], "-", ys[i]))
+    k <- k+1
+  }
+}
+
+modelsummary(results, stars = TRUE, gof_map = my_gof, statistic = "p.value", output = "gt") |>
+  tab_options(table.font.size = px(16))
+```
+
+Les effets significatifs des variables de localisation sont tous négatifs, suggérant que l'éloignement aux plazas, districts et routes déprécient la probabilité de vente d'une parcelle. De plus, les $R^2$ des régressions avec listing-sale-rate sont globalement meilleurs que ceux avec time-on-market.
+
+
+## Hypothèse [H3](#hyp-3): Lien Attention - Liquidité
+
+[Cette section et les sections suivantes sont encore en cours de travail...]{style="color: #0000FF;"}
+
+### Construction de la base de données
+
+Nous partons de l'ensemble des listings de 2019 et 2020, de laquelle pour chaque listing nous construisons les mesures d'attention sur les parcelles listées dans deux fenêtres temporelles: une fenêtre arrière et une fenêtre avant:
+
+  - ***Fenêtre arrière***: Elle correspond aux 30 derniers jours avant le listing de la parcelle. Pour cette fenêtre, nous considérons deux mesures d'attention: l'attention binaire en période de listing (dans les 30j) et l'attention binaire en période de non listing (dans les 30j). Ce choix est guidé par les résultats en section @emp-anl-1920-h1, qui ont montré que les liens localisation - attention sont moins forts lorsque l'attention est mesurée de manière globale dans un intervalle de temps. 
+  - ***Fenêtre avant***: Elle correspond à la période durant laquelle la parcelle est listée jusqu'au moment de la vente. Pour cette fenêtre, nous considérons uniquement l'attention normalisée en période de listing, car la fenêtre est une période de listing pleine, et généralement courte par rapport à la fenêtre arrière. Nous rappelons que l'attention normalisée désigne la demande de parcelle par unité de jours de listing. Pour cette fenêtre, l'attention normalisée apparaît plus significative que l'attention binaire.
+
+La figure @fig-listings-windows illustre la construction des fenêtres:
+
+```{r}
+plot_timeline <- function(listing_date = 5.2,
+                          lookback_start = 0.6,
+                          lookback_end = 4.8,
+                          listing_start = 5.5,
+                          listing_end = 7.8,
+                          x_min = 0,
+                          x_max = 10) {
+  ggplot() +
+    geom_segment(
+      aes(x = x_min, xend = x_max, y = 0, yend = 0),
+      linewidth = 0.8,
+      arrow = arrow(length = grid::unit(0.25, "cm"), type = "closed")
+    ) +
+    geom_segment(
+      aes(x = listing_date, xend = listing_date, y = -0.18, yend = 0.18),
+      linewidth = 0.7
+    ) +
+    geom_segment(
+      aes(x = listing_end, xend = listing_end, y = -0.18, yend = 0.18),
+      linewidth = 0.7
+    ) +
+    geom_segment(aes(x = lookback_start, xend = lookback_end, y = 0.72, yend = 0.72), linewidth = 0.7) +
+    geom_segment(aes(x = lookback_start, xend = lookback_start, y = 0.72, yend = 0.40), linewidth = 0.7) +
+    geom_segment(aes(x = lookback_end, xend = lookback_end, y = 0.72, yend = 0.40), linewidth = 0.7) +
+    geom_segment(aes(x = listing_start, xend = listing_end, y = 0.72, yend = 0.72), linewidth = 0.7) +
+    geom_segment(aes(x = listing_start, xend = listing_start, y = 0.72, yend = 0.40), linewidth = 0.7) +
+    geom_segment(aes(x = listing_end, xend = listing_end, y = 0.72, yend = 0.40), linewidth = 0.7) +
+    annotate("text", x = (lookback_start + lookback_end)/2, y = 1.00, label = "Lookback\nwindow", size = 5) +
+    annotate("text", x = (listing_start + listing_end)/2, y = 1.00, label = "Listing\nperiod", size = 5) +
+    annotate("text", x = listing_date, y = -0.70, label = "Listing\nDate", size = 5) +
+    annotate("text", x = listing_end, y = -0.70, label = "Sale\nDate", size = 5) +
+    coord_cartesian(xlim = c(x_min, x_max + 0.2), ylim = c(-1.0, 1.25), clip = "off") +
+    theme_void() +
+    theme(plot.margin = margin(20, 30, 20, 30))
+}
+```
+
+```{r}
+#| label: fig-listings-windows
+#| fig-cap: "Illustration de la fenêtre de lookback et de la période de listing autour de la date de listing."
+#| echo: false
+#| warning: false
+#| message: false
+#| fig-width: 8
+#| fig-height: 3.5
+
+library(ggplot2)
+
+x_min <- 0
+x_max <- 10
+listing_date <- 5.2
+lookback_start <- 0.6
+lookback_end   <- 4.8
+listing_start <- 5.3
+listing_end   <- 7.8
+
+p <- plot_timeline(listing_date, lookback_start, lookback_end, listing_start, listing_end, x_min, x_max)
+p
+```
+
+Nous conservons comme mesures de liquidité le **time-on-market** et le **listing-sale-rate**.
+
+
+### Régressions Liquidité sur Attention
+
+Nous incluons le log du prix de listing comme variable de contrôle, car elle peut avoir un effet sur la liquidité. En effet, une parcelle listée plus chère par rapport aux prix du moment peut être moins liquide et inversément. Par ailleurs, nous transformons le time-on-market on log pour rapprocher sa distribution d'une normale.
+
+**Régression Time-on-market sur Attention en période de listing actuelle**
+
+Le tableau @tbl-h3-2019-2020-quaterly-res-tom-1 présente les résultats des régressions trimestrielles de la liquidité mesurée par le time-on-market sur l'attention normalisée durant la période de listing (date de listing jusqu'à date de vente). 
+
+```{r}
+#| label: tbl-h3-2019-2020-quaterly-res-tom-1
+#| tbl-cap: "Lien Liquidité - Attention (2019-2020) par trimestre<br> La liquidité est mesurée par le time-on-market, et l'attention est mesurée de manière normalisée dans l'intervalle [Date de listing; Date de vente]"
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(gt)
+source("./models.R")
+
+alq_db <- readRDS(file = "alq_db_2019_2020.RDS")
+
+ys <- 2019:2020
+qs <- 1:4
+results <- vector(mode = "list", length = length(qs)*length(ys))
+rnames <- c()
+k <- 1
+for (i in seq_along(ys)) {
+  for (j in seq_along(qs)) {
+    res = lm_model(
+      alq_db |> 
+        mutate(quarter = quarter(date), year = year(date)) |> 
+        filter(quarter == qs[j], year == ys[i], status == "filled") |> 
+        mutate(
+          Lvalue = log1p(value),
+          Ltom = log(tom),
+          Attention = factor(as.numeric(asks_cl > 0), levels = c(0, 1), labels=c("No", "Yes")), 
+          AttNorm = asks_cl_m
+        ) |>
+        filter(if_all(c("Ltom", "Lvalue"), ~ filter_outliers(.x))),
+      Y = c("Ltom"),
+      X = c("AttNorm", "Lvalue")
+    )
+    results[[k]] = res$model
+    rnames <- c(rnames, paste0("Q", qs[j], "-", ys[i]))
+    k <- k+1
+  }
+}
+names(results) <- rnames
+
+modelsummary(results, stars = TRUE, statistic = "p.value", output = "gt") |>
+  tab_options(table.font.size = px(16))
+```
+
+La relation entre l'attention (mésurée par la demande normalisée dans la période de listing) et le time-on-market est toujours significativement négative. Ainsi, l'attention apprécie la liquidité.
+
+
+**Régression Time-on-market sur Attention en période de non listing arrière**
+
+Le tableau @tbl-h3-2019-2020-quaterly-res-tom-2 présente les résultats des régressions trimestrielles de la liquidité mesurée par le time-on-market sur l'attention binaire durant la période de non listing dans les 30 jours précédant le jour de listing.
+
+```{r}
+#| label: tbl-h3-2019-2020-quaterly-res-tom-2
+#| tbl-cap: "Lien Liquidité - Attention (2019-2020) par trimestre<br> La liquidité est mesurée par le time-on-market, et l'attention est mesurée de manière binaire en période de non listing dans les 30j précédant le jour de listing"
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(gt)
+source("./models.R")
+
+alq_db <- readRDS(file = "alq_db_2019_2020.RDS")
+
+ys <- 2019:2020
+qs <- 1:4
+results <- vector(mode = "list", length = length(qs)*length(ys))
+rnames <- c()
+k <- 1
+for (i in seq_along(ys)) {
+  for (j in seq_along(qs)) {
+    res = lm_model(
+      alq_db |> 
+        mutate(quarter = quarter(date), year = year(date)) |> 
+        filter(quarter == qs[j], year == ys[i], status == "filled") |> 
+        mutate(
+          Lvalue = log1p(value),
+          Ltom = log(tom),
+          Attention = factor(as.numeric(asks_ul_30d > 0), levels = c(0, 1), labels=c("No", "Yes")), 
+        ) |>
+        filter(if_all(c("Ltom", "Lvalue"), ~ filter_outliers(.x))),
+      Y = c("Ltom"),
+      X = c("Attention", "Lvalue")
+    )
+    results[[k]] = res$model
+    rnames <- c(rnames, paste0("Q", qs[j], "-", ys[i]))
+    k <- k+1
+  }
+}
+names(results) <- rnames
+
+modelsummary(results, stars = TRUE, statistic = "p.value", output = "gt") |>
+  tab_options(table.font.size = px(16))
+```
+
+La relation entre l'attention (mésurée par la demande binaire en période de non listing dans les 30 jours précédant le listing) et le time-on-market est majoritairement significativement négative. Seuls les deux trimestres du milieu de 2020 et le troisième trimestre de 2019 affichent une non significativité entre les deux variables. Globalement, l'attention apprécie la liquidité.
+
+
+**Régression Time-on-market sur Attention en période totale arrière**
+
+Le tableau @tbl-h3-2019-2020-quaterly-res-tom-3 présente les résultats des régressions trimestrielles de la liquidité mesurée par le time-on-market sur l'attention binaire durant les 30 jours précédant le jour de listing. 
+<!--Nous ajoutons comme variable de contrôle la variable binaire qui indique si la parcelle a été listée également dans les 30 jours précédant le listing.-->
+
+```{r}
+#| label: tbl-h3-2019-2020-quaterly-res-tom-3
+#| tbl-cap: "Lien Liquidité - Attention (2019-2020) par trimestre<br> La liquidité est mesurée par le time-on-market, et l'attention est mesurée de manière binaire dans les 30j précédant le jour de listing"
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(gt)
+source("./models.R")
+
+alq_db <- readRDS(file = "alq_db_2019_2020.RDS")
+
+ys <- 2019:2020
+qs <- 1:4
+results <- vector(mode = "list", length = length(qs)*length(ys))
+rnames <- c()
+k <- 1
+for (i in seq_along(ys)) {
+  for (j in seq_along(qs)) {
+    res = lm_model(
+      alq_db |> 
+        mutate(quarter = quarter(date), year = year(date)) |> 
+        filter(quarter == qs[j], year == ys[i], status == "filled") |> 
+        mutate(
+          Lvalue = log1p(value),
+          Ltom = log(tom),
+          Attention = factor(as.numeric(asks_ll_30d > 0), levels = c(0, 1), labels=c("No", "Yes")), 
+          Listed30j = factor(as.numeric(ndays_li_30d > 0), levels = c(0, 1), labels=c("No", "Yes")), 
+        ) |>
+        filter(if_all(c("Ltom", "Lvalue"), ~ filter_outliers(.x))),
+      Y = c("Ltom"),
+      X = c("Attention", "Lvalue")
+    )
+    results[[k]] = res$model
+    rnames <- c(rnames, paste0("Q", qs[j], "-", ys[i]))
+    k <- k+1
+  }
+}
+names(results) <- rnames
+
+modelsummary(results, stars = TRUE, statistic = "p.value", output = "gt") |>
+  tab_options(table.font.size = px(16))
+```
+
+Les effets de l'attention sur le time-on-market sont moins forts lorsque l'attention est mesurée par la demande dans les 30 jours précédant la date de listing. Toutefois, ils restent majoritairement négatifs.
+
+**Régression Listing-sale-Rate sur Attention en période de listing actuelle**
+
+Le tableau @tbl-h3-2019-2020-quaterly-res-lsr-1 présente les résultats des régressions trimestrielles de la liquidité mesurée par le listing-sale-rate (Probabilité de vente) sur l'attention binaire durant la période de listing (date de listing jusqu'à date de vente).
+
+```{r}
+#| label: tbl-h3-2019-2020-quaterly-res-lsr-1
+#| tbl-cap: "Lien Liquidité - Attention (2019-2020) par trimestre<br> La liquidité est mesurée par le listing-sale-rate (Probabilité de vente), et l'attention est mesurée de manière binaire dans l'intervalle [Date de listing; Date de vente]"
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(gt)
+source("./models.R")
+
+glance_custom.glm <- function(x, ...) {
+  ll_model <- as.numeric(logLik(x))
+  ll_null  <- -0.5 * x$null.deviance
+  mcfadden_r2 <- 1 - (ll_model / ll_null)
+  data.frame("mcfadden" = mcfadden_r2)
+}
+
+# 2. Fixed layout map (Notice the lowercase "raw" names)
+my_gof <- list(
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "mcfadden", "clean" = "McFadden R2", "fmt" = 3),
+  list("raw" = "logLik",   "clean" = "Log Lik.",    "fmt" = 2),
+  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+)
+
+alq_db <- readRDS(file = "alq_db_2019_2020.RDS")
+
+ys <- 2019:2020
+qs <- 1:4
+results <- vector(mode = "list", length = length(qs)*length(ys))
+rnames <- c()
+k <- 1
+for (i in seq_along(ys)) {
+  for (j in seq_along(qs)) {
+    res = logit_model(
+      alq_db |> 
+        mutate(quarter = quarter(date), year = year(date)) |> 
+        filter(quarter == qs[j], year == ys[i]) |> 
+        filter(status == "filled" | status == "expired") |>
+        mutate(
+          Lvalue = log1p(value),
+          Sold = as.numeric(status == "filled"),
+          Attention = factor(as.numeric(asks_cl > 0), levels = c(0, 1), labels=c("No", "Yes")),
+          AttNorm = asks_cl_m
+        ) |>
+        filter(if_all(c("Lvalue"), ~ filter_outliers(.x))),
+      Y = c("Sold"),
+      X = c("AttNorm", "Lvalue")
+    )
+    results[[k]] = res
+    rnames <- c(rnames, paste0("Q", qs[j], "-", ys[i]))
+    k <- k+1
+  }
+}
+names(results) <- rnames
+
+modelsummary(results, stars = TRUE, statistic = "p.value", gof_map = my_gof, output = "gt") |>
+  tab_options(table.font.size = px(16))
+```
+
+Les effets de l'attention mesurée par la demande normalisée en période de listing sur la probabilité de vente d'une parcelle sont significatifs et positifs pour tous les trimestres. Plus une parcelle suscite de l'attention en période de listing, plus elle de chances d'être vendue.
+
+**Régression Listing-sale-Rate sur Attention en période de non listing arrière**
+
+Le tableau @tbl-h3-2019-2020-quaterly-res-lsr-2 présente les résultats des régressions trimestrielles de la liquidité mesurée par le listing-sale-rate (Probabilité de vente) sur l'attention binaire durant la période de non listing dans les 30 jours précédant le jour de listing.
+
+```{r}
+#| label: tbl-h3-2019-2020-quaterly-res-lsr-2
+#| tbl-cap: "Lien Liquidité - Attention (2019-2020) par trimestre<br> La liquidité est mesurée par le listing-sale-rate (Probabilité de vente), et l'attention est mesurée de manière binaire en période de non listing dans les 30j précédant le jour de listing"
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(gt)
+source("./models.R")
+
+glance_custom.glm <- function(x, ...) {
+  ll_model <- as.numeric(logLik(x))
+  ll_null  <- -0.5 * x$null.deviance
+  mcfadden_r2 <- 1 - (ll_model / ll_null)
+  data.frame("mcfadden" = mcfadden_r2)
+}
+
+# 2. Fixed layout map (Notice the lowercase "raw" names)
+my_gof <- list(
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "mcfadden", "clean" = "McFadden R2", "fmt" = 3),
+  list("raw" = "logLik",   "clean" = "Log Lik.",    "fmt" = 2),
+  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+)
+
+alq_db <- readRDS(file = "alq_db_2019_2020.RDS")
+
+ys <- 2019:2020
+qs <- 1:4
+results <- vector(mode = "list", length = length(qs)*length(ys))
+rnames <- c()
+k <- 1
+for (i in seq_along(ys)) {
+  for (j in seq_along(qs)) {
+    res = logit_model(
+      alq_db |> 
+        mutate(quarter = quarter(date), year = year(date)) |> 
+        filter(quarter == qs[j], year == ys[i]) |> 
+        filter(status == "filled" | status == "expired") |>
+        mutate(
+          lvalue = log1p(value),
+          Sold = as.numeric(status == "filled"),
+          Attention = factor(as.numeric(asks_ul_30d > 0), levels = c(0, 1), labels=c("No", "Yes")), 
+        ) |>
+        filter(if_all(c("lvalue"), ~ filter_outliers(.x))),
+      Y = c("Sold"),
+      X = c("Attention", "lvalue")
+    )
+    results[[k]] = res
+    rnames <- c(rnames, paste0("Q", qs[j], "-", ys[i]))
+    k <- k+1
+  }
+}
+names(results) <- rnames
+
+modelsummary(results, stars = TRUE, statistic = "p.value", gof_map = my_gof, output = "gt") |>
+  tab_options(table.font.size = px(16))
+```
+
+L'attention en période de non listing suscitée par une parcelle dans les 30 jours précédant son listing a un effet significatif et positif sur la probabilité de vente pour tous les trimestres à l'exception de Q4-2019 et Q4-2020 (ces derniers restant tout de même positifs). Ainsi, plus une parcelle suscite de l'attention spontanée dans les jours précédant son listing, plus elle a de chances d'être vendue.
+
+
+**Régression Listing-sale-Rate sur Attention en période totale arrière**
+
+Le tableau @tbl-h3-2019-2020-quaterly-res-lsr-3 présente les résultats des régressions trimestrielles de la liquidité mesurée par le listing-sale-rate (Probabilité de vente) sur l'attention binaire durant les 30 jours précédant le jour de listing. 
+<!--Nous ajoutons comme variable de contrôle la variable binaire qui indique si la parcelle a été listée également dans les 30 jours précédant le listing.-->
+
+```{r}
+#| label: tbl-h3-2019-2020-quaterly-res-lsr-3
+#| tbl-cap: "Lien Liquidité - Attention (2019-2020) par trimestre<br> La liquidité est mesurée par le listing-sale-rate (Probabilité de vente), et l'attention est mesurée de manière binaire dans les 30j précédant le jour de listing"
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(gt)
+source("./models.R")
+
+alq_db <- readRDS(file = "alq_db_2019_2020.RDS")
+
+ys <- 2019:2020
+qs <- 1:4
+results <- vector(mode = "list", length = length(qs)*length(ys))
+rnames <- c()
+k <- 1
+for (i in seq_along(ys)) {
+  for (j in seq_along(qs)) {
+    res = logit_model(
+      alq_db |> 
+        mutate(quarter = quarter(date), year = year(date)) |> 
+        filter(quarter == qs[j], year == ys[i]) |> 
+        filter(status == "filled" | status == "expired") |>
+        mutate(
+          lvalue = log1p(value),
+          Sold = as.numeric(status == "filled"),
+          Attention = factor(as.numeric(asks_ll_30d > 0), levels = c(0, 1), labels=c("No", "Yes")), 
+          Listed30j = factor(as.numeric(ndays_li_30d > 0), levels = c(0, 1), labels=c("No", "Yes")), 
+        ) |>
+        filter(if_all(c("lvalue"), ~ filter_outliers(.x))),
+      Y = c("Sold"),
+      X = c("Attention", "lvalue")
+    )
+    results[[k]] = res
+    rnames <- c(rnames, paste0("Q", qs[j], "-", ys[i]))
+    k <- k+1
+  }
+}
+names(results) <- rnames
+
+modelsummary(results, stars = TRUE, statistic = "p.value", gof_map = my_gof, output = "gt") |>
+  tab_options(table.font.size = px(16))
+```
+
+Les effets de l'attention totale dans les jours précédant le listing sont moins prononcées que ceux de l'attention en période de non listing. Quand bien même, pour la moitié des trimestres étudiés, les effets sont significatifs et positifs, et pour trois parmi le reste, ils sont positifs et non significatifs. Ainsi, bien que dans une moindre mesure ici, plus une parcelle suscite de l'attention dans les jours précédant son listing, plus elle a de chances d'être vendue.
+
+
+## Hypothèse [H4](#hyp-4): Lien Localisation - Attention - Liquidité
+
+Dans cette section, nous examinons le rôle médiateur de l'attention dans le lien entre la localisation et la liquidité.
+
+### Cadre économétrique du test de médiation
+
+L'analyse de médiation économétrique fournit les outils permettant de tester si l'effet d'une variable indépendante $X$ sur la variable dépendante $Y^{'}$ passe par une variable intermédiaire $M$ (médiateur). Le cadre théorique du test de médiation s'appuie sur trois régressions:
+
+* **L'effet total **($c$) de $X$ sur $Y$: dont l'équation est
+
+$$
+Y = \beta_0 + c X + \epsilon_1
+$$
+
+* **L'effet sur le médiateur** $M$ de $X$ ($a$): dont l'équation de régression est
+
+$$
+M = \alpha_0 + a X + \epsilon_2
+$$
+
+* **L'effet conjoint** ($c'$ et $b$) de $X$ et $M$ sur $Y$: dont l'équation de régression est
+
+$$
+Y = \gamma_0 + c' X + b M + \epsilon_3
+$$
+
+L'effet total $c$ se décompose en deux composantes: 
+
+- **L'effet direct** de $X$ sur $Y$, après contrôle pour $M$, donné par $c'$;
+- **L'effet indirect** (effet de médiation) de $X$ sur $Y$, donné par le produit des coefficients $a$ et $b$, soit $a \times b$.
+
+Ainsi:
+
+$$
+c = c' + a \times b
+$$
+
+Il existe deux principales approches de test de significativité de médiation:
+
+- L'approche historique de **Baron et Kenny**.
+- L'approche moderne par **Modèles d'Equations Structurelles**.
+
+**Méthode de Baron et Kenny**
+
+La méthode historique de Baron et Kenny repose sur des critères de signification qualitative, à savoir:
+
+- Le coefficient $c$ doit être statistiquement différent de 0: la variable indépendante $X$ et la variable dépendante $Y$ sont liées;
+- Le coefficient $a$ doit être statistiquement différent de 0: la variable indépendante $X$ et la variable médiatrice $M$ sont liées;
+- Le coefficient $b$ doit être statistiquement différent de 0: la variable médiatrice $M$ et la variable dépendante $M$ sont liées lorsque l'on contrôle pour la variable indépendante;
+- Le coefficient $c''$ de régression de $X$ sur $Z$ avec $Y$ comme variable de contrôle ($X = \delta_0 + c'' Y + b' M + \epsilon_3$) doit être statistiquement égal à 0. Cette condition assure le sens de médiation $X \rightarrow M \rightarrow Y$
+
+L'inconvenient de cette méthode est qu'elle ne fournit pas d'évidence statistique de l'effet indirect de $X$ sur $Y$ via $M$ ($a \times b$).
+
+**Méthode par Modèles d'Equations Structurelles**
+
+Cette méthode permet d'estimer l'effet indirect de $X$ sur $Y$ via $M$, et fournit l'évidence statistique de sa significativité (ou de sa non significavité). Les modèles de régression sont estimés conjointement par maximum de vraisemblance ou GMM, et des intervalles de confiance des composantes de l'effet total peuvent être calculés par bootstrap pour des résultats plus robustes.
+
+
+### Application de la méthode par Modèles d'Equations Structurelles
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Réferences {.unnumbered}
 

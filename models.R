@@ -29,3 +29,13 @@ felogit_model <- function (dataset, Y, X, fe, cl) {
   res <- feglm(fml, data = dataset, family = "binomial", cluster = fml_cl)
   return(res)
 }
+
+filter_outliers <- function(x) {
+  # Calculate thresholds once to keep it fast
+  q25 <- quantile(x, 0.25, na.rm = TRUE)
+  q75 <- quantile(x, 0.75, na.rm = TRUE)
+  iqr_val <- IQR(x, na.rm = TRUE)
+  
+  # Check if x is within the normal range (not an outlier)
+  return(x >= (q25 - 1.5 * iqr_val) & x <= (q75 + 1.5 * iqr_val))
+}

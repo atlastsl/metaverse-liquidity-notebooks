@@ -82,3 +82,63 @@ ggplot() +
     legend.title = element_text(size = 12),
     legend.text = element_text(size = 11)
   )
+
+
+########################################################################
+
+library(ggplot2)
+
+# bornes de la timeline
+x_min <- 0
+x_max <- 10
+
+# position de la listing date
+listing_date <- 5.2
+
+# bornes des deux intervalles
+lookback_start <- 0.6
+lookback_end   <- 4.8
+
+label_start <- 5.5
+label_end   <- 7.8
+
+p <- ggplot() +
+  # axe principal
+  geom_segment(
+    aes(x = x_min, xend = x_max, y = 0, yend = 0),
+    linewidth = 0.8,
+    arrow = arrow(length = grid::unit(0.25, "cm"), type = "closed")
+  ) +
+  
+  # repère vertical : listing date
+  geom_segment(
+    aes(x = listing_date, xend = listing_date, y = -0.18, yend = 0.18),
+    linewidth = 0.7
+  ) +
+  
+  # accolade "lookback window"
+  geom_segment(aes(x = lookback_start, xend = lookback_end, y = 0.72, yend = 0.72), linewidth = 0.7) +
+  geom_segment(aes(x = lookback_start, xend = lookback_start, y = 0.72, yend = 0.40), linewidth = 0.7) +
+  geom_segment(aes(x = lookback_end,   xend = lookback_end,   y = 0.72, yend = 0.40), linewidth = 0.7) +
+  
+  # accolade "label period"
+  geom_segment(aes(x = label_start, xend = label_end, y = 0.72, yend = 0.72), linewidth = 0.7) +
+  geom_segment(aes(x = label_start, xend = label_start, y = 0.72, yend = 0.40), linewidth = 0.7) +
+  geom_segment(aes(x = label_end,   xend = label_end,   y = 0.72, yend = 0.40), linewidth = 0.7) +
+  
+  # textes
+  annotate("text", x = (lookback_start + lookback_end) / 2, y = 1.00,
+           label = "Lookback\nwindow", size = 5) +
+  annotate("text", x = (label_start + label_end) / 2, y = 1.00,
+           label = "Label\nperiod", size = 5) +
+  annotate("text", x = listing_date, y = -0.70,
+           label = "Listing\nDate", size = 5) +
+  
+  # mise en forme
+  coord_cartesian(xlim = c(0, 10.2), ylim = c(-1.0, 1.25), clip = "off") +
+  theme_void() +
+  theme(
+    plot.margin = margin(20, 30, 20, 30)
+  )
+
+p
