@@ -21,6 +21,12 @@ format:
 bibliography: references.bib
 ---
 
+# Mises à jour {.unnumbered}
+
+- Section 4 (@sec-emp-anl-1920)
+- Section 4.1 : Lien Localisation - Attention (@sec-emp-anl-1920-h1)
+- Section 4.2 : Lien Localisation - Liquidité (@sec-emp-anl-1920-h2)
+
 # Introduction
 
 ## Contexte et problématique
@@ -498,12 +504,12 @@ Dans les prochaines sections, nous précéderons dans la prochaine section à l'
 
 
 
-# Examen empirique en phases 1 et 2 (2019 - 2020)
+# Examen empirique en phases 1 et 2 (2019 - 2020) {#sec-emp-anl-1920}
 
 Dans cette section, nous procédons à l'examen empirique des hypothèses [H1](#hyp-1), [H2](#hyp-2), [H3](#hyp-3) et [H4](#hyp-4) à partir des données transactionnelles de la marketplace officielle de Decentraland sur les années 2019 et 2020.
 
 
-## Hypothèse [H1](#hyp-1): Lien localisation - attention { #emp-anl-1920-h1 }
+## Hypothèse [H1](#hyp-1): Lien localisation - attention {#sec-emp-anl-1920-h1}
 
 ### Construction de la base de données
 
@@ -847,7 +853,7 @@ Globalemement, la proximité aux zones d'intérêt a un effet positif sur l'atte
 <!-- Les conclusions globales restent les mêmes que celles établies précédemment, lorsque l'attention est mesurée par les demandes en période de non listing. De plus, les modèles ont des $R^2$ globalement plus élevées que ceux des modèles avec attention mesurée en période de listing ou non listing. -->
 
 
-## Hypothèse [H2](#hyp-2): Lien localisation - liquidité
+## Hypothèse [H2](#hyp-2): Lien localisation - liquidité {#sec-emp-anl-1920-h2}
 
 ### Construction de la base de données
 
@@ -993,7 +999,7 @@ Les effets significatifs des variables de localisation sont tous négatifs, sugg
 
 Nous partons de l'ensemble des listings de 2019 et 2020, de laquelle pour chaque listing nous construisons les mesures d'attention sur les parcelles listées dans deux fenêtres temporelles: une fenêtre arrière et une fenêtre avant:
 
-  - ***Fenêtre arrière***: Elle correspond aux 30 derniers jours avant le listing de la parcelle. Pour cette fenêtre, nous considérons deux mesures d'attention: l'attention binaire en période de listing (dans les 30j) et l'attention binaire en période de non listing (dans les 30j). Ce choix est guidé par les résultats en section @emp-anl-1920-h1, qui ont montré que les liens localisation - attention sont moins forts lorsque l'attention est mesurée de manière globale dans un intervalle de temps. 
+  - ***Fenêtre arrière***: Elle correspond aux 30 derniers jours avant le listing de la parcelle. Pour cette fenêtre, nous considérons deux mesures d'attention: l'attention binaire en période de listing (dans les 30j) et l'attention binaire en période de non listing (dans les 30j). Ce choix est guidé par les résultats en section @sec-emp-anl-1920-h1, qui ont montré que les liens localisation - attention sont moins forts lorsque l'attention est mesurée de manière globale dans un intervalle de temps. 
   - ***Fenêtre avant***: Elle correspond à la période durant laquelle la parcelle est listée jusqu'au moment de la vente. Pour cette fenêtre, nous considérons uniquement l'attention normalisée en période de listing, car la fenêtre est une période de listing pleine, et généralement courte par rapport à la fenêtre arrière. Nous rappelons que l'attention normalisée désigne la demande de parcelle par unité de jours de listing. Pour cette fenêtre, l'attention normalisée apparaît plus significative que l'attention binaire.
 
 La figure @fig-listings-windows illustre la construction des fenêtres:
