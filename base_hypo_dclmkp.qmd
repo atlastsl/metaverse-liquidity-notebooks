@@ -25,8 +25,8 @@ bibliography: references.bib
 
 ***22 Juin 2026***
 
-- Section 4.1 : Lien Attention - Liquidité (@sec-emp-anl-1920-h3)
-- Section 4.2 : Médiation Localisation - Attention - Liquidité (@sec-emp-anl-1920-h3)
+- Section 4.3 : Lien Attention - Liquidité (@sec-emp-anl-1920-h3)
+- Section 4.4 : Médiation Localisation - Attention - Liquidité (@sec-emp-anl-1920-h4)
 
 # Introduction
 
