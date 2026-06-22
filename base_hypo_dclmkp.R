@@ -205,7 +205,7 @@ date_now <- lubridate::now()
 # Listings on Dcl marketplace V1
 listings <- Transactions |>
   filter(asset_contract == LandContract & type == "order" & order_type == "list" & order_market == "dcl-marketplace-1") |>
-  select(hash, order_id, asset_id, maker, date, order_time_on_market, order_status, amount_usd) |>
+  select(hash, order_id, asset_id, maker, date, order_time_on_market, order_status, order_canceled_by, amount_usd) |>
   transmute( 
     # Rearrange listing database, create listing period (interval [Date, Date+Tom)), and 30 days lookback interval
     asset_id,
@@ -214,7 +214,8 @@ listings <- Transactions |>
     list_start = date,
     list_end = as.POSIXct(ifelse(order_status == "pending", date_now, date + dmilliseconds(floor(order_time_on_market*86400*1000))), tz = "UTC"),
     status = order_status,
-    value = amount_usd
+    value = amount_usd,
+    canceled_by = order_canceled_by
   )
 listings <- listings |>
   add_count(asset_id, date) |>
@@ -575,7 +576,7 @@ alq_base <- listings |>
 
 alq_db <- database_builder(interval_base = alq_base, listings_base = listings, asks_base = asks)
 
-saveRDS(alq_db, file = "alq_db_2019_2020.RDS")
+saveRDS(alq_db, file = "alq_db_2019_2020_va.RDS")
 
 
 ###################################################################
