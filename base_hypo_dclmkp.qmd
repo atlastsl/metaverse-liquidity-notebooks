@@ -23,10 +23,14 @@ bibliography: references.bib
 
 # Mises à jour {.unnumbered}
 
+***02 Juillet 2026***
+
+- Section 5 (@sec-emp-anl-1920v2) : Identifications des faiblesses en section @sec-emp-anl-1920 et proposition de pistes de corrections. Réexamen des hypothèses [H1](#hyp-1), [H2](#hyp-2), [H3](#hyp-3) et [H4](#hyp-4) et examen de l'hypothèse [H5](#hyp-5).
+
 ***22 Juin 2026***
 
-- Section 4.3 : Lien Attention - Liquidité (@sec-emp-anl-1920-h3)
-- Section 4.4 : Médiation Localisation - Attention - Liquidité (@sec-emp-anl-1920-h4)
+- Section 4.3 (@sec-emp-anl-1920-h3) : Lien Attention - Liquidité.
+- Section 4.4 (@sec-emp-anl-1920-h4) : Médiation Localisation - Attention - Liquidité.
 
 # Introduction
 
@@ -325,7 +329,7 @@ En conclusion, les résultats sur la base de données issue de la marketplace Op
 
 Un examen sur les périodes pré 2021 (avant la bulle, lancement du métavers), 2021-2022 (bulle crypto, nft, métavers), et fin 2022-mi 2024 (post bulle, chute d'intérêt et/ou retour progressif à la normale - 2020). est nécessaire pour conclure sur les hypothèses [H1](#hyp-1), [H2](#hyp-2), [H3](#hyp-3) et [H4](#hyp-4).
 
-## Statistiques descriptives
+## Statistiques descriptives { #sec-stat-desc }
 
 ### Decentraland Marketplace V1
 
@@ -505,7 +509,7 @@ Dans les prochaines sections, nous précéderons dans la prochaine section à l'
 
 
 
-# Examen empirique en phases 1 et 2 (2019 - 2020) {#sec-emp-anl-1920}
+# Examen empirique 2019 - 2020: 1ere partie {#sec-emp-anl-1920}
 
 Dans cette section, nous procédons à l'examen empirique des hypothèses [H1](#hyp-1), [H2](#hyp-2), [H3](#hyp-3) et [H4](#hyp-4) à partir des données transactionnelles de la marketplace officielle de Decentraland sur les années 2019 et 2020.
 
@@ -1811,8 +1815,27 @@ library(dplyr)
 library(tidyr)
 library(modelsummary)
 library(broom)
-library(stargazer)
+library(gt)
 source("./models.R")
+
+glance_custom.glm <- function(x, ...) {
+  ll_model <- as.numeric(logLik(x))
+  ll_null  <- -0.5 * x$null.deviance
+  mcfadden_r2 <- 1 - (ll_model / ll_null)
+  data.frame("mcfadden" = mcfadden_r2)
+}
+
+# 2. Fixed layout map (Notice the lowercase "raw" names)
+my_gof <- list(
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "mcfadden", "clean" = "McFadden R2", "fmt" = 3),
+  list("raw" = "r.squared", "clean" = "R2", "fmt" = 3),
+  list("raw" = "r.squared.adj", "clean" = "R2 Adj", "fmt" = 3),
+  list("raw" = "logLik",   "clean" = "Log Lik.",    "fmt" = 2),
+  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+)
 
 alq_db <- readRDS(file = "alq_db_2019_2020_va.RDS")
 
@@ -1826,9 +1849,10 @@ db <- alq_db |>
     Lvalue = log1p(value),
     Ltom = log(tom),
     Attention = factor(as.numeric(asks_cl > 0), levels = c(0, 1), labels=c("No", "Yes")), 
+    AttNum = as.numeric(asks_cl > 0),
     AttNorm = asks_cl_m
   ) |>
-  filter(if_all(c("Ltom", "Lvalue"), ~ filter_outliers(.x)))
+  filter(if_all(c("Ltom", "Lvalue", "AttNorm"), ~ filter_outliers(.x)))
 
 Ys <- c("Ltom", "AttNorm", "Ltom")
 Xs_main <- c("DPC", "DPX", "DRD", "DDX", "Lvalue")
@@ -1838,6 +1862,21 @@ Xs_plus <- list(c(), c(), c("AttNorm"))
 results <- vector(mode = "list", length = 3)
 rnames <- c()
 for (i in seq_along(results)) {
+  # if (i %% 2 == 3) {
+  #   res = logit_model(
+  #     db,
+  #     Y = Ys[i],
+  #     X = c(Xs_plus[[i]], Xs_main, Xs_dummy)
+  #   )
+  #   results[[i]] = res
+  # } else {
+  #   res = lm_model(
+  #     db,
+  #     Y = Ys[i],
+  #     X = c(Xs_plus[[i]], Xs_main, Xs_dummy)
+  #   )
+  #   results[[i]] = res$model
+  # }
   res = lm_model(
     db,
     Y = Ys[i],
@@ -1847,7 +1886,7 @@ for (i in seq_along(results)) {
 }
 names(results) <- Ys
 
-modelsummary(results, stars = TRUE, statistic = "p.value", output = "gt") |>
+modelsummary(results, stars = TRUE, statistic = "p.value", gof_map = my_gof, output = "gt") |>
   tab_options(table.font.size = px(16))
 ```
 
@@ -2075,6 +2114,879 @@ Les tests de médiation permettent de conclure, dans une moindre mesure, à l'ex
 
 [*Etudier l'existence d'un moyen de faire ressortir plus fortement le lien entre localisation et liquidité pour les parcelles listées, peut être faire une analyse par aggrégats trimestriels (comme pour H1)...*]{style="color: #0000FF;"}
 
+
+
+# Examen empirique 2019 - 2020: 2e partie {#sec-emp-anl-1920v2}
+
+Dans cette seconde partie, nous allons identifier les faiblesses méthodologiques de la première partie et y apporter des corrections.
+
+## Rétrospective de la 1ère partie: résultats, faiblesses et perspectives de correction.
+
+### Résultats obtenus en 1ère partie
+
+Dans la première partie, nous procédions à l'examen empirique des hypothèses [H1](#hyp-1), [H2](#hyp-2), [H3](#hyp-3) et [H4](#hyp-4) sur la relation entre la localisation et la liquidité, et sur le rôle médiateur de l'attention mesurée par la demande de parcelles sur la dite relation. Nous avions trouvé que:
+
+- Une relation **positive et significative** entre **la localisation et la liquidité**;
+- Une relation **positive et significative** entre **la localisation et l'attention**, **forte** lorsque l'on examine l'attention globale trimestrielle par parcelles, mais **faible** lorsque l'on examine l'attention suscitée par les parcelles listées avant leur listing;
+- Une relation **positive et significative** entre **l'attention et la liquidité**;
+- Un **très faible**, voire **insignifiant** rapport de médiation de l'attention dans la relation entre la localisation et la liquidité.
+
+### Faiblesses méthodologiques / données
+
+Les résultats obtenus, qu'ils soient forts (et souhaitées) ou faibles (non souhaitées) tiennent plus, malheureusement, de faiblesses dans la méthodologie d'examination que de réels effets statistiques entre les données. Comme faiblesses méthodologiques observées, nous avons:
+
+- **L'endogénéité de la mesure d'attention**: il s'agit du problème le plus critique dans l'analyse précédente. 
+  - Endogénéité conceptuelle du proxy d'attention: Il est entendu implicitement dans la formulation du problème que l'attention est une caractéristique exogène de la parcelle, générée par sa localisation. Toutefois, le proxy d'attention utilisé, à savoir les demandes de parcelles, est une composante endogène au problème de liquidité car elle émane (en partie) de la stratégie des agents (vendeurs et acheteurs). La demande est une intention d'achat, qui résulte en plus de la seule localisation, d'un ensemble de paramètres pour la plupart difficilement observables (prix de demande du vendeur si la demande est faite pour une parcelle listée, capacité financière de l'acheteur, stratégie d'investissement de l'acheteur, expectations du vendeur quant à la valeur future de la parcelle, etc...). En ce sens, le demande est plus une composante de la liquidité qu'un indicateur de l'attention.
+  - Endogénéité mécanique du proxy d'attention: L'attention normalisée (quelle soit antérieure ou postérieure au listing) est construite de manière à avoir mécaniquement un lien négatif avec la liquidité ($\frac{Demandes}{Tom}$). Cela explique les fortes significativés observées avec cette mesure.
+  
+- **Le rarification des données d'attention dans le temps**: Les statistiques descriptives en section @sec-stat-desc montrent les demandes de parcelles diminuent avec le temps. Elles étaient déjà rares en 2019-2020 par rapport aux listings, période où elles sont les plus fortes. Ainsi, l'extension de l'analyse localisation-attention-liquidité en 2021-2022-2023 et 2024-2025 souffrirait d'un manque criard de données sur l'attention, et donc de biais substantiels dans les résultats. La rareté des demandes sur la marketplace V1 s'explique par le fait que demander une parcelle exige un coût substantiel (frais de gas blockchain + immobilisation d'une qté de crypto équivalente au prix d'offre pour la demande de parcelles) pour une garanti de conversion en vente faible, par rapport aux autres marketplaces moins contraignantes. Donc au fil du temps, les opérations de demandes ont progressivement migré ailleurs.
+
+- **Modèles économétriques de l'analyse de la liquidité**: Parmi l'ensemble des parcelles listées, nous sélectionnons uniquement les listings convertis en ventes, desquels nous extrayons les `tom` que nous régressons sur les variables de localisation par OLS. Ainsi, nous excluons volontairement les listings non conclus de l'analyse (problème de censure à droite), ce qui biaise les résultats. Pour palier à ce problème, nous utilisons une seconde mesure de liquidité qui est le taux de conversion (`listing-sale-rate`), construite à partir des listings convertis ou expirés, et estimée par des modèles logistiques. Celle mesure de liquidité fournit d'ailleurs généralement des résultats plus significatifs, mais souffre d'un problème d'exclusions des relistings ou des listings annulés pour cause de vente via une autre marketplace. Par ailleurs, nous les régressions où l'attention ante-listing fait office de variable dépendante, la binarisation masque l'information sur son intensité, et l'utilisation de l'OLS sur la version non binarisée est inappropriée du fait de la nature entière (l'attention est une variable définie sur l'ensemble des entiers naturels) de celle-ci.
+
+Ci-dessus sont présentées les trois principales faiblesses méthodologiques identifiées dans l'analyse en section @sec-emp-anl-1920. Et maintenant, ci-dessus, nous présentons quelques faiblesses, moins graves, mais intéressantes à indexer en guise de robustesse.
+
+- **Dépendance spatiale**: Les parcelles voisines ne sont pas strictement indépendantes les unes des autres, des phémonènes de propagation spatiale de liquidité et surtout d'attention peuvent être raisonnablement envisagées. Ainsi, les erreurs types des régressions peuvent s'en trouver spatialement corrélées, et il faudrait en tenir compte au risque d'avoir les significativités érronées.
+
+
+### Perspectives de correction et d'amélioration
+
+- **Endogénéité de l'attention**: 
+  - Il serait mieux indiqué de **partir sur un autre proxy de l'attention** que les demandes de parcelles. Toutefois, notre travail préliminaire sur la recherche des proxies d'attention aboutit à l'impossible d'en trouver: les données de fréquentation historique par parcelles serait le substitut idéal, mais il est impossible d'en trouver l'historique.
+  - Si l'on tient à persister sur l'utilisation de la demande comme proxy d'attention, il serait préférable d'utiliser la **demande ante-listing hors marché**, c'est-à-dire la demande suscité avant le listing lorsque la parcelle n'est pas sur le marché durant la période antérieure observée. Toutefois, ce type de demande se fait encore plus rare. Enormément de parcelles avec 0 demandes, et très peu de parcelles avec plus de 2 demandes sur 30 jours avant de listing. Toutefois, dans les sections @sec-emp-anl-1920v2-h1, @sec-emp-anl-1920v2-h3 et @sec-emp-anl-1920v2-h4, **nous partirons sur cette mesure de l'attention**.
+  
+- **Rarification de l'attention dans le temps**: cela rejoint les indications formulées précédemment concernant l'endogénéité. Il est plus indiqué de partir sur un autre proxy. L'utilisation de la demande ante-listing hors marché empirerait le biais dû au manque de données sur l'attention lors de l'extension de l'analyse aux années 2021 à 2025.
+
+- **Modèles économétriques de l'analyse de la liquidité**:
+  - **Examen de la liquidité**: Pour palier le problème de censure à droite, il est plus indiqué d'utiliser des modèles de survie ou des modèles de hasard. 
+    - Les **modèles de survie** modélisent la probabilité qu'un évènement surviennte après un temps $t$. Ils sont donc les mieux adaptés pour le `time-on-market`. Le modèle de survie le plus adapté et utilisé en immobilier (semble-t'il) est le modèle AFT (Accelerated Failure Time). Par des transformations mathématiques du formalisme de base des modèles de survie, il modèlise les effets des variables explicatives sur le temps de survenue d'un évènement. Une variable peut ainsi avoir un effet contractif ou dilatatif sur le temps de survenue.
+    - Les **modèles de hasard** modélisent la probabilité instantanée d'un évènement à un temps $t$, conditionnellement au fait qu'il n'ait pas encore eu lieu. Statistiquement, il fournit les effets des variables explicitatifs (appréciatifs ou dépréciatifs) sur cette probabilité instantanée. Il est donc plus adapté pour le `listing-sale-rate`. La seule contrainte des modèles de hasard est l'hypothèse des risques proportionnels dans le temps, qui stipule que l'effet d'une variable sur la probabilité soit constant dans le temps. Par exemple, l'effet du prix affiché élevé d'un bien immobilier sur sa probabilité n'est pas censé être plus faible lorsque l'annonce de vente est récente que lorsque l'annonce est vieille, ce qui, du point de vue de la psychologie des potentiels acheteurs, est rarement valide. Nonobstant, nous examinerons tout de même le taux de conversion via un modèle de hasard, avec contrôle sur le prix, en faisant l'hypothèse d'un effet constant des prix de listing sur la probabilité de vente, car les dates de listing ne sont pas visible sur les pages d'annonce sur la marketplace Decentraland. Comme modèle de hasard, nous utiliserons le modèle à risques proportionnels de Cox.
+  - **Examen de l'attention**: Etant donné que nous partirons sur l'attention brute (quantité brute de demandes 30 jours avant le listing), il est plus indiqué de recourir à des modèles de comptage (poisson, binomiale négative, hurdle) qu'à des modèles OLS. De plus, le modèle hurdle permet de faire une estimation à deux étapes: une première estimation qui dégage les effets de variables sur la probabilité d'avoir un comptage (nombre de demandes) non nul, et une seconde qui dégage les effets des variables sur la valeur du compte (nombre de demandes) sachant que celui-ci est non nul. Bien que pas parfait, il est plus indiqué dans notre cas, où l'on nombre un grand nombre de parcelles compte 0 demandes hors marché.
+  
+- **Autres improvments possibles**: Dans l'analyse en section @sec-emp-anl-1920, nous regardons les effets de quatre variables de localisation, quatre distances. Cela complexifie plus qu'il n'en faut l'interprétabilité des effets de la localisation sur la liquidité. Pour la suite, nous nous concentrerons uniquement sur l'effet de la distance au centre. La dispersion attentionnelle dans Decentraland va du centre vers la périphérie, car le centre le point d'apparition de tous les visiteurs se connectant au métavers. Nous inclurons les localisations par rapport aux autres aménités comme des variables de contrôle binaires de proximité:
+  - Proximité à un plaza périphérique: `CPX`;
+  - Proximité à la route: `CRD`;
+  - Proximité à un district: `CDX`;
+Nous définissons la proximité à partir de la distance, en lui donnant la valeur `1` lorsque la distance est inférieure à 10 parcelles. C'est d'ailleurs de cette manière que les proximités aux aménités (incluant la plaza centrale) sont spécifiés sur les annonces de vente de parcelles dans la marketplace Decentraland. 
+Nous incluons également deux variables de contrôle-localisation additionnelles:
+  - L'inclusion dans la zone nord de la carte `North`: cette zone est la zone de concentration de la majorité des districts dans Decentraland. Il s'agit donc d'une zone où il y'a plus d'activités/attention qu'ailleurs (zone sud).
+  - L'inclusion dans un district `IDX`: certaines parcelles listées et vendues sont des parcelles à l'intérieur d'un district. Bien que ces parcelles ne sont pas censées être négociables (*ownables*), on en observe certaines qui le sont.
+
+
+## Hypothèse [H1](#hyp-1): Lien localisation - attention {#sec-emp-anl-1920v2-h1}
+
+Nous utiliserons comme mesure d'attention le nombre de demandes hors marché (et ante-listing lorsque nous examinerons l'attention des parcelles listées), et comme modèle économétrique le modèle hurdle. Ainsi, dans nos échantillons, nous exclurons les parcelles qui ont été sur le marché à au moins un moment de la période d'examen observée (trimestre ou 30j avant le listing).
+
+### Attention trimestrielle des parcelles demandées
+
+Le tableau @tbl-h1-2019-2020-v2-quaterly-res-1 présente les résultats des régressions trimestrielles de l'attention sur la localisation. Un ensemble panel des parcelles demandées est construit sur l'ensemble des 8 trimestres de la période 2019-2020. Pour chacun des trimestre, par souci d'équité, nous ne considérons que les parcelles hors marché sur l'entièreté du trimestre.
+
+```{r}
+#| label: tbl-h1-2019-2020-v2-quaterly-res-1
+#| tbl-cap: "Lien Attention - Localisation (2019-2020) [Parcelles demandées]<br> L'attention est mesurée par le nombre de demandes hors marché. Les parcelles ayant été sur le marché au moins une fois dans le trimestre observé sont exclues."
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+library(stringr)
+source("./models.R")
+
+lat_db <- readRDS(file = "lat_db_2019_2020_v2.RDS")
+ys <- 2019:2020
+qs <- 1:4
+
+my_gof <- list(
+  list("raw" = "q.controls",     "clean" = "Controls Quarter", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "r.squared", "clean" = "R2", "fmt" = 3),
+  list("raw" = "adj.r.squared",   "clean" = "R2 Adj.",    "fmt" = 3),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1),
+  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2)
+)
+
+results <- vector(mode = "list", length = length(qs)*length(ys)+1)
+rnames <- c()
+k <- 1
+for (k in seq_len(length.out = length(results))) {
+  
+  db <- lat_db |> 
+    mutate(quarter = quarter(date), year = year(date)) |> 
+    filter(ndays_li_30d == 0)
+  Xcols <- c("DPC", "CPX", "CRD", "CDX", "North")
+  qcontrols <- "No"
+  rname <- NULL
+  if (k <= length(qs)*length(ys)) {
+    i = ((k-1) %/% 4) + 1
+    j = ifelse(k %% 4 == 0, 4, k %% 4)
+    db <- db |> filter(quarter == qs[j], year == ys[i])
+    rname <- paste0("Q", qs[j], "-", ys[i])
+  } else {
+    db <- db |> mutate(qname = paste0("Q", quarter, "_", year)) |> 
+      mutate(v = 1) |> 
+      pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+    Xcols <- c(Xcols, c("Q2_2019", "Q3_2019", "Q4_2019", "Q1_2020", "Q2_2020", "Q3_2020", "Q4_2020"))
+    qcontrols <- "Yes"
+    rname <- "2019-2020"
+  }
+  
+  fit = hurdle_model(
+    db,
+    Y = c("asks_ul_30d"),
+    X = Xcols
+  )
+  td = get_estimates(fit) |>
+    mutate(
+      component = recode(component, conditional = "Count model", zero_inflated  = "Zero model"),
+      term = sub("^count_", "", term),
+      term = sub("^zero_", "", term),
+      term = sub("^\\(Intercept\\)$", "Intercept", term)
+    ) |>
+    filter(!str_detect(term, "^Q\\d+_\\d+"))
+  gf = get_gof(fit)
+  gf[["q.controls"]] = qcontrols
+  mod = list(tidy = td, glance = gf)
+  class(mod) <- "modelsummary_list"
+  results[[k]] = mod
+  rnames <- c(rnames, rname)
+  
+}
+names(results) <- rnames
+
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  shape = as.formula(paste("component", "+ term ~ model")), 
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(i = 13, line = "t", line_width = 0.05) |> style_tt(fontsize = 0.8)
+colnames(tab) <- c(" ", colnames(tab)[-1])
+
+tab
+```
+
+Globalement, la proximité d'une parcelle au centre accroît sa probabilité de susciter de l'attention. Toutefois, l'impact de la proximité au centre sur l'amplitude de l'attention reçue est plus mitigé: il est parfois positif (Q1-2019 et Q3-2019), parfois négatif (Q1-2020 et Q2-2020), et parfois non significatif. Sur l'&chantillon entier des demandes sur la période 2019-2020, la proximité au centre n'affecte pas significativement l'amplitude des demandes reçues.
+Concernant les proximités d'une parcelles aux autres aménités, la proximité aux plazas périphériques et aux districts accroissent la probabilité de susciter de l'attention, tandis que la proximité à la route et la proximité au district accroissent l'amplitude de l'attention suscitée.
+
+
+### Attention trimestrielle des parcelles listées
+
+Le tableau @tbl-h1-2019-2020-v2-quaterly-res-2 présente les résultats des régressions trimestrielles de l'attention des parcelles listées sur la localisation. Pour chaque listing, nous mesurons l'attention par les demandes hors marché dans les 30 jours précédant le listing. Ainsi, par souci d'équité, nous ne considérons que les parcelles hors marché durant toute la période des 30 jours précédant le listing.
+
+```{r}
+#| label: tbl-h1-2019-2020-v2-quaterly-res-2
+#| tbl-cap: "Lien Attention - Localisation (2019-2020) [Parcelles listées]<br> L'attention est mesurée par le nombre de demandes hors marché antérieures au listing. Les parcelles ayant été sur le marché au moins une fois dans les 30j précédant le listing sont exclues."
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+source("./models.R")
+
+alq_db <- readRDS(file = "alq_db_2019_2020_v2.RDS")
+ys <- 2019:2020
+qs <- 1:4
+
+my_gof <- list(
+  list("raw" = "q.controls",     "clean" = "Controls Quarter", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "r.squared", "clean" = "R2", "fmt" = 3),
+  list("raw" = "adj.r.squared",   "clean" = "R2 Adj.",    "fmt" = 3),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1),
+  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2)
+)
+
+results <- vector(mode = "list", length = length(qs)*length(ys)+1)
+rnames <- c()
+k <- 1
+for (k in seq_len(length.out = length(results))) {
+  
+  db <- alq_db |> 
+    mutate(quarter = quarter(date), year = year(date)) |> 
+    filter(ndays_li_30d == 0)
+  Xcols <- c("DPC", "CPX", "CRD", "CDX", "North")
+  qcontrols <- "No"
+  rname <- NULL
+  if (k <= length(qs)*length(ys)) {
+    i = ((k-1) %/% 4) + 1
+    j = ifelse(k %% 4 == 0, 4, k %% 4)
+    db <- db |> filter(quarter == qs[j], year == ys[i])
+    rname <- paste0("Q", qs[j], "-", ys[i])
+  } else {
+    db <- db |> mutate(qname = paste0("Q", quarter, "_", year)) |> 
+      mutate(v = 1) |> 
+      pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+    Xcols <- c(Xcols, c("Q2_2019", "Q3_2019", "Q4_2019", "Q1_2020", "Q2_2020", "Q3_2020", "Q4_2020"))
+    qcontrols <- "Yes"
+    rname <- "2019-2020"
+  }
+  
+  fit = hurdle_model(
+    db,
+    Y = c("asks_ul_30d"),
+    X = Xcols
+  )
+  td = get_estimates(fit) |>
+    mutate(
+      component = recode(component, conditional = "Count model", zero_inflated  = "Zero model"),
+      term = sub("^count_", "", term),
+      term = sub("^zero_", "", term),
+      term = sub("^\\(Intercept\\)$", "Intercept", term)
+    ) |>
+    filter(!str_detect(term, "^Q\\d+_\\d+"))
+  gf = get_gof(fit)
+  gf[["q.controls"]] = qcontrols
+  mod = list(tidy = td, glance = gf)
+  class(mod) <- "modelsummary_list"
+  results[[k]] = mod
+  rnames <- c(rnames, rname)
+  
+}
+names(results) <- rnames
+
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  shape = as.formula(paste("component", "+ term ~ model")), 
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(i = 13, line = "t", line_width = 0.05) |> style_tt(fontsize = 0.8)
+colnames(tab) <- c(" ", colnames(tab)[-1])
+
+tab
+```
+
+Le constat est alarmant concernant les parcelles listées et la demande ante-listing. La distance au centre a majoritairement des effets non significatifs sur l'attention pour les régressions trimestrielles. Dans certains cas, le modèle de comptage peine à converger, ce qui résulte à l'absence d'erreurs-type des coefficients de localisation. Par contre, pour la régression globale, contre-intuitivement, l'éloignement au centre augmente significativement l'attention reçue lorsque celle-ci est non nulle.
+Concernant la proximité aux autres aménités, seule la proximité au plaza périphérique influence significativement la probabilité de susciter de l'attention et l'amplitude de celle-ci. La proximité à la route influence uniquement l'amplitude de l'attention, tandis que la proximité au district et la localisation au nord influence uniquement la probabilité de susciter de l'attention.
+En somme, le résultat est le même que celui des analyses en section @sec-emp-anl-1920, à savoir que l'attention est faiblement drivée, voire pas du tout, pas la localisation.
+
+
+## Hypothèse [H2](#hyp-2): Lien localisation - liquidité {#sec-emp-anl-1920v2-h2}
+
+Nous allons évaluer la relation entre localisation et liquidité, par l'usage du modèle de survie AFT pour le `time-on-market`, et du modèle de COX pour le `listing-sale-rate`. Toutes les listings, y compris celles non converties en vente seront inclus dans l'analyse. Nous contrôlerons pour le prix de demande dans les régressions. La gestion des valeurs extrêmes de prix et de `time-on-market` sera faite par winsorisation aux quantiles 1% et 99% pour le prix, et par winsorisation à droite à 365 jours (1 an) pour le `time-on-market`. Le prix de listing est également transformé en log.
+
+### Time-on-marking: Modèle AFT
+
+Le tableau @tbl-h2-2019-2020-v2-res-1 présente les résultats de régression par AFT de la liquidité sur la localisation. Pour rappel, le modèle AFT permet d'obtenir les effets (contractifs ou dilatatifs) des variables de localisation sur le temps de vente d'une parcelle.
+
+```{r}
+#| label: tbl-h2-2019-2020-v2-res-1
+#| tbl-cap: "Lien Liquidité - Localisation (2019-2020)<br> La régression est faite par AFT, permettant d'obtenir les effets (contractifs ou dilatatifs) des variables de localisation sur le temps de vente d'une parcelle."
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+library(DescTools)
+source("./models.R")
+
+alq_db <- readRDS(file = "alq_db_2019_2020_v2.RDS")
+ys <- 2019:2020
+qs <- 1:4
+
+my_gof <- list(
+  list("raw" = "q.controls",     "clean" = "Controls Quarter", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+)
+
+results <- vector(mode = "list", length = length(qs)*length(ys)+1)
+rnames <- c()
+k <- 1
+for (k in seq_len(length.out = length(results))) {
+  
+  db <- alq_db |> 
+    mutate(quarter = quarter(date), year = year(date)) |> 
+    filter(!is.na(tom) & tom > 0) |>
+    mutate(
+      sold = as.numeric(status == "filled" & tom <= 365),
+      tom = if_else(tom > 365, 365, tom),
+      LogPrice = log(Winsorize(value, val = quantile(value, probs = c(0.01, 0.99))))
+    ) 
+  Xcols <- c("DPC", "CPX", "CRD", "CDX", "North", "LogPrice")
+  qcontrols <- "No"
+  rname <- NULL
+  if (k <= length(qs)*length(ys)) {
+    i = ((k-1) %/% 4) + 1
+    j = ifelse(k %% 4 == 0, 4, k %% 4)
+    db <- db |> filter(quarter == qs[j], year == ys[i])
+    rname <- paste0("Q", qs[j], "-", ys[i])
+  } else {
+    db <- db |> mutate(qname = paste0("Q", quarter, "_", year)) |> 
+      mutate(v = 1) |> 
+      pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+    Xcols <- c(Xcols, c("Q2_2019", "Q3_2019", "Q4_2019", "Q1_2020", "Q2_2020", "Q3_2020", "Q4_2020"))
+    qcontrols <- "Yes"
+    rname <- "2019-2020"
+  }
+  
+  fit = aft_model(
+    db,
+    Y_time = "tom",
+    Y_event = "sold",
+    X = Xcols,
+    error_cluster = "asset_id"
+  )
+  td = get_estimates(fit) |>
+    filter(!str_detect(term, "^Q\\d+_\\d+"))
+  gf = get_gof(fit)
+  gf[["q.controls"]] = qcontrols
+  gf[["rmse"]] = NULL
+  mod = list(tidy = td, glance = gf)
+  class(mod) <- "modelsummary_list"
+  results[[k]] = mod
+  rnames <- c(rnames, rname)
+  
+}
+names(results) <- rnames
+
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(fontsize = 0.8)
+colnames(tab) <- c(" ", colnames(tab)[-1])
+
+tab
+```
+
+Un coefficient positif traduit un effet dilatatif tandis qu'un coefficient négatif traduit un effet contractif. Sur les deux premiers trimestres de 2019 et les deux derniers de 2020, et à l'échelle de la période 2019-2020 toute entière, la distance au centre dilate (augmente) le temps sur le marché de manière significative. 
+De plus, la proximité à un plaza périphérique et à la route contractent le temps sur le marché, tandis que, la localisation au nord le dilate.
+Le modèle AFT nous renseigne, à travers le coefficient `Log(Scale)`, sur le taux de variation de la probabilité de vente au fil du temps. Il est toujours positif et significatif, ce qui traduit une diminution de la probabilité de vente au fil du temps. Ainsi, plus une parcelle passe du temps sur le marché, moins elle aura de chances de se vendre.
+
+### Listing-Sale-Rate: Modèle Cox
+
+Le tableau @tbl-h2-2019-2020-v2-res-2 présente les résultats de régression par COX de la liquidité sur la localisation. Pour rappel, le modèle de Cox permet d'obtenir les effets des variables de localisation sur la probabilité instantanée de vente d'une parcelle sur le marché.
+
+```{r}
+#| label: tbl-h2-2019-2020-v2-res-2
+#| tbl-cap: "Lien Liquidité - Localisation (2019-2020)<br> La régression est faite par modèle de COX, permettant d'obtenir les effets des variables de localisation sur la probabilité instantanée de vente d'une parcelle sur le marché."
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+library(DescTools)
+source("./models.R")
+
+alq_db <- readRDS(file = "alq_db_2019_2020_v2.RDS")
+ys <- 2019:2020
+qs <- 1:4
+
+my_gof <- list(
+  list("raw" = "q.controls",     "clean" = "Controls Quarter", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
+  list("raw" = "concordance",   "clean" = "Concordance",    "fmt" = 2),
+  list("raw" = "concordance.std",   "clean" = "Concordance Std",    "fmt" = 3),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1),
+  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2)
+)
+
+results <- vector(mode = "list", length = length(qs)*length(ys)+1)
+rnames <- c()
+k <- 1
+for (k in seq_len(length.out = length(results))) {
+  
+  db <- alq_db |> 
+    mutate(quarter = quarter(date), year = year(date)) |> 
+    filter(!is.na(tom) & tom > 0) |>
+    mutate(
+      sold = as.numeric(status == "filled" & tom <= 365),
+      tom = if_else(tom > 365, 365, tom),
+      LogPrice = log(Winsorize(value, val = quantile(value, probs = c(0.01, 0.99))))
+    ) 
+  Xcols <- c("DPC", "CPX", "CRD", "CDX", "North", "LogPrice")
+  qcontrols <- "No"
+  rname <- NULL
+  if (k <= length(qs)*length(ys)) {
+    i = ((k-1) %/% 4) + 1
+    j = ifelse(k %% 4 == 0, 4, k %% 4)
+    db <- db |> filter(quarter == qs[j], year == ys[i])
+    rname <- paste0("Q", qs[j], "-", ys[i])
+  } else {
+    db <- db |> mutate(qname = paste0("Q", quarter, "_", year)) |> 
+      mutate(v = 1) |> 
+      pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+    Xcols <- c(Xcols, c("Q2_2019", "Q3_2019", "Q4_2019", "Q1_2020", "Q2_2020", "Q3_2020", "Q4_2020"))
+    qcontrols <- "Yes"
+    rname <- "2019-2020"
+  }
+  
+  fit = cox_model(
+    db,
+    Y_time = "tom",
+    Y_event = "sold",
+    X = Xcols,
+    error_cluster = "asset_id"
+  )
+  td = get_estimates(fit) |>
+    filter(!str_detect(term, "^Q\\d+_\\d+"))
+  gf = get_gof(fit)
+  gf[["q.controls"]] = qcontrols
+  gf[["concordance"]] = fit$concordance[6]
+  gf[["concordance.std"]] = fit$concordance[7]
+  mod = list(tidy = td, glance = gf)
+  class(mod) <- "modelsummary_list"
+  results[[k]] = mod
+  rnames <- c(rnames, rname)
+  
+}
+names(results) <- rnames
+
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(fontsize = 0.8)
+colnames(tab) <- c(" ", colnames(tab)[-1])
+
+tab
+```
+
+Similairement aux résultats obtenus avec le modèle AFT, la distance au centre a un effet négatif globalement sur la probabilité instantanée de vente, tandis que les proximités aux autres aménités ont des effets globaux positifs.
+La concordance d'un modèle COX renseigne sur sa précision à correctement prédire entre deux observations, pour laquelle l'évènement étudié surviendra le premier. Des concordance entre 0.6 et 0.8 indiquent que le modèle performance bien dans cette tâche. Globalement, les intervalles de confiance des concordances de nos modèles coincident dans l'intervalle [0.6, 0.8].
+
+### Conclusion hypothèse H2
+
+Les modèles de durée affichent des significativités et des $R^2$ bien plus importants que les modèles OLS en section @sec-emp-anl-1920, ce qui confirme la pertinence de ceux-ci pour notre analyse.
+
+
+## Hypothèse [H3](#hyp-3): Lien Attention - Liquidité {#sec-emp-anl-1920v2-h3}
+
+Nous employons les mêmes modèles de liquidité qu'en section @sec-emp-anl-1920v2-h2, et la même stratégie d'identification de l'attention qu'en section @sec-emp-anl-1920v2-h2 (attention ante-listing, et restriction de la base de données aux parcelles hors marché durant la période ante-listing). Etant donné qu'ici l'attention est variable explicative, nous la transformons en variable qualitative, dont les modalités sont:
+- `Zero` (catégorie de référence): La parcelle n'a fait l'objet d'aucune demande;
+- `One`: La parcelle a été demandée une seule fois;
+- `Less5`: La parcelle a été demandée moins de 5 fois (5 inclus);
+- `More5`: La parcelle a été demandée strictement plus de 5 fois.
+
+Le tableau @tbl-h3-2019-2020-v2-res présente les résultats de régressions par AFT et par COX de la liquidité sur l'attention, avec contrôle pour le prix de listing.
+
+```{r}
+#| label: tbl-h3-2019-2020-v2-res
+#| tbl-cap: "Lien Liquidité - Attention (2019-2020)<br> Les régressions sont faites par modèle AFT et modèle de COX. Le modèle AFT permet d'obtenir les effets de l'attention sur le time-on-market, tandis que le modèle de Cox permet les effets de l'attention sur la probabilité instantanée de vente d'une parcelle sur le marché.<br> L'attention est transformée en variable catégorielle."
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+library(DescTools)
+source("./models.R")
+
+alq_db <- readRDS(file = "alq_db_2019_2020_v2.RDS")
+
+my_gof <- list(
+  list("raw" = "q.controls",     "clean" = "Controls Quarter", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
+  list("raw" = "concordance",   "clean" = "Concordance",    "fmt" = 2),
+  list("raw" = "concordance.std",   "clean" = "Concordance Std",    "fmt" = 3),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1),
+  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2)
+)
+
+results <- vector(mode = "list", length = 2)
+k <- 1
+for (k in seq_len(length.out = length(results))) {
+  
+  db <- alq_db |> 
+    mutate(quarter = quarter(date), year = year(date)) |> 
+    filter(!is.na(tom) & tom > 0) |>
+    filter(ndays_li_30d == 0) |>
+    mutate(
+      Attention = if_else(
+        asks_ul_30d == 0,
+        "Zero",
+        if_else(
+          asks_ul_30d == 1,
+          "One",
+          if_else(
+            asks_ul_30d <= 5,
+            "Less5",
+            "More5"
+          )
+        )
+      ),
+      Attention = factor(Attention, levels = c("Zero", "One", "Less5", "More5")),
+      sold = as.numeric(status == "filled" & tom <= 365),
+      tom = if_else(tom > 365, 365, tom),
+      LogPrice = log(Winsorize(value, val = quantile(value, probs = c(0.01, 0.99))))
+    ) |> 
+    mutate(qname = paste0("Q", quarter, "_", year)) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+  Xcols <- c("Attention", "LogPrice")
+  Xcols <- c(Xcols, c("Q2_2019", "Q3_2019", "Q4_2019", "Q1_2020", "Q2_2020", "Q3_2020", "Q4_2020"))
+  
+  fit <- NULL
+  if (k == 1) {
+    fit = aft_model(
+      db,
+      Y_time = "tom",
+      Y_event = "sold",
+      X = Xcols,
+      error_cluster = "asset_id"
+    )
+  } else {
+    fit = cox_model(
+      db,
+      Y_time = "tom",
+      Y_event = "sold",
+      X = Xcols,
+      error_cluster = "asset_id"
+    )
+  }
+  
+  td = get_estimates(fit) |>
+    filter(!str_detect(term, "^Q\\d+_\\d+"))
+  gf = get_gof(fit)
+  gf[["q.controls"]] = "Yes"
+  if (k == 1) {
+    gf[["rmse"]] = NULL
+  } else {
+    gf[["concordance"]] = fit$concordance[6]
+    gf[["concordance.std"]] = fit$concordance[7]
+  }
+  mod = list(tidy = td, glance = gf)
+  class(mod) <- "modelsummary_list"
+  results[[k]] = mod
+  
+}
+names(results) <- c("2019-2020<br> (AFT Model)", "2019-2020<br> (Cox Model)")
+
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(fontsize = 1)
+
+tab
+```
+
+Les résultats des deux modèles sont unanimes. Susciter de l'attention avant le listing a un effet positif sur la liquidité, mais en recevoir trop a un effet négatif.
+
+
+## Hypothèse [H4](#hyp-4): Lien Localisation - Attention - Liquidité {#sec-emp-anl-1920v2-h4}
+
+Suite aux résultats intéressants trouvés en sections @sec-emp-anl-1920v2-h1, @sec-emp-anl-1920v2-h2 et @sec-emp-anl-1920v2-h3, nous réalisons un test de médiation basique de Baron & Kenny. Concrètement, nous évaluons les effets de la localisation sur la liquidité sans et avec contrôle pour la l'attention.
+
+Le tableau @tbl-h4-2019-2020-v2-res présente les résultats de régressions par AFT et par COX de la liquidité sur la localisation, avec et sans contrôle pour l'attention.
+
+```{r}
+#| label: tbl-h4-2019-2020-v2-res
+#| tbl-cap: "Lien Liquidité - Attention - Localisation (2019-2020)<br> Les régressions sont faites par modèle AFT et modèle de COX. Le modèle AFT permet d'obtenir les effets de la localisation sur le time-on-market, tandis que le modèle de Cox permet les effets de la localisation sur la probabilité instantanée de vente d'une parcelle sur le marché.<br> L'attention est transformée en variable catégorielle."
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+library(DescTools)
+source("./models.R")
+
+alq_db <- readRDS(file = "alq_db_2019_2020_v2.RDS")
+
+my_gof <- list(
+  list("raw" = "q.controls",     "clean" = "Controls Quarter", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
+  list("raw" = "concordance",   "clean" = "Concordance",    "fmt" = 2),
+  list("raw" = "concordance.std",   "clean" = "Concordance Std",    "fmt" = 3),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1),
+  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2)
+)
+
+results <- vector(mode = "list", length = 4)
+k <- 1
+for (k in seq_len(length.out = length(results))) {
+  
+  db <- alq_db |> 
+    mutate(quarter = quarter(date), year = year(date)) |> 
+    filter(!is.na(tom) & tom > 0) |>
+    filter(ndays_li_30d == 0) |>
+    mutate(
+      Attention = if_else(
+        asks_ul_30d == 0,
+        "Zero",
+        if_else(
+          asks_ul_30d == 1,
+          "One",
+          if_else(
+            asks_ul_30d <= 5,
+            "Less5",
+            "More5"
+          )
+        )
+      ),
+      Attention = factor(Attention, levels = c("Zero", "One", "Less5", "More5")),
+      sold = as.numeric(status == "filled" & tom <= 365),
+      tom = if_else(tom > 365, 365, tom),
+      LogPrice = log(Winsorize(value, val = quantile(value, probs = c(0.01, 0.99))))
+    ) |> 
+    mutate(qname = paste0("Q", quarter, "_", year)) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+  XLoc <- c("DPC", "CPX", "CRD", "CDX", "North")
+  XAtt <- list(c("Attention"), c())
+  XControls <- c("LogPrice", "Q2_2019", "Q3_2019", "Q4_2019", "Q1_2020", "Q2_2020", "Q3_2020", "Q4_2020")
+  
+  fit <- NULL
+  if (k <= 2) {
+    fit = aft_model(
+      db,
+      Y_time = "tom",
+      Y_event = "sold",
+      X = c(XLoc, XAtt[[(k %% 2)+1]], XControls),
+      error_cluster = "asset_id"
+    )
+  } else {
+    fit = cox_model(
+      db,
+      Y_time = "tom",
+      Y_event = "sold",
+      X = c(XLoc, XAtt[[(k %% 2)+1]], XControls),
+      error_cluster = "asset_id"
+    )
+  }
+  
+  td = get_estimates(fit) |>
+    filter(!str_detect(term, "^Q\\d+_\\d+"))
+  gf = get_gof(fit)
+  gf[["q.controls"]] = "Yes"
+  if (k <= 2) {
+    gf[["rmse"]] = NULL
+  } else {
+    gf[["concordance"]] = fit$concordance[6]
+    gf[["concordance.std"]] = fit$concordance[7]
+  }
+  mod = list(tidy = td, glance = gf)
+  class(mod) <- "modelsummary_list"
+  results[[k]] = mod
+  
+}
+names(results) <- c("2019-2020<br> Attention OFF<br> (AFT Model)", "2019-2020<br> Attention ON<br> (AFT Model)", "2019-2020<br> Attention OFF<br> (COX Model)", "2019-2020<br> Attention ON<br> (COX Model)")
+
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(fontsize = 1)
+
+tab
+```
+
+Nous observons un phénomène pour le peu contre intuitif. Après contrôle pour l'attention, l'effet de la distance au centre sur la liquidité devient encore plus fort. L'attention semble donc être un **inhibiteur des effets de la localisation sur la liquidité**, plutôt qu'un médiateur.
+
+
+## Hypothèse [H5](#hyp-5): Dépendance non linéaire entre la liquidité et la localisation {#sec-emp-anl-1920v2-h5}
+
+Nous examinons dans cette section la forme de dépendance entre la liquidité et la localisation. Nous avions émis l'hypothèse selon laquelle si l'attention sert de canal de transmission des effets de la localisation sur la liquidité, alors étant donné que l'attention se disperse de manière non linéaire et convexe du centre du monde virtuel vers la périphérie, alors il en serait de même pour la liquidité.
+
+Pour évaluer la forme de dépendance entre la liquidité et la localisation, nous régressons (par AFT et COX) sur la liquidité sur la localisation, par sous-échantillons de la base de données des listings 2019-2020 correspondant aux déciles de distances au centre du métavers. Nous contrôlons à chaque fois pour le prix et pour les trimestres.
+
+### Time-on-marking: Modèle AFT
+
+Le tableau @tbl-h5-2019-2020-v2-res-1 présente les résultats de régressions par modèle AFT de la liquidité sur la localisation, pour chaque sous-échantillon de décile de la variable `DPC`.
+
+```{r}
+#| label: tbl-h5-2019-2020-v2-res-1
+#| tbl-cap: "Forme de dépendance Liquidité - Localisation (2019-2020)<br> La régression est faite par AFT, sur chaque sous-échantillon correspondant à un décile de la variable `DPC`"
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+library(DescTools)
+source("./models.R")
+
+alq_db <- readRDS(file = "alq_db_2019_2020_v2.RDS")
+
+my_gof <- list(
+  list("raw" = "locs.controls",     "clean" = "Control Other Loc", fmt = 0),
+  list("raw" = "price.controls",     "clean" = "Controls Log Price", fmt = 0),
+  list("raw" = "q.controls",     "clean" = "Controls Quarter", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+)
+
+results <- vector(mode = "list", length = 10)
+rnames <- c()
+for (k in seq_len(length.out = 10)) {
+  
+  db <- alq_db |> 
+    mutate(quarter = quarter(date), year = year(date)) |> 
+    filter(!is.na(tom) & tom > 0) |>
+    mutate(
+      sold = as.numeric(status == "filled" & tom <= 365),
+      tom = if_else(tom > 365, 365, tom),
+      LogPrice = log(Winsorize(value, val = quantile(value, probs = c(0.01, 0.99))))
+    ) |>
+    mutate(qname = paste0("Q", quarter, "_", year)) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0) |>
+    filter(DPC >= quantile(DPC, (k-1)*0.1), DPC < quantile(DPC, k*0.1))
+  Xcols <- c("DPC", "CPX", "CRD", "CDX", "North", "LogPrice")
+  Xcols <- c(Xcols, c("Q2_2019", "Q3_2019", "Q4_2019", "Q1_2020", "Q2_2020", "Q3_2020", "Q4_2020"))
+  qcontrols <- "Yes"
+  
+  fit = aft_model(
+    db,
+    Y_time = "tom",
+    Y_event = "sold",
+    X = Xcols,
+    error_cluster = "asset_id"
+  )
+  td = get_estimates(fit) |>
+    filter(term == "DPC")
+  gf = get_gof(fit)
+  gf[["locs.controls"]] = "Yes"
+  gf[["price.controls"]] = "Yes"
+  gf[["q.controls"]] = "Yes"
+  gf[["rmse"]] = NULL
+  mod = list(tidy = td, glance = gf)
+  class(mod) <- "modelsummary_list"
+  results[[k]] = mod
+  rnames <- c(rnames, paste0("Decile ", k))
+  
+}
+names(results) <- rnames
+
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(fontsize = 0.8)
+colnames(tab) <- c(" ", colnames(tab)[-1])
+
+tab
+```
+
+Les résultats montrent que la localisation n'affecte la liquidité que dans le premier décile, qui correspond aux distances entre 3 et 31 parcelles. Pour les parcelles situées à plus de 31 parcelles du centre, la distance au centre n'a pas d'effet significatif sur la liquidité, exception faite du 7e décile (entre 112 et 122 parcelles de distance du centre), dont la distance est significative à 10%.
+
+### Listing-Sale-Rate: Modèle Cox
+
+Le tableau @tbl-h5-2019-2020-v2-res-2 présente les résultats de régressions par modèle COX de la liquidité sur la localisation, pour chaque sous-échantillon de décile de la variable `DPC`.
+
+```{r}
+#| label: tbl-h5-2019-2020-v2-res-2
+#| tbl-cap: "Forme de dépendance Liquidité - Localisation (2019-2020)<br> La régression est faite par COX, sur chaque sous-échantillon correspondant à un décile de la variable `DPC`"
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+library(DescTools)
+source("./models.R")
+
+alq_db <- readRDS(file = "alq_db_2019_2020_v2.RDS")
+
+my_gof <- list(
+  list("raw" = "locs.controls",     "clean" = "Control Other Loc", fmt = 0),
+  list("raw" = "price.controls",     "clean" = "Controls Log Price", fmt = 0),
+  list("raw" = "q.controls",     "clean" = "Controls Quarter", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
+  list("raw" = "concordance",   "clean" = "Concordance",    "fmt" = 2),
+  list("raw" = "concordance.std",   "clean" = "Concordance Std",    "fmt" = 3),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+)
+
+results <- vector(mode = "list", length = 10)
+rnames <- c()
+for (k in seq_len(length.out = 10)) {
+  
+  db <- alq_db |> 
+    mutate(quarter = quarter(date), year = year(date)) |> 
+    filter(!is.na(tom) & tom > 0) |>
+    mutate(
+      sold = as.numeric(status == "filled" & tom <= 365),
+      tom = if_else(tom > 365, 365, tom),
+      LogPrice = log(Winsorize(value, val = quantile(value, probs = c(0.01, 0.99))))
+    ) |>
+    mutate(qname = paste0("Q", quarter, "_", year)) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0) |>
+    filter(DPC >= quantile(DPC, (k-1)*0.1), DPC < quantile(DPC, k*0.1))
+  Xcols <- c("DPC", "CPX", "CRD", "CDX", "North", "LogPrice")
+  Xcols <- c(Xcols, c("Q2_2019", "Q3_2019", "Q4_2019", "Q1_2020", "Q2_2020", "Q3_2020", "Q4_2020"))
+  qcontrols <- "Yes"
+  
+  fit = cox_model(
+    db,
+    Y_time = "tom",
+    Y_event = "sold",
+    X = Xcols,
+    error_cluster = "asset_id"
+  )
+  td = get_estimates(fit) |>
+    filter(term == "DPC")
+  gf = get_gof(fit)
+  gf[["locs.controls"]] = "Yes"
+  gf[["price.controls"]] = "Yes"
+  gf[["q.controls"]] = "Yes"
+  gf[["concordance"]] = fit$concordance[6]
+  gf[["concordance.std"]] = fit$concordance[7]
+  mod = list(tidy = td, glance = gf)
+  class(mod) <- "modelsummary_list"
+  results[[k]] = mod
+  rnames <- c(rnames, paste0("Decile ", k))
+  
+}
+names(results) <- rnames
+
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(fontsize = 0.8)
+colnames(tab) <- c(" ", colnames(tab)[-1])
+
+tab
+```
+
+Les résultats du modèle COX confirment ceux du modèle AFT. Seul le premier décile compte. Les déciles suivants n'affectent pas la liquidité, exception faite du 7e décile.
+
+### Conclusion hypothèse H5
+
+Les résultats confirment un dépendance non linéaire convexe entre la liquidité et la localisation, très forte dans le premier décile de distance au centre, et insignifiant dans les autres déciles de distance.
 
 
 # Réferences {.unnumbered}

@@ -2,6 +2,8 @@ library(plm)
 library(fixest)
 library(lmtest)
 library(sandwich)
+library(pscl)
+library(survival)
 
 lm_model <- function (dataset, Y, X, correct = T) {
   fml <- as.formula(paste0(Y, " ~ ", paste0(X, collapse = " + ")))
@@ -38,4 +40,41 @@ filter_outliers <- function(x) {
   
   # Check if x is within the normal range (not an outlier)
   return(x >= (q25 - 1.5 * iqr_val) & x <= (q75 + 1.5 * iqr_val))
+}
+
+hurdle_model <- function (dataset, Y, X, count_dist = "negbin") {
+  fml <- as.formula(paste0(Y, " ~ ", paste0(X, collapse = " + "), " | ", paste0(X, collapse = " + ")))
+  fit <- hurdle(
+    fml,
+    data = dataset, 
+    count_dist = count_dist
+  )
+  return(fit)
+}
+
+aft_model <- function (dataset, Y_time, Y_event, X, error_cluster = NULL, dist = "weibull") {
+  fml_str <- paste0("survival::Surv(", Y_time, ", ", Y_event, ") ~ ", paste0(X, collapse = " + "))
+  if(!is.null(error_cluster)) {
+    fml_str <- paste0(fml_str, " + survival::cluster(", error_cluster, ")")
+  }
+  fml <- as.formula(fml_str)
+  fit <- survival::survreg(
+    fml,
+    data = dataset,
+    dist = dist
+  )
+  return(fit)
+}
+
+cox_model <- function (dataset, Y_time, Y_event, X, error_cluster = NULL) {
+  fml_str <- paste0("survival::Surv(", Y_time, ", ", Y_event, ") ~ ", paste0(X, collapse = " + "))
+  if(!is.null(error_cluster)) {
+    fml_str <- paste0(fml_str, " + survival::cluster(", error_cluster, ")")
+  }
+  fml <- as.formula(fml_str)
+  fit <- survival::coxph(
+    fml,
+    data = dataset
+  )
+  return(fit)
 }

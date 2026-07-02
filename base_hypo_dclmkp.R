@@ -210,6 +210,7 @@ listings <- Transactions |>
     # Rearrange listing database, create listing period (interval [Date, Date+Tom)), and 30 days lookback interval
     asset_id,
     date,
+    maker,
     tom = order_time_on_market,
     list_start = date,
     list_end = as.POSIXct(ifelse(order_status == "pending", date_now, date + dmilliseconds(floor(order_time_on_market*86400*1000))), tz = "UTC"),
@@ -234,6 +235,62 @@ asks <- Transactions |>
     ask_date = date,
     asker = taker
   )
+
+library(conflicted)
+conflicted::conflicts_prefer(dplyr::select)
+
+locations_merger <- function (database) {
+  loc_merged_db <- database |>
+    left_join(
+      Locations |> 
+        mutate(
+          CPX = factor(if_else(DIST_NRS_PLAZA > 10, "No", "Yes"), levels = c("No", "Yes")),
+          CRD = factor(if_else(DIST_ROAD > 10, "No", "Yes"), levels = c("No", "Yes")),
+          CDX = factor(if_else(DIST_NRS_DISTRICT_CAT > 10, "No", "Yes"), levels = c("No", "Yes")),
+          North = factor(if_else(Y < 0, "No", "Yes"), levels = c("No", "Yes")),
+          IDX = factor(if_else(TYPE != "district" & DIST_NRS_DISTRICT_CAT > 0, "No", "Yes"), levels = c("No", "Yes"))
+        ) |>
+        select(
+          asset_id = TOKEN_ID,
+          DPC      = DIST_PLAZA_central,
+          CPX,
+          CRD,
+          CDX,
+          North,
+          IDX
+          # DPX      = DIST_NRS_PLAZA,
+          # NPX      = NAME_NRS_PLAZA,
+          # DRD      = DIST_ROAD,
+          # DDX      = DIST_NRS_DISTRICT_CAT,
+          # NDX      = NAME_NRS_DISTRICT_CAT,
+          # DPXn     = DIST_PLAZA_north,
+          # DPXs     = DIST_PLAZA_south,
+          # DPXe     = DIST_PLAZA_east,
+          # DPXw     = DIST_PLAZA_west,
+          # DPXne    = `DIST_PLAZA_north-east`,
+          # DPXse    = `DIST_PLAZA_south-east`,
+          # DPXnw    = `DIST_PLAZA_north-west`,
+          # DPXsw    = `DIST_PLAZA_south-west`
+        ) |>
+        mutate(
+          DPC = log1p(DPC) #,
+          # DPX = log1p(DPX),
+          # DRD = log1p(DRD),
+          # DDX = log1p(DDX),
+          # DPXn = log1p(DPXn),
+          # DPXs = log1p(DPXs),
+          # DPXe = log1p(DPXe),
+          # DPXw = log1p(DPXw),
+          # DPXne = log1p(DPXne),
+          # DPXse = log1p(DPXse),
+          # DPXnw = log1p(DPXnw),
+          # DPXsw = log1p(DPXsw),
+        ),
+      by = "asset_id"
+    )
+  
+  return(loc_merged_db)
+}
 
 database_builder <- function (interval_base, listings_base, asks_base) {
   
@@ -448,46 +505,7 @@ database_builder <- function (interval_base, listings_base, asks_base) {
   }
   
   # Step 10: Join with location data
-  database <- database |>
-    left_join(
-      Locations |> 
-        mutate(
-          IDX = as.numeric(TYPE == "district") # Infer is parcel is in a district or not
-        ) |>
-        select(
-          asset_id = TOKEN_ID,
-          IDX,
-          DPC      = DIST_PLAZA_central,
-          DPX      = DIST_NRS_PLAZA,
-          NPX      = NAME_NRS_PLAZA,
-          DRD      = DIST_ROAD,
-          DDX      = DIST_NRS_DISTRICT_CAT,
-          NDX      = NAME_NRS_DISTRICT_CAT,
-          DPXn     = DIST_PLAZA_north,
-          DPXs     = DIST_PLAZA_south,
-          DPXe     = DIST_PLAZA_east,
-          DPXw     = DIST_PLAZA_west,
-          DPXne    = `DIST_PLAZA_north-east`,
-          DPXse    = `DIST_PLAZA_south-east`,
-          DPXnw    = `DIST_PLAZA_north-west`,
-          DPXsw    = `DIST_PLAZA_south-west`
-        ) |>
-        mutate(
-          DPC = log1p(DPC),
-          DPX = log1p(DPX),
-          DRD = log1p(DRD),
-          DDX = log1p(DDX),
-          DPXn = log1p(DPXn),
-          DPXs = log1p(DPXs),
-          DPXe = log1p(DPXe),
-          DPXw = log1p(DPXw),
-          DPXne = log1p(DPXne),
-          DPXse = log1p(DPXse),
-          DPXnw = log1p(DPXnw),
-          DPXsw = log1p(DPXsw),
-        ),
-      by = "asset_id"
-    )
+  database <- locations_merger(database)
   
   return(database)
 }
@@ -521,7 +539,7 @@ lat_base <- data.table::CJ(
   
 lat_db <- database_builder(interval_base = lat_base, listings_base = listings, asks_base = asks)
 
-saveRDS(lat_db, file = "lat_db_2019_2020_va.RDS")
+saveRDS(lat_db, file = "lat_db_2019_2020_v2.RDS")
 
 llq_db <- listings |>
   filter(lubridate::year(date) %in% c(2019, 2020)) |>
@@ -576,7 +594,22 @@ alq_base <- listings |>
 
 alq_db <- database_builder(interval_base = alq_base, listings_base = listings, asks_base = asks)
 
-saveRDS(alq_db, file = "alq_db_2019_2020_va.RDS")
+saveRDS(alq_db, file = "alq_db_2019_2020_v2.RDS")
+
+library(conflicted)
+conflict_prefer("filter", "dplyr")
+conflict_prefer("select", "dplyr")
+
+alq_base_B21 <- listings |>
+  mutate(
+    interval_start = pmax(floor_date(date - ddays(30), unit = "day"), floor_date(min(Transactions$date, na.rm = T), unit = "day")),
+    interval_end = floor_date(date, unit = "day")
+  ) |> 
+  filter(lubridate::year(date) == 2021 & lubridate::month(date) >= 6)
+
+alq_db_B21 <- database_builder(interval_base = alq_base_B21, listings_base = listings, asks_base = asks)
+
+saveRDS(alq_db, file = "alq_db_2019_2020_B21.RDS")
 
 
 ###################################################################
@@ -636,6 +669,117 @@ fit_global <- lavaan::sem(
 
 # 4. Afficher les résultats avec les intervalles de confiance bootstrap
 summary(fit_global, standardized = TRUE, ci = TRUE, rsquare = TRUE)
+
+
+
+###################################################################
+###################################################################
+######### SURVIVAL  ANALYSIS ######################################
+###################################################################
+
+library(survival)
+library(DescTools)
+library(dplyr)
+library(tidyr)
+library(lubridate)
+library(MASS)
+
+cox_fit <- survival::coxph(
+  survival::Surv(tom, dstatus) ~ DPC + DPX + DRD + DDX + lvalue + survival::cluster(asset_id),
+  data = alq_db_B21 |>
+    mutate(
+      dstatus = as.numeric(status == "filled" & !is.na(tom) & tom <= 365),
+      tom = if_else(tom > 365, 365, tom),
+      lvalue = log(Winsorize(value, val = quantile(value, probs = c(0.01, 0.99))))
+    ) |>
+    filter(tom > 0)
+)
+summary(cox_fit)
+
+aft_fit <- survival::survreg(
+  survival::Surv(tom, dstatus) ~ DPC + DPX + DRD + DDX + lvalue + survival::cluster(asset_id),
+  data = alq_db_B21 |>
+    mutate(
+      dstatus = as.numeric(status == "filled" & !is.na(tom) & tom <= 365),
+      tom = if_else(tom > 365, 365, tom),
+      lvalue = log(Winsorize(value, val = quantile(value, probs = c(0.01, 0.99))))
+    ) |>
+    filter(tom > 0),
+  dist = "loglogistic"
+)
+summary(aft_fit)
+
+aft_fit <- survival::survreg(
+  survival::Surv(tom, dstatus) ~ DPC + 
+    CPX + CRD + CDX + North + LogPrice + Q2_2019 + Q3_2019 + 
+    Q4_2019 + Q1_2020 + Q2_2020 + Q3_2020 + Q4_2020 + survival::cluster(asset_id),
+  data = db |>
+    mutate(
+      dstatus = as.numeric(status == "filled" & !is.na(tom) & tom <= 365),
+      tom = if_else(tom > 365, 365, tom),
+      lvalue = log(Winsorize(value, val = quantile(value, probs = c(0.01, 0.99))))
+    ),
+  dist = "weibull"
+)
+summary(aft_fit)
+
+poiss_fit <- glm(
+  Attention ~ DPC + DPX + DRD + DDX,
+  data = alq_db |>
+    filter(ndays_li_30d == 0) |>
+    mutate(
+      Attention = asks_ul_30d
+    ),
+  family = poisson(link = "log")
+)
+summary(poiss_fit)
+
+negbin_model <- glm.nb(
+  Attention ~ DPC + DPX + DRD + DDX,
+  data = alq_db |>
+    filter(ndays_li_30d == 0) |>
+    mutate(
+      Attention = asks_ul_30d
+    )
+)
+summary(negbin_model)
+
+# Load the pscl package
+library(pscl)
+
+# Fit the hurdle model
+# Stage 1 (Binary): count > 0 ~ x1 + x2
+# Stage 2 (Count): count ~ z1 + z2
+# dist = "negbin" applies the negative binomial distribution to the count part
+hurdle_fit <- hurdle(
+  Attention ~ DPC + DPX + DRD + DDX + PastValue | DPC + DPX + DRD + DDX + PastValue, 
+  data = alq_db |>
+    #filter(ndays_li_30d == 0) |>
+    mutate(
+      Attention = asks_ll_30d,
+      Listed = factor(if_else(ndays_li_30d > 0, "YES", "NO"), levels = c("NO", "YES")),
+      PastValue = log1p(past_value)
+    ), 
+  dist = "negbin"
+)
+
+# View the results
+summary(hurdle_fit)
+
+cox_fit_2 <- survival::coxph(
+  survival::Surv(tom, dstatus) ~ DPC + DPX + DRD + DDX + Attention + lvalue + survival::cluster(asset_id),
+  data = alq_db |>
+    filter(ndays_li_30d == 0)|>
+    filter(tom > 0) |>
+    mutate(
+      Attention = asks_ul_30d,
+      dstatus = as.numeric(status == "filled" & !is.na(tom) & tom <= 365),
+      tom = if_else(tom > 365, 365, tom),
+      lvalue = log(Winsorize(value, val = quantile(value, probs = c(0.01, 0.99))))
+    ) 
+)
+summary(cox_fit_2)
+
 
 
 
