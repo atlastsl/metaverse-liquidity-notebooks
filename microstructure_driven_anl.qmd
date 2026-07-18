@@ -1,0 +1,23 @@
+---
+title: "Microstructure de marché des parcelles virtuelles"
+author:
+  name:
+    given: Aurélien
+    family: Simo
+  email: aurelien-yannick.simo-fotso.1@ulaval.ca
+  affiliations:
+    - Département de FAI, FSA, Université Laval
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-title: Table des matières
+    toc-expand: true
+    toc-location: left
+    code-fold: true
+    number-sections: true
+    number-depth: 4
+    css: styles.css
+bibliography: references.bib
+---
+

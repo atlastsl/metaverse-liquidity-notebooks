@@ -1,5 +1,5 @@
 ---
-title: "Déterminants de la liquidité des parcelles de métavers"
+title: "L'attention comme canal de transmission de la liquidité des parcelles virtuelles par la localisation"
 author:
   name:
     given: Aurélien
@@ -22,6 +22,14 @@ bibliography: references.bib
 ---
 
 # Mises à jour {.unnumbered}
+
+***17 Juillet 2026***
+
+- Sections 5.7 (@sec-emp-anl-1920v2-h6b) et 5.8 (@sec-emp-anl-1920v2-h6a) : Hypothèses [H6A](#hyp-6a) et [H6B](#hyp-6b) - Lien liquidité, localisation, temps et régimes de marché.
+- Section 6 et 6.1 (@sec-micro-anl) : Possible rédirection vers la microstructure: hypothèses de microstructure du marché des parcelles.
+- Section 6.2 (@sec-micro-anl-h8): Hypothèse [H8](#hyp-8) - Structure spatiale/locale de la liquidité.
+- Section 6.4 (@sec-micro-anl-h10): Hypothèse [H10](#hyp-10) - Liquidité listing vs liquidité demande/sollicitations.
+
 
 ***02 Juillet 2026***
 
@@ -246,7 +254,7 @@ Le métavers Decentraland constitue sans doute le terrain le plus propice à l'e
 
 - **Les parcelles libres**: Les parcelles libres sont les parcelles ne faisant pas partie de plazas, de routes ou de districts. Ce sont les parcelles que les investisseurs et visiteurs du métavers peuvent acheter, vendre, ou exploiter. Sur 92 576 parcelles au total, seules 44 480 sont des parcelles libres, soit un peu moins de la moitié. Toutefois, nous observons sur le marché qu'il existe certaines parcelles de districts qui sont négociées.
 
-### Marché immobilier du métavers
+### Marché immobilier du métavers {#sec-market-periods}
 
 Decentraland est un métavers décentralisé, dont les titres de propriétés des parcelles virtuelles sont encodés dans la blockchain Ethereum, sous forme de [NFT](https://eips.ethereum.org/EIPS/eip-721). Il a été annoncé en 2017 pour un lancement en 2018 s'étant déroulé en trois phases:
 
@@ -2200,7 +2208,7 @@ ys <- 2019:2020
 qs <- 1:4
 
 my_gof <- list(
-  list("raw" = "q.controls",     "clean" = "Controls Quarter", fmt = 0),
+  list("raw" = "q.controls",     "clean" = "FE Quarters", fmt = 0),
   list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
   list("raw" = "r.squared", "clean" = "R2", "fmt" = 3),
   list("raw" = "adj.r.squared",   "clean" = "R2 Adj.",    "fmt" = 3),
@@ -2295,7 +2303,7 @@ ys <- 2019:2020
 qs <- 1:4
 
 my_gof <- list(
-  list("raw" = "q.controls",     "clean" = "Controls Quarter", fmt = 0),
+  list("raw" = "q.controls",     "clean" = "FE Quarters", fmt = 0),
   list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
   list("raw" = "r.squared", "clean" = "R2", "fmt" = 3),
   list("raw" = "adj.r.squared",   "clean" = "R2 Adj.",    "fmt" = 3),
@@ -2372,7 +2380,7 @@ En somme, le résultat est le même que celui des analyses en section @sec-emp-a
 
 Nous allons évaluer la relation entre localisation et liquidité, par l'usage du modèle de survie AFT pour le `time-on-market`, et du modèle de COX pour le `listing-sale-rate`. Toutes les listings, y compris celles non converties en vente seront inclus dans l'analyse. Nous contrôlerons pour le prix de demande dans les régressions. La gestion des valeurs extrêmes de prix et de `time-on-market` sera faite par winsorisation aux quantiles 1% et 99% pour le prix, et par winsorisation à droite à 365 jours (1 an) pour le `time-on-market`. Le prix de listing est également transformé en log.
 
-### Time-on-marking: Modèle AFT
+### Time-on-market: Modèle AFT
 
 Le tableau @tbl-h2-2019-2020-v2-res-1 présente les résultats de régression par AFT de la liquidité sur la localisation. Pour rappel, le modèle AFT permet d'obtenir les effets (contractifs ou dilatatifs) des variables de localisation sur le temps de vente d'une parcelle.
 
@@ -2396,7 +2404,7 @@ ys <- 2019:2020
 qs <- 1:4
 
 my_gof <- list(
-  list("raw" = "q.controls",     "clean" = "Controls Quarter", fmt = 0),
+  list("raw" = "q.controls",     "clean" = "FE Quarters", fmt = 0),
   list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
   list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
   list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
@@ -2491,7 +2499,7 @@ ys <- 2019:2020
 qs <- 1:4
 
 my_gof <- list(
-  list("raw" = "q.controls",     "clean" = "Controls Quarter", fmt = 0),
+  list("raw" = "q.controls",     "clean" = "FE Quarters", fmt = 0),
   list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
   list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
   list("raw" = "concordance",   "clean" = "Concordance",    "fmt" = 2),
@@ -2598,7 +2606,7 @@ source("./models.R")
 alq_db <- readRDS(file = "alq_db_2019_2020_v2.RDS")
 
 my_gof <- list(
-  list("raw" = "q.controls",     "clean" = "Controls Quarter", fmt = 0),
+  list("raw" = "q.controls",     "clean" = "FE Quarters", fmt = 0),
   list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
   list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
   list("raw" = "concordance",   "clean" = "Concordance",    "fmt" = 2),
@@ -2713,7 +2721,7 @@ source("./models.R")
 alq_db <- readRDS(file = "alq_db_2019_2020_v2.RDS")
 
 my_gof <- list(
-  list("raw" = "q.controls",     "clean" = "Controls Quarter", fmt = 0),
+  list("raw" = "q.controls",     "clean" = "FE Quarters", fmt = 0),
   list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
   list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
   list("raw" = "concordance",   "clean" = "Concordance",    "fmt" = 2),
@@ -2811,7 +2819,7 @@ Nous examinons dans cette section la forme de dépendance entre la liquidité et
 
 Pour évaluer la forme de dépendance entre la liquidité et la localisation, nous régressons (par AFT et COX) sur la liquidité sur la localisation, par sous-échantillons de la base de données des listings 2019-2020 correspondant aux déciles de distances au centre du métavers. Nous contrôlons à chaque fois pour le prix et pour les trimestres.
 
-### Time-on-marking: Modèle AFT
+### Time-on-market: Modèle AFT
 
 Le tableau @tbl-h5-2019-2020-v2-res-1 présente les résultats de régressions par modèle AFT de la liquidité sur la localisation, pour chaque sous-échantillon de décile de la variable `DPC`.
 
@@ -2833,9 +2841,9 @@ source("./models.R")
 alq_db <- readRDS(file = "alq_db_2019_2020_v2.RDS")
 
 my_gof <- list(
-  list("raw" = "locs.controls",     "clean" = "Control Other Loc", fmt = 0),
+  list("raw" = "locs.controls",     "clean" = "Controls Other Loc Vars", fmt = 0),
   list("raw" = "price.controls",     "clean" = "Controls Log Price", fmt = 0),
-  list("raw" = "q.controls",     "clean" = "Controls Quarter", fmt = 0),
+  list("raw" = "q.controls",     "clean" = "FE Quarters", fmt = 0),
   list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
   list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
   list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
@@ -2918,9 +2926,9 @@ source("./models.R")
 alq_db <- readRDS(file = "alq_db_2019_2020_v2.RDS")
 
 my_gof <- list(
-  list("raw" = "locs.controls",     "clean" = "Control Other Loc", fmt = 0),
+  list("raw" = "locs.controls",     "clean" = "Controls Other Loc Vars", fmt = 0),
   list("raw" = "price.controls",     "clean" = "Controls Log Price", fmt = 0),
-  list("raw" = "q.controls",     "clean" = "Controls Quarter", fmt = 0),
+  list("raw" = "q.controls",     "clean" = "FE Quarters", fmt = 0),
   list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
   list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
   list("raw" = "concordance",   "clean" = "Concordance",    "fmt" = 2),
@@ -2987,6 +2995,1519 @@ Les résultats du modèle COX confirment ceux du modèle AFT. Seul le premier d�
 ### Conclusion hypothèse H5
 
 Les résultats confirment un dépendance non linéaire convexe entre la liquidité et la localisation, très forte dans le premier décile de distance au centre, et insignifiant dans les autres déciles de distance.
+
+## Hypothèse [H6B](#hyp-6b): Effets de la localisation sur la liquidité suivant le régime de marché {#sec-emp-anl-1920v2-h6b}
+
+Nous examinons la manière dont sont affectés les effets de la localisation sur la liquidité suivant les régimes de marché. Depuis le lancement du métavers Decentraland, on dénombre quatre régimes de marché, rattachés aux cinq phases présentées en section @sec-market-periods :
+
+* **R1: Régime d'expansion douce**: qui correspond aux phases de lancement 1 et 2, durant les années 2019 et 2020;
+* **R2: Régime d'expansion forte**: qui correspond à l'année 2021;
+* **R3: Régime de récession forte**: qui correspond à l'année 2022;
+* **R4: Régime de récession lente**: qui correspond à la phase déserte du métavers, de 2023 jusqu'à nos jours.
+
+Pour chacun de ces régimes, nous estimons les effets de la localisation sur la liquidité. Nous avons émis l'hypothèse ([H6B](#hyp-6b)), qu'en régime d'expansion et de récession forte, la localisation ne déterminerait plus la liquidité, auquel cas l'effet de la première sur la dernière serait statiquement nulle.
+
+### Time-on-Market selon le régime de marché
+
+Le tableau @tbl-h6b-v2-res-1 présente les résultats de régression par AFT de la liquidité sur la localisation, pour chacun des quatre régimes de marché cités plus haut. Pour rappel, le modèle AFT permet d'obtenir les effets (contractifs ou dilatatifs) des variables de localisation sur le temps de vente d'une parcelle.
+
+```{r}
+#| label: tbl-h6b-v2-res-1
+#| tbl-cap: "Lien Liquidité (Time-on-market) - Localisation suivant les régimes de marché - AFT<br> Quatre régimes de marché sont étudiés: R1 = Expansion douce ou Lancement du métavers / 2019-2020, R2 = Expansion forte / Boom Crypto / 2021, R3 = Récession forte / Crash Crypto / 2022, R4 = Expansion lente ou désert métavers / 2023-2024<br> La régression est faite par AFT, permettant d'obtenir les effets (contractifs ou dilatatifs) des variables de localisation sur le temps de vente d'une parcelle."
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+library(DescTools)
+library(stringr)
+source("./models.R")
+
+alq_db_R1 <- readRDS(file = "alq_db_2019_2020_v2.RDS")
+alq_db_R2 <- readRDS(file = "alq_db_2021.RDS")
+alq_db_R3 <- readRDS(file = "alq_db_2022.RDS")
+alq_db_R4 <- readRDS(file = "alq_db_2023_2024.RDS")
+
+Xcols <- c("DPC", "CPX", "CRD", "CDX", "North", "LogPrice")
+XQtDummies <- list(
+  c("Q2_2019", "Q3_2019", "Q4_2019", 
+    "Q1_2020", "Q2_2020", "Q3_2020", "Q4_2020"),
+  c("Q2_2021", "Q3_2021", "Q4_2021"),
+  c("Q2_2022", "Q3_2022", "Q4_2022"),
+  c("Q2_2023", "Q3_2023", "Q4_2023", 
+    "Q1_2024", "Q2_2024", "Q3_2024", "Q4_2024")
+)
+
+my_gof <- list(
+  list("raw" = "q.controls",     "clean" = "FE Quarters", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+)
+
+results <- vector(mode = "list", length = 4)
+rnames <- c("R1: 2019-2020", "R2: 2021", "R3: 2022", "R4: 2023-2024")
+k <- 1
+for (k in seq_len(length.out = length(results))) {
+  
+  xcols <- c(Xcols, XQtDummies[[k]])
+  db <- NULL
+  eval(parse(text = paste0("db <- alq_db_R", k)))
+  db <- db |> 
+    filter(!is.na(tom) & tom > 0) |>
+    mutate(
+      sold = as.numeric(status == "filled" & tom <= 365),
+      tom = if_else(tom > 365, 365, tom),
+      LogPrice = log(Winsorize(value, val = quantile(value, probs = c(0.01, 0.99))))
+    ) |>
+    mutate(quarter = quarter(date), year = year(date)) |> 
+    mutate(qname = paste0("Q", quarter, "_", year)) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+  
+  fit = aft_model(
+    db,
+    Y_time = "tom",
+    Y_event = "sold",
+    X = xcols,
+    error_cluster = "asset_id"
+  )
+  td = get_estimates(fit) |>
+    filter(!str_detect(term, "^Q\\d+_\\d+"))
+  gf = get_gof(fit)
+  gf[["q.controls"]] = "Yes"
+  gf[["rmse"]] = NULL
+  mod = list(tidy = td, glance = gf)
+  class(mod) <- "modelsummary_list"
+  results[[k]] = mod
+  
+}
+names(results) <- rnames
+
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(fontsize = 0.8)
+colnames(tab) <- c(" ", colnames(tab)[-1])
+
+tab
+```
+
+Il apparait que la distance au centre n'affecte significativement le temps de vente que dans le régime d'expansion douce, durant le lancement du métavers. En période d'expansion (récession) forte, l'éloignement augmente (diminue) le temps de vente mais de manière non significative. En régime désert, l'éloignement augmente également le temps de vente d'une parcelle, mais de manière non significative.
+
+D'autres faits notables des variables de localisation sont à relever aussi. La proximité à un plaza périphérique n'affecte (et ce positivement) le temps de vente qu'en régime (expansion ou récession) doux. La proximité à la route contracte toujours significativement le temps de vente, sauf en régime d'expansion forte, où il l'étire (le déprécie) plutôt. La proximité à un district n'a aucun effet sur le temps de vente, tandis que la localisation au nord de la carte n'affecte significativement le temps de vente qu'en régime d'expansion: en expansion douce, les parcelles au nord se vendent plus rapidement, tandis qu'en expansion forte, elles se vendent moins rapidement.
+
+Ces résultats montrent que les parcelles qui se vendent moins rapidement en expansion douce se retrouvent à être celles qui se vendent plus facilement en expansion forte. En expansion forte, les parcelles bien situées semblent constituer des *chasses gardées* pour leurs détenteurs, qui préfèrent vendre les parcelles moins bien situées de leurs portefeuilles. En récession, la tendance s'inverse à nouveau, mais dans une moindre mesure: seules la proximité à la route et aux plaza périphériques apprécient la liquidité.
+
+### Listing-sale-rate selon le régime de marché
+
+Le tableau @tbl-h6b-v2-res-2 présente les résultats de régression par COX de la liquidité sur la localisation, pour chacun des quatre régimes de marché cités plus haut. Pour rappel, le modèle COX permet d'obtenir les effets des variables explicatives sur la probabilité instantanée de vente d'une parcelle sur le marché.
+
+```{r}
+#| label: tbl-h6b-v2-res-2
+#| tbl-cap: "Lien Liquidité (Listing-sale-rate) - Localisation suivant les régimes de marché - CIX<br> Quatre régimes de marché sont étudiés: R1 = Expansion douce ou Lancement du métavers / 2019-2020, R2 = Expansion forte / Boom Crypto / 2021, R3 = Récession forte / Crash Crypto / 2022, R4 = Expansion lente ou désert métavers / 2023-2024<br> La régression est faite par AFT, permettant d'obtenir les effets (contractifs ou dilatatifs) des variables de localisation sur le temps de vente d'une parcelle."
+#| warning: false
+#| echo: false
+
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+library(DescTools)
+library(stringr)
+source("./models.R")
+
+alq_db_R1 <- readRDS(file = "alq_db_2019_2020_v2.RDS")
+alq_db_R2 <- readRDS(file = "alq_db_2021.RDS")
+alq_db_R3 <- readRDS(file = "alq_db_2022.RDS")
+alq_db_R4 <- readRDS(file = "alq_db_2023_2024.RDS")
+
+Xcols <- c("DPC", "CPX", "CRD", "CDX", "North", "LogPrice")
+XQtDummies <- list(
+  c("Q2_2019", "Q3_2019", "Q4_2019", 
+    "Q1_2020", "Q2_2020", "Q3_2020", "Q4_2020"),
+  c("Q2_2021", "Q3_2021", "Q4_2021"),
+  c("Q2_2022", "Q3_2022", "Q4_2022"),
+  c("Q2_2023", "Q3_2023", "Q4_2023", 
+    "Q1_2024", "Q2_2024", "Q3_2024", "Q4_2024")
+)
+
+my_gof <- list(
+  list("raw" = "q.controls",     "clean" = "FE Quarters", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
+  list("raw" = "concordance",   "clean" = "Concordance",    "fmt" = 2),
+  list("raw" = "concordance.std",   "clean" = "Concordance Std",    "fmt" = 3),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1),
+  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2)
+)
+
+results <- vector(mode = "list", length = 4)
+rnames <- c("R1: 2019-2020", "R2: 2021", "R3: 2022", "R4: 2023-2024")
+k <- 1
+for (k in seq_len(length.out = length(results))) {
+  
+  xcols <- c(Xcols, XQtDummies[[k]])
+  db <- NULL
+  eval(parse(text = paste0("db <- alq_db_R", k)))
+  db <- db |> 
+    filter(!is.na(tom) & tom > 0) |>
+    mutate(
+      sold = as.numeric(status == "filled" & tom <= 365),
+      tom = if_else(tom > 365, 365, tom),
+      LogPrice = log(Winsorize(value, val = quantile(value, probs = c(0.01, 0.99))))
+    ) |>
+    mutate(quarter = quarter(date), year = year(date)) |> 
+    mutate(qname = paste0("Q", quarter, "_", year)) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+  
+  fit = cox_model(
+    db,
+    Y_time = "tom",
+    Y_event = "sold",
+    X = xcols,
+    error_cluster = "asset_id"
+  )
+  td = get_estimates(fit) |>
+    filter(!str_detect(term, "^Q\\d+_\\d+"))
+  gf = get_gof(fit)
+  gf[["q.controls"]] = "Yes"
+  gf[["concordance"]] = fit$concordance[6]
+  gf[["concordance.std"]] = fit$concordance[7]
+  mod = list(tidy = td, glance = gf)
+  class(mod) <- "modelsummary_list"
+  results[[k]] = mod
+  
+}
+names(results) <- rnames
+
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(fontsize = 0.8)
+colnames(tab) <- c(" ", colnames(tab)[-1])
+
+tab
+```
+
+Les résultats sont exactement les mêmes que ceux fournies par les modèles AFT. La distance au centre n'affecte significativement la liquidité qu'en régime d'expansion douce. Les effets des autres variables de localisation sur la probabilité de vente sont les mêmes (en termes de signe: positif / négatif) que ceux sur le temps sur le marché.
+
+En conclusion, en régimes spéculatif et récessif, seules les proximités aux aménités secondaires affectent la liquidité. En régime expansif fort, les parcelles bien situées se vendent plus mal que leurs homologues moins bien situées, tandis que malheureusement après le crash de 2022, le marché des parcelles ne semble pas être revenu à sa dynamique d'avant 2021.
+
+### Effets trimestriels de la distance au centre, sur la liquidité
+
+Pour accompagner les observations faites sur les régimes de marché, nous construisons le graphique @fig-h6b-v2-res-3, qui illustre l'évolution dans le temps de l'effet de la distance au centre sur la liquidité, mesurée par le temps sur le marché.
+
+
+```{r fig.width=10, fig.height=4}
+#| label: fig-h6b-v2-res-3
+#| layout-nrow: 2
+#| fig-cap: "Evolution de l'effet de la distance au centre sur la liquidité, entre 2019 et 2024"
+#| fig-subcap: 
+#| - "Temps sur le marché"
+#| - "Probabilité de vente"
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+library(DescTools)
+library(ggplot2)
+
+#######################################
+## Regressions
+#######################################
+
+source("./models.R")
+
+alq_db_R1 <- readRDS(file = "alq_db_2019_2020_v2.RDS")
+alq_db_R2 <- readRDS(file = "alq_db_2021.RDS")
+alq_db_R3 <- readRDS(file = "alq_db_2022.RDS")
+alq_db_R4 <- readRDS(file = "alq_db_2023_2024.RDS")
+db_list_idx <- 1:4
+qt_list <- list(
+  list(ys=2019:2020, qs=1:4),
+  list(ys=2021, qs=1:4),
+  list(ys=2022, qs=1:4),
+  list(ys=2023:2024, qs=1:4)
+)
+
+Xcols <- c("DPC", "CPX", "CRD", "CDX", "North", "LogPrice")
+
+tab1 <- list()
+tab2 <- list()
+qdates <- c()
+k <- 1
+
+for (k in db_list_idx) {
+  
+  db <- NULL
+  eval(parse(text = paste0("db <- alq_db_R", k)))
+  db <- db |> 
+    filter(!is.na(tom) & tom > 0) |>
+    mutate(
+      sold = as.numeric(status == "filled" & tom <= 365),
+      tom = if_else(tom > 365, 365, tom),
+      LogPrice = log(Winsorize(value, val = quantile(value, probs = c(0.01, 0.99))))
+    ) |>
+    mutate(quarter = quarter(date), year = year(date))
+  
+  ys <- qt_list[[k]]$ys
+  qs <- qt_list[[k]]$qs
+  
+  for (y in ys) {
+    for (q in qs) {
+      
+      db_elm <- db |> filter(quarter == q, year == y)
+      
+      fit1 = aft_model(
+        db_elm,
+        Y_time = "tom",
+        Y_event = "sold",
+        X = Xcols,
+        error_cluster = "asset_id"
+      )
+      td1 = get_estimates(fit1)
+      fit2 = cox_model(
+        db_elm,
+        Y_time = "tom",
+        Y_event = "sold",
+        X = Xcols,
+        error_cluster = "asset_id"
+      )
+      td2 = get_estimates(fit2)
+      
+      qdate = floor_date(make_date(y, (q*3)-2, 1), "quarter")
+      qdates <- c(qdates, qdate)
+      
+      tab1 = append(tab1, list(data.frame(date=qdate, estimate=td1[2,2], conf.low=td1[2,5], conf.high=td1[2,6])))
+      tab2 = append(tab2, list(data.frame(date=qdate, estimate=td2[1,2], conf.low=td2[1,5], conf.high=td2[1,6])))
+    }
+  }
+  
+}
+
+tab1 <- as.data.frame(do.call(rbind, tab1))
+tab2 <- as.data.frame(do.call(rbind, tab2))
+rownames(tab1) <- as.character(qdates)
+rownames(tab2) <- as.character(qdates)
+colnames(tab1) <- c("date", "estimate", "conf.low", "conf.high")
+colnames(tab2) <- c("date", "estimate", "conf.low", "conf.high")
+
+tab1 |>
+  ggplot(aes(x = date)) +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "#E69F00", alpha = 0.15) +
+  geom_line(aes(y = conf.low), color = "#D55E00", linetype = "dashed", linewidth = 0.5) +
+  geom_line(aes(y = conf.high), color = "#D55E00", linetype = "dashed", linewidth = 0.5) +
+  geom_line(aes(y = estimate), color = "#222222", linewidth = 1) +
+  labs(
+    # title = "Your Main Project Title",
+    # subtitle = "Optional descriptive subtitle line",
+    x = "Time (in years)",
+    y = "Estimate of DPC coefficient (with 95% conf. Int)",
+    # caption = "Data Source: Internal Database"
+  ) +
+  theme_minimal()
+
+tab2 |>
+  ggplot(aes(x = date)) +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "deepskyblue", alpha = 0.15) +
+  geom_line(aes(y = conf.low), color = "deepskyblue3", linetype = "dashed", linewidth = 0.5) +
+  geom_line(aes(y = conf.high), color = "deepskyblue3", linetype = "dashed", linewidth = 0.5) +
+  geom_line(aes(y = estimate), color = "navyblue", linewidth = 1) +
+  labs(
+    # title = "Your Main Project Title",
+    # subtitle = "Optional descriptive subtitle line",
+    x = "Time (in years)",
+    y = "Estimate of DPC coefficient (with 95% conf. Int)",
+    # caption = "Data Source: Internal Database"
+  ) +
+  theme_minimal()
+```
+
+Entre 2019 et 2020, la proximité au centre a globalement un effet positif sur la liquidité. A partir de 2021, l'effet diminue jusqu'à devenir non significatif. En 2022, la variabilité de l'effet de la distance au centre s'accroit, cette dernière demeurant non significative. A partir du milieu de 2023, l'effet commence à s'inverser (effet dépréciatif de la proximité au centre sur la liquidité), avant de rapidement revenir à la normale en fin 2023, puis de redevenir non significatif durant toute l'année 2024.
+
+
+## Hypothèse [H6A](#hyp-6a): Effets de la localisation sur la liquidité suivant le régime d'attention globale {#sec-emp-anl-1920v2-h6a}
+
+Nous examinons comment sont affectés les effets de la localisation sur la liquidité, suivant le régime d'attention globale suscité par le métavers. L'attention globale suscitée par le métavers désigne le niveau d'intérêt porté par les investisseurs et le public en général pour le monde virtuel. Ce niveau d'intérêt n'est pas observé, mais il peut être raisonnablement approché (approximé) par trois mesures:
+
+* Le **volume de transactions** de ventes de parcelles;
+* Le **nombre de transactions** de ventes de parcelles;
+* Le **niveau des tendances** de recherches des mots associés au métavers sur les moteurs de recherche.
+
+Les deux premières mesures portent sur l'attention globale des investisseurs, et la dernière sur l'attention globale suscitée chez le grand public.
+
+Nous construisons les mesures d'attention globale de la manière suivante: 
+* pour l'attention suscitée chez les investisseurs, nous calculons pour chaque listing le volume et le nombre de transactions de ventes de parcelles via la marketplace Decentraland dans les 30j qui précèdent le listing, 
+* Pour l'attention suscitée chez le grand public, nous collectons les données de tendance hebdomadaires Google Trends sur le mot `decentraland`, et nous associons pour chaque listing, l'indice de tendance Google Trend de la semaine qui précède la date du listing.
+
+Ensuite, pour chaque régime identifié en section @sec-emp-anl-1920v2-h6b, nous évaluons l'effet d'interaction de la distance au centre et de la variable d'attention globale.
+
+### En régime d'expansion douce R1
+
+Le tableau @tbl-h6a-v2-res-r1 présente les résultats de régression de la liquidité sur la localisation croisée avec l'attention globale, en régime d'expansion douce (2019-2020). L'attention globale est mesurée par le volume de ventes, le nombre de ventes, et l'indice de recherche du mot `decentraland` sur Google.
+
+```{r}
+#| label: tbl-h6a-v2-res-r1
+#| tbl-cap: "Lien Liquidité - Localisation x Attention Globale en régime d'expansion douce (2019-2020)<br> Les deux mesures de liquidité (Time-on-market et Listing-sale-rate) sont estimés. L'attention globale est mesurée par le volume de ventes, le nombre de ventes, et l'indice de recherche du mot `decentraland` sur Google<br>TOM = Time-on-market, LSR = Listing-sale-rate"
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+library(DescTools)
+library(stringr)
+source("./models.R")
+
+my_gof <- list(
+  list("raw" = "q.controls",     "clean" = "FE Quarters", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
+  list("raw" = "concordance",   "clean" = "Concordance",    "fmt" = 2),
+  list("raw" = "concordance.std",   "clean" = "Concordance Std",    "fmt" = 3),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1),
+  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2)
+)
+
+glt_db <- readRDS(file = "glt_db.RDS")
+gtt_db <- readRDS(file = "gtt_db.RDS")
+db <- readRDS(file = "alq_db_2019_2020_v2.RDS")
+db <- db |> mutate(day = floor_date(date, unit = "day")) |> 
+  left_join(glt_db |> rename(day = date), by = c("day")) |>
+  left_join(gtt_db |> rename(day = date), by = c("day")) |>
+  filter(!is.na(tom) & tom > 0) |>
+  mutate(
+    sold = as.numeric(status == "filled" & tom <= 365),
+    tom = if_else(tom > 365, 365, tom),
+    LogPrice = log(Winsorize(value, val = quantile(value, probs = c(0.01, 0.99))))
+  ) |>
+  mutate(quarter = quarter(date), year = year(date)) |> 
+  mutate(qname = paste0("Q", quarter, "_", year)) |> 
+  mutate(v = 1) |> 
+  pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+
+attmap <- c("vol_tot", "vol_N", "lagged.wtrend")
+Xcols <- c("DPC", "DPC:Attention", "CPX", "CRD", "CDX", "North", "LogPrice", "Q2_2019", "Q3_2019", "Q4_2019", 
+    "Q1_2020", "Q2_2020", "Q3_2020", "Q4_2020")
+
+results <- vector(mode = "list", length = 6)
+rnames <- c(
+  "TOM<br>Attention = Vol. Ventes ($)", "TOM<br>Attention = Nbr Ventes", "TOM<br>Attention = Google Trends",
+  "LSR<br>Attention = Vol. Ventes ($)", "LSR<br>Attention = Nbr Ventes", "LSR<br>Attention = Google Trends"
+)
+k <- 1
+for (k in seq_len(length.out = length(results))) {
+  lqm <- ((k-1) %/% 3) + 1
+  atm <- ((k-1) %% 3) + 1
+  
+  db <- db |> mutate(
+    Attention = log1p(.data[[attmap[atm]]])
+  )
+  
+  fit <- NULL
+  gf <- NULL
+  if (lqm == 1) {
+    fit = aft_model(
+      db,
+      Y_time = "tom",
+      Y_event = "sold",
+      X = Xcols,
+      error_cluster = "asset_id"
+    )
+    gf = get_gof(fit)
+    gf[["rmse"]] = NULL
+  } else {
+    fit = cox_model(
+      db,
+      Y_time = "tom",
+      Y_event = "sold",
+      X = Xcols,
+      error_cluster = "asset_id"
+    )
+    gf = get_gof(fit)
+    gf[["concordance"]] = fit$concordance[6]
+    gf[["concordance.std"]] = fit$concordance[7]
+  }
+  gf[["q.controls"]] = "Yes"
+  
+  td = get_estimates(fit) |>
+    filter(!str_detect(term, "^Q\\d+_\\d+"))
+  mod = list(tidy = td, glance = gf)
+  class(mod) <- "modelsummary_list"
+  results[[k]] = mod
+  
+}
+names(results) <- rnames
+
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(fontsize = 0.8)
+colnames(tab) <- c(" ", colnames(tab)[-1])
+
+tab
+```
+
+
+Les résultats suggèrent que l'attention globale attenue, sans les neutraliser, les effets de la localisation sur la liquidité. Concrètement, en période de forte attention globale, l'éloignement au centre dilate moins le temps de vente qu'en période de faible attention globale.
+
+
+### En régime d'expansion forte R2
+
+Nous avions vu en section @sec-emp-anl-1920v2-h6b que la localisation n'a pas d'effet sur la liquidité en période d'expansion forte. Toutefois, est-ce qu'un effet conjoint avec l'attention globale reste présent ?
+
+Le tableau @tbl-h6a-v2-res-r2 présente les résultats de régression de la liquidité sur la localisation croisée avec l'attention globale, en régime d'expansion forte (2021). L'attention globale est mesurée par le volume de ventes, le nombre de ventes, et l'indice de recherche du mot `decentraland` sur Google.
+
+```{r}
+#| label: tbl-h6a-v2-res-r2
+#| tbl-cap: "Lien Liquidité - Localisation x Attention Globale en régime d'expansion forte (2021)<br> Les deux mesures de liquidité (Time-on-market et Listing-sale-rate) sont estimés. L'attention globale est mesurée par le volume de ventes, le nombre de ventes, et l'indice de recherche du mot `decentraland` sur Google<br>TOM = Time-on-market, LSR = Listing-sale-rate"
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+library(DescTools)
+library(stringr)
+source("./models.R")
+
+my_gof <- list(
+  list("raw" = "q.controls",     "clean" = "FE Quarters", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
+  list("raw" = "concordance",   "clean" = "Concordance",    "fmt" = 2),
+  list("raw" = "concordance.std",   "clean" = "Concordance Std",    "fmt" = 3),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1),
+  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2)
+)
+
+glt_db <- readRDS(file = "glt_db.RDS")
+gtt_db <- readRDS(file = "gtt_db.RDS")
+db <- readRDS(file = "alq_db_2021.RDS")
+db <- db |> mutate(day = floor_date(date, unit = "day")) |> 
+  left_join(glt_db |> rename(day = date), by = c("day")) |>
+  left_join(gtt_db |> rename(day = date), by = c("day")) |>
+  filter(!is.na(tom) & tom > 0) |>
+  mutate(
+    sold = as.numeric(status == "filled" & tom <= 365),
+    tom = if_else(tom > 365, 365, tom),
+    LogPrice = log(Winsorize(value, val = quantile(value, probs = c(0.01, 0.99))))
+  ) |>
+  mutate(quarter = quarter(date), year = year(date)) |> 
+  mutate(qname = paste0("Q", quarter, "_", year)) |> 
+  mutate(v = 1) |> 
+  pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+
+attmap <- c("vol_tot", "vol_N", "lagged.wtrend")
+Xcols <- c("DPC", "DPC:Attention", "CPX", "CRD", "CDX", "North", "LogPrice", "Q2_2021", "Q3_2021", "Q4_2021")
+
+results <- vector(mode = "list", length = 6)
+rnames <- c(
+  "TOM<br>Attention = Vol. Ventes ($)", "TOM<br>Attention = Nbr Ventes", "TOM<br>Attention = Google Trends",
+  "LSR<br>Attention = Vol. Ventes ($)", "LSR<br>Attention = Nbr Ventes", "LSR<br>Attention = Google Trends"
+)
+k <- 1
+for (k in seq_len(length.out = length(results))) {
+  lqm <- ((k-1) %/% 3) + 1
+  atm <- ((k-1) %% 3) + 1
+  
+  db <- db |> mutate(
+    Attention = log1p(.data[[attmap[atm]]])
+  )
+  
+  fit <- NULL
+  gf <- NULL
+  if (lqm == 1) {
+    fit = aft_model(
+      db,
+      Y_time = "tom",
+      Y_event = "sold",
+      X = Xcols,
+      error_cluster = "asset_id"
+    )
+    gf = get_gof(fit)
+    gf[["rmse"]] = NULL
+  } else {
+    fit = cox_model(
+      db,
+      Y_time = "tom",
+      Y_event = "sold",
+      X = Xcols,
+      error_cluster = "asset_id"
+    )
+    gf = get_gof(fit)
+    gf[["concordance"]] = fit$concordance[6]
+    gf[["concordance.std"]] = fit$concordance[7]
+  }
+  gf[["q.controls"]] = "Yes"
+  
+  td = get_estimates(fit) |>
+    filter(!str_detect(term, "^Q\\d+_\\d+"))
+  mod = list(tidy = td, glance = gf)
+  class(mod) <- "modelsummary_list"
+  results[[k]] = mod
+  
+}
+names(results) <- rnames
+
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(fontsize = 0.8)
+colnames(tab) <- c(" ", colnames(tab)[-1])
+
+tab
+```
+
+En intégrant l'interaction entre la distance au centre et l'attention globale en régime d'expansion forte, la distance au centre et l'interaction apparaissent avoir des effets significatifs sur la liquidité. La localisation apprécie la liquidité, et l'interaction avec l'attention globale attenue l'effet de la localisation seule. Le fait qu'en régime d'expansion forte la localisation ne détermine pas la liquidité, signifie que les effets de la localisation seule et de l'interaction se neutralisent pour notre base de données.
+
+### En régime de récession forte R3
+
+Le tableau @tbl-h6a-v2-res-r3 présente les résultats de régression de la liquidité sur la localisation croisée avec l'attention globale, en régime de récession forte (2022). L'attention globale est mesurée par le volume de ventes, le nombre de ventes, et l'indice de recherche du mot `decentraland` sur Google.
+
+```{r}
+#| label: tbl-h6a-v2-res-r3
+#| tbl-cap: "Lien Liquidité - Localisation x Attention Globale en régime de récession douce (2022)<br> Les deux mesures de liquidité (Time-on-market et Listing-sale-rate) sont estimés. L'attention globale est mesurée par le volume de ventes, le nombre de ventes, et l'indice de recherche du mot `decentraland` sur Google<br>TOM = Time-on-market, LSR = Listing-sale-rate"
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+library(DescTools)
+library(stringr)
+source("./models.R")
+
+my_gof <- list(
+  list("raw" = "q.controls",     "clean" = "FE Quarters", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
+  list("raw" = "concordance",   "clean" = "Concordance",    "fmt" = 2),
+  list("raw" = "concordance.std",   "clean" = "Concordance Std",    "fmt" = 3),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1),
+  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2)
+)
+
+glt_db <- readRDS(file = "glt_db.RDS")
+gtt_db <- readRDS(file = "gtt_db.RDS")
+db <- readRDS(file = "alq_db_2022.RDS")
+db <- db |> mutate(day = floor_date(date, unit = "day")) |> 
+  left_join(glt_db |> rename(day = date), by = c("day")) |>
+  left_join(gtt_db |> rename(day = date), by = c("day")) |>
+  filter(!is.na(tom) & tom > 0) |>
+  mutate(
+    sold = as.numeric(status == "filled" & tom <= 365),
+    tom = if_else(tom > 365, 365, tom),
+    LogPrice = log(Winsorize(value, val = quantile(value, probs = c(0.01, 0.99))))
+  ) |>
+  mutate(quarter = quarter(date), year = year(date)) |> 
+  mutate(qname = paste0("Q", quarter, "_", year)) |> 
+  mutate(v = 1) |> 
+  pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+
+attmap <- c("vol_tot", "vol_N", "lagged.wtrend")
+Xcols <- c("DPC", "DPC:Attention", "CPX", "CRD", "CDX", "North", "LogPrice", "Q2_2022", "Q3_2022", "Q4_2022")
+
+results <- vector(mode = "list", length = 6)
+rnames <- c(
+  "TOM<br>Attention = Vol. Ventes ($)", "TOM<br>Attention = Nbr Ventes", "TOM<br>Attention = Google Trends",
+  "LSR<br>Attention = Vol. Ventes ($)", "LSR<br>Attention = Nbr Ventes", "LSR<br>Attention = Google Trends"
+)
+k <- 1
+for (k in seq_len(length.out = length(results))) {
+  lqm <- ((k-1) %/% 3) + 1
+  atm <- ((k-1) %% 3) + 1
+  
+  db <- db |> mutate(
+    Attention = log1p(.data[[attmap[atm]]])
+  )
+  
+  fit <- NULL
+  gf <- NULL
+  if (lqm == 1) {
+    fit = aft_model(
+      db,
+      Y_time = "tom",
+      Y_event = "sold",
+      X = Xcols,
+      error_cluster = "asset_id"
+    )
+    gf = get_gof(fit)
+    gf[["rmse"]] = NULL
+  } else {
+    fit = cox_model(
+      db,
+      Y_time = "tom",
+      Y_event = "sold",
+      X = Xcols,
+      error_cluster = "asset_id"
+    )
+    gf = get_gof(fit)
+    gf[["concordance"]] = fit$concordance[6]
+    gf[["concordance.std"]] = fit$concordance[7]
+  }
+  gf[["q.controls"]] = "Yes"
+  
+  td = get_estimates(fit) |>
+    filter(!str_detect(term, "^Q\\d+_\\d+"))
+  mod = list(tidy = td, glance = gf)
+  class(mod) <- "modelsummary_list"
+  results[[k]] = mod
+  
+}
+names(results) <- rnames
+
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(fontsize = 0.8)
+colnames(tab) <- c(" ", colnames(tab)[-1])
+
+tab
+```
+
+En régime de récession forte (2022), les résultats sont les mêmes qu'en régime d'expansion forte. Des effets de la localisation qui autrefois n'apparaissaient pas, sont désormais visibles, accompagnés d'effets inverses pour l'interaction entre la localisation et l'attention globale. De même en régime d'expansion forte, cela suggère que ces effets se neutralisent.
+
+### En régime de récession faible R4
+
+Le tableau @tbl-h6a-v2-res-r4 présente les résultats de régression de la liquidité sur la localisation croisée avec l'attention globale, en régime récession faible (2023-2024). L'attention globale est mesurée par le volume de ventes, le nombre de ventes, et l'indice de recherche du mot `decentraland` sur Google.
+
+```{r}
+#| label: tbl-h6a-v2-res-r4
+#| tbl-cap: "Lien Liquidité - Localisation x Attention Globale en régime récession faible (2023-2024)<br> Les deux mesures de liquidité (Time-on-market et Listing-sale-rate) sont estimés. L'attention globale est mesurée par le volume de ventes, le nombre de ventes, et l'indice de recherche du mot `decentraland` sur Google<br>TOM = Time-on-market, LSR = Listing-sale-rate"
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+library(DescTools)
+library(stringr)
+source("./models.R")
+
+my_gof <- list(
+  list("raw" = "q.controls",     "clean" = "FE Quarters", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
+  list("raw" = "concordance",   "clean" = "Concordance",    "fmt" = 2),
+  list("raw" = "concordance.std",   "clean" = "Concordance Std",    "fmt" = 3),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1),
+  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2)
+)
+
+glt_db <- readRDS(file = "glt_db.RDS")
+gtt_db <- readRDS(file = "gtt_db.RDS")
+db <- readRDS(file = "alq_db_2023_2024.RDS")
+db <- db |> mutate(day = floor_date(date, unit = "day")) |> 
+  left_join(glt_db |> rename(day = date), by = c("day")) |>
+  left_join(gtt_db |> rename(day = date), by = c("day")) |>
+  filter(!is.na(tom) & tom > 0) |>
+  mutate(
+    sold = as.numeric(status == "filled" & tom <= 365),
+    tom = if_else(tom > 365, 365, tom),
+    LogPrice = log(Winsorize(value, val = quantile(value, probs = c(0.01, 0.99))))
+  ) |>
+  mutate(quarter = quarter(date), year = year(date)) |> 
+  mutate(qname = paste0("Q", quarter, "_", year)) |> 
+  mutate(v = 1) |> 
+  pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+
+attmap <- c("vol_tot", "vol_N", "lagged.wtrend")
+Xcols <- c("DPC", "DPC:Attention", "CPX", "CRD", "CDX", "North", "LogPrice", "Q2_2023", "Q3_2023", "Q4_2023", 
+    "Q1_2024", "Q2_2024", "Q3_2024", "Q4_2024")
+
+results <- vector(mode = "list", length = 6)
+rnames <- c(
+  "TOM<br>Attention = Vol. Ventes ($)", "TOM<br>Attention = Nbr Ventes", "TOM<br>Attention = Google Trends",
+  "LSR<br>Attention = Vol. Ventes ($)", "LSR<br>Attention = Nbr Ventes", "LSR<br>Attention = Google Trends"
+)
+k <- 1
+for (k in seq_len(length.out = length(results))) {
+  lqm <- ((k-1) %/% 3) + 1
+  atm <- ((k-1) %% 3) + 1
+  
+  db <- db |> mutate(
+    Attention = log1p(.data[[attmap[atm]]])
+  )
+  
+  fit <- NULL
+  gf <- NULL
+  if (lqm == 1) {
+    fit = aft_model(
+      db,
+      Y_time = "tom",
+      Y_event = "sold",
+      X = Xcols,
+      error_cluster = "asset_id"
+    )
+    gf = get_gof(fit)
+    gf[["rmse"]] = NULL
+  } else {
+    fit = cox_model(
+      db,
+      Y_time = "tom",
+      Y_event = "sold",
+      X = Xcols,
+      error_cluster = "asset_id"
+    )
+    gf = get_gof(fit)
+    gf[["concordance"]] = fit$concordance[6]
+    gf[["concordance.std"]] = fit$concordance[7]
+  }
+  gf[["q.controls"]] = "Yes"
+  
+  td = get_estimates(fit) |>
+    filter(!str_detect(term, "^Q\\d+_\\d+"))
+  mod = list(tidy = td, glance = gf)
+  class(mod) <- "modelsummary_list"
+  results[[k]] = mod
+  
+}
+names(results) <- rnames
+
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(fontsize = 0.8)
+colnames(tab) <- c(" ", colnames(tab)[-1])
+
+tab
+```
+
+De même que précédemment, des effets de la localisation sur la liquidité apparaissent en régime de récession douce, lorsque l'interaction entre la localisation et l'attention globale est intégrée à l'analyse. Cela suggère que ces effets se neutralisent lorsque seule la localisation est analysée.
+
+### Conclusion
+
+En période de lancement du métavers, la localisation a un effet positif sur la liquidité des parcelles. Toutefois, cet effet est atténué par l'attention globale. Lorsque celle-ci est forte, l'avantage des parcelles bien situées est attenuée. Ces résultats suggèrent que le marché immobilier virtuel, bien que drivée par l'attention (supposément) obéit aux mêmes règles implicites en matière d'avantage spatial sur la liquidité.
+
+Par ailleurs, durant tous les régimes (expansion forte et récessions) ayant suivi le lancement, la localisation n'a pas eu d'effets significatif sur la liquidité. Toutefois, ces effets apparaissent lorsque les interactions avec l'attention globale sont prises en compte, ce qui suggère que les effets de la localisation seule et de l'interaction entre localisation et attention globale se neutralisent en période d'expansion forte et de récession.
+
+
+
+# Microstructure des marchés immobiliers virtuels {#sec-micro-anl}
+
+Notre travail était principalement articulé autour du mécanisme d'attention comme canal de transmission des effets de la localisation sur la liquidité des parcelles virtuelles. Les résultats, bien qu'intéressants, mettent surtout en lumière la médiocrité du proxy d'attention (demandes de parcelles) choisi. Ne pouvant pas compléter notre analyse sur l'attention, nous sortons du cadre dans lequel nous l'avons défini, pour explorer la microstructure du marché des parcelles. Nous formulons ainsi les hypothèses suivantes.
+
+
+## Hypothèses sur la microstructure du marché des parcelles {#sec-micro-anl-hyp}
+
+- ::: {#hyp-8}
+  ***H8: Il existe une microstructure spatiale du marché des parcelles:*** Nous avons montré que la liquidité est générée par la localisation dans les premières années du métavers Decentraland. Nous hypothétisons qu'en plus de la localisation, la liquidité d'une parcelle est également générée par la dynamique de marché autour de la parcelle. Plus concrètement, nous postulons que les listings et demandes en cours et la liquidité passée des parcelles voisines à une parcelle détermine également sa liquidité. Cette hypothèse est intéressante car  contrairement au monde réel où le marché immobilier est segmenté spatialement, dans le métavers le marché est global: les différences structurelles de marché (offre, demande, accès à l'information) entre zones du métavers sont faibles voir nulles, ce qui impliquerait que la liquidité ne dépende que des caractéristiques intrinsèques (localisation, rareté) ou de marché (prix, attention ou hype, régime de marché). Dans le métavers Decentraland, les listings actifs sont affichés de manière: de manière classique comme sur toute marketplace sous forme de liste ou de grille, et aussi, dans une carte interactive. Nous pouvons raisonnablement penser que cette dernière modalité d'affichage peut orienter les choix des potentiels acheteurs, lesquels pourraient être plus portées vers des micro-marchés locaux actifs (plus de parcelles disponibles), que vers des micro-marchés dormants.
+  :::
+  
+- ::: {#hyp-9}
+  ***H9: La révision de prix appliquée sur une parcelle invendue dépend de sa localisation, et influence sa liquidité:*** Les vendeurs de parcelles révisent assez souvent leurs prix en cas de temps sur le marché un peu trop long. Nous faisons l'hypothèses de cette révision de prix dépend de la localisation, à savoir qu'en régime expansionniste, les parcelles bien situées sont plus révisées à la hausse que les parcelles moins bien situées, et qu'en régime récessionniste, les parcelles bien situées sont moins décôtées que les parcelles moins bien situées. De plus, nous postulons que la révision de prix est effectuée de manière à apprécier davantage la liquidité en fonction de la localisation.
+  ::: 
+
+- ::: {#hyp-10}
+  ***H10: Demande de parcelles - La dynamique de liquidité au niveau de la demande parcelle est moins portée par la localisation:*** Nous faisons l'hypothèse que (1) les prix d'offres pour les demandes de parcelles sont moins tributaires de la localisation que les prix de listing ne le sont, (2) le spread prix-listing/prix-demande dépend de la localisation, à savoir qu'il est plus fort pour les parcelles bien situées, (3) la liquidité du point de vue de la demande de parcelle est soit non affectée, soit négativement affectée par la localisation.
+  ::: 
+
+## Hypothèse [H8](#hyp-8): Microstructure spatiale du marché {#sec-micro-anl-h8}
+
+Nous examinons dans cette section la présence d'une composante locale de la liquidité des parcelles du métavers Decentraland, plus spécifiquement si l'activité transactionnelle passée des parcelles voisines affecte, de manière significative, la liquidité d'une parcelle.
+
+Pour cela, nous définissons trois fenêtre de voisinage: 15, 20 et 30 parcelles, et une fenêtre temporelle: 30 jours avant le jour de listing, et nous construisons quatre variables de microstructure locale du marché:
+
+- Le **nombre de listing actifs** (en cours) dans le voisinage, qui renseigne sur le nombre de parcelles sur le marché, autour de la parcelle listée, au moment du listing;
+- Le **nombre de demandes actives** (en cours) dans le voisinage, qui renseigne sur le nombre de parcelles sollicitées par de potentiels acheteurs autour de la parcelle listée, au moment du listing;
+- Le **taux de conversion en vente** passé (les 30 jours précédant le listing) des parcelles voisines à la parcelle listée;
+- Le **temps sur le marché médian** des parcelles voisines à la parcelle listée, et vendues dans les 30 jours précédant le listing.
+
+Nous menons l'analyse sur chacun des quatre régimes de marché identifiés, et avec le time-on-market comme seule mesure de liquidité.
+
+### En régime d'expansion douce R1
+
+Le tableau @tbl-h8-v2-res-r1 présente les résultats de régression de la liquidité, mesurée par le time-on-market, sur l'activité transactionnelle locale, en régime d'expansion douce (2019-2020), avec contrôles pour la localisation, le trimestre, et le prix de listing.
+
+```{r}
+#| label: tbl-h8-v2-res-r1
+#| tbl-cap: "Lien Liquidité - Activité de marché locale en régime d'expansion douce (2019-2020)<br> La liquidité est mesurée par le time-on-market. L'activité de marché locale est mesurée par le nombre de listings et de demandes actifs, et la liquidité sur les 30 jours précédant le listing, sur les parcelles voisines à la parcelle listée. La notion de voisinage est définie par un cercle autour de la parcelle, dont les rayons sont 10, 15 et 25 parcelles. <br>TOM = Time-on-market, LSR = Listing-sale-rate"
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+library(DescTools)
+library(stringr)
+source("./models.R")
+
+my_gof <- list(
+  list("raw" = "q.controls",     "clean" = "FE Quarters", fmt = 0),
+  list("raw" = "loc.controls",     "clean" = "Loc Controls", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+)
+
+splq_db_r10 <- readRDS(file = "splq_db_r10.RDS")
+splq_db_r15 <- readRDS(file = "splq_db_r15.RDS")
+splq_db_r25 <- readRDS(file = "splq_db_r25.RDS")
+
+XColsList <- list(
+  c("LocalListings", "LocalDemand"),
+  c("LocalListings", "LocalDemand", "LocalPastLSRatio", "LocalPastTom")
+)
+XLocControls <- c(
+  "DPC", "CPX", "CRD", "CDX", "North", "LogPrice"
+)
+XQtControls <- c(
+  "Q2_2019", "Q3_2019", "Q4_2019", "Q1_2020", "Q2_2020", "Q3_2020", "Q4_2020"
+)
+db_idx <- c(10, 15, 25)
+
+results <- vector(mode = "list", length = 6)
+rnames <- c(
+  "TOM<br>Neighboor = 10", "TOM<br>Neighboor = 10", "TOM<br>Neighboor = 15",
+  "TOM<br>Neighboor = 15", "TOM<br>Neighboor = 25", "TOM<br>Neighboor = 25"
+)
+k <- 1
+for (k in seq_len(length.out = length(results))) {
+  dbidx <- ((k-1) %/% 2) + 1
+  xcidx <- ((k-1) %% 2) + 1
+  
+  eval(parse(text = paste0("db <- splq_db_r", db_idx[dbidx])))
+  db <- db |> 
+    filter(lubridate::year(Date) %in% 2019:2020) |>
+    filter(!is.na(Tom) & Tom > 0) |>
+    mutate(quarter = quarter(Date), year = year(Date)) |> 
+    mutate(qname = paste0("Q", quarter, "_", year)) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+  
+  fit <- aft_model(
+    db,
+    Y_time = "Tom",
+    Y_event = "Sold",
+    X = c(XLocControls, XColsList[[xcidx]], XQtControls),
+    error_cluster = "asset_id"
+  )
+  gf <- get_gof(fit)
+  gf[["rmse"]] = NULL
+  gf[["q.controls"]] = "Yes"
+  gf[["loc.controls"]] = "Yes"
+  
+  td = get_estimates(fit) |>
+    filter(!str_detect(term, "^Q\\d+_\\d+")) |>
+    filter(!str_detect(term, "^C.+")) |>
+    filter(!str_detect(term, "^North.+")) |>
+    filter(!str_detect(term, "^Log.+"))
+  mod = list(tidy = td, glance = gf)
+  class(mod) <- "modelsummary_list"
+  results[[k]] = mod
+  
+}
+names(results) <- rnames
+
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(fontsize = 0.8)
+colnames(tab) <- c(" ", colnames(tab)[-1])
+
+tab
+```
+
+Les résultats suggèrent que la liquidité d'une parcelle, en plus d'être portée par sa localisation par rapport au centre et sa proximité aux autres aménités (routes, districts, plazas périphériques), dépend aussi de la dynamique de marché autour de la parcelle. En effet, entre deux parcelles aux caractéristiques localisationnelles similaires, celle parcelle se situant entre des parcelles sollicitées et dans une localité dynamique en termes de ventes, se vendra plus vide que celle n'ayant pas ces avantages.
+
+Ces résultats suggèrent que les investisseurs du début du métavers, étaient plus portées, en plus de la localisation, vers des zones du métavers où l'activité transactionnelle était plus forte. En gros, les acheteurs s'orientaient là vers les zones où l'offre de parcelles était plus conséquente.
+
+Examinons maintenant comment la composante microstructurelle du marché de parcelles a évolué avec le temps, à partir de 2021.
+
+### Autres régimes de marchés (2021-2024)
+
+Nous avions vu en section @sec-emp-anl-1920v2-h6a qu'à partir de 2021, la localisation n'affectait plus la liquidité des parcelles. Nous examinons dans cette section si, malgré celà, la présence de différences locales en termes de dynamique de liquidité subsiste.
+
+Le tableau @tbl-h8-v2-res-r2 présente les résultats de régression de la liquidité, mesurée par le time-on-market, sur l'activité transactionnelle locale, à partir de 2021 jusqu'en 2024. Les régressions intègrent des variables de contrôle pour la localisation, le trimestre, et le prix de listing.
+
+```{r}
+#| label: tbl-h8-v2-res-r2
+#| tbl-cap: "Lien Liquidité - Activité de marché locale à partir de 2021 (2021-2024)<br> La liquidité est mesurée par le time-on-market. L'activité de marché locale est mesurée par le nombre de listings et de demandes actifs, et la liquidité sur les 30 jours précédant le listing, sur les parcelles voisines à la parcelle listée. La notion de voisinage est définie par un cercle autour de la parcelle, dont les rayons sont 10, 15 et 25 parcelles. <br>TOM = Time-on-market, LSR = Listing-sale-rate"
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+library(DescTools)
+library(stringr)
+source("./models.R")
+
+my_gof <- list(
+  list("raw" = "q.controls",     "clean" = "FE Quarters", fmt = 0),
+  list("raw" = "loc.controls",     "clean" = "Loc Controls", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+)
+
+splq_db_r15 <- readRDS(file = "splq_db_r15.RDS")
+
+qt_list <- list(
+  list(ys=2021, qtc=c("Q2_2021", "Q3_2021", "Q4_2021")),
+  list(ys=2022, qtc=c("Q2_2022", "Q3_2022", "Q4_2022")),
+  list(ys=2023:2024, qtc="Q2_2023", "Q3_2023", "Q4_2023", "Q1_2024", "Q2_2024", "Q3_2024", "Q4_2024")
+)
+XColsList <- list(
+  c("LocalListings", "LocalDemand"),
+  c("LocalListings", "LocalDemand", "LocalPastLSRatio", "LocalPastTom")
+)
+XLocControls <- c(
+  "DPC", "CPX", "CRD", "CDX", "North", "LogPrice"
+)
+
+results <- vector(mode = "list", length = 6)
+rnames <- c(
+  "TOM<br>R2 (2021)<br>Neighboor = 15", "TOM<br>R2 (2021)<br>Neighboor = 15", 
+  "TOM<br>R3 (2022)<br>Neighboor = 15", "TOM<br>R3 (2022)<br>Neighboor = 15", 
+  "TOM<br>R4 (2023-2024)<br>Neighboor = 15", "TOM<br>R4 (2023-2024)<br>Neighboor = 15"
+)
+k <- 1
+for (k in seq_len(length.out = length(results))) {
+  qtidx <- ((k-1) %/% 2) + 1
+  xcidx <- ((k-1) %% 2) + 1
+  ys <- qt_list[[qtidx]]$ys
+  XQtControls <- qt_list[[qtidx]]$qtc
+  
+  db <- splq_db_r15 |> 
+    filter(lubridate::year(Date) %in% ys) |>
+    filter(!is.na(Tom) & Tom > 0) |>
+    mutate(quarter = quarter(Date), year = year(Date)) |> 
+    mutate(qname = paste0("Q", quarter, "_", year)) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+  
+  fit <- aft_model(
+    db,
+    Y_time = "Tom",
+    Y_event = "Sold",
+    X = c(XLocControls, XColsList[[xcidx]], XQtControls),
+    error_cluster = "asset_id"
+  )
+  gf <- get_gof(fit)
+  gf[["rmse"]] = NULL
+  gf[["q.controls"]] = "Yes"
+  gf[["loc.controls"]] = "Yes"
+  
+  td = get_estimates(fit) |>
+    filter(!str_detect(term, "^Q\\d+_\\d+")) |>
+    filter(!str_detect(term, "^C.+")) |>
+    filter(!str_detect(term, "^North.+")) |>
+    filter(!str_detect(term, "^Log.+"))
+  mod = list(tidy = td, glance = gf)
+  class(mod) <- "modelsummary_list"
+  results[[k]] = mod
+  
+}
+names(results) <- rnames
+
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(fontsize = 0.8)
+colnames(tab) <- c(" ", colnames(tab)[-1])
+
+tab
+```
+
+Nous constatons que l'activité de marché locale détermine toujours significativement la liquidité après 2020. En effet:
+- Durant le régime d'expansion forte en 2021, l'offre et la demande locale au moment du listing, le liquidité passé sont liées positivement à la liquidité. On observe également que la proximité au centre redevient significative, mais négative. 
+- En régimes de récession à partir de 2022, la demande locale est liée positivement à la liquidité, tandis que l'offre locale n'est liée à la liquidité qu'en période de récession forte, et la liquidité passé n'est liée à la liquidité actuelle en période de récession faible.
+
+
+## Hypothèse [H9](#hyp-9): Révision des prix des invendus {#sec-micro-anl-h9}
+
+[*En cours de travail...*]{style="color: #0000FF;"}
+
+
+## Hypothèse [H10](#hyp-10): Liquidité du point de vue des demandes de parcelles {#sec-micro-anl-h10}
+
+Dans cette section, nous comparons les effets de la localisation sur le prix et la liquidité des parcelles du point de vue des vendeurs et du point de vue des demandeurs. Nous procédons comme suit:
+
+- Dans un premier temps, nous comparons l'évolution dans le temps des effets de la distance au centre sur les prix de listing et les prix d'offres pour les demandes de parcelles.
+- Ensuite, nous examinons l'effet de la localisation sur le spread prix-de-listing/prix-d-offre, suivant l'hypothèse qu'il augmente avec l'éloignement de la parcelle au centre.
+- Enfin, nous examinons l'effet de la localisation, du temps passé sur le marché et du spread sur la liquidité des parcelles demandées (temps et probabilité d'acceptation).
+
+### Effets de la localisation sur les prix de listing et les prix de sollicitation des parcelles dans le temps
+
+La figure @fig-h10-v2-res-1 montre l'évolution des coefficients de pente de la distance au centre dans les régressions du **prix de listing (panel (a))** et du **prix de sollicitation (panel (b))** sur la distance au centre. Les régressions sont faites trimestriellement, et les localisations par rapport aux autres aménités sont intégrées en tant que variables de contrôle.
+
+```{r fig.width=10, fig.height=4}
+#| label: fig-h10-v2-res-1
+#| layout-nrow: 2
+#| fig-cap: "Evolution de l'effet de la distance au centre sur les prix de listing et les prix de sollicitation (demande de parcelles), entre 2019 et 2024"
+#| fig-subcap: 
+#| - "Prix de listing"
+#| - "Prix de sollicitation"
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+library(DescTools)
+library(ggplot2)
+
+#######################################
+## Regressions
+#######################################
+
+source("./models.R")
+
+opr_db <- readRDS(file = "opr_db.RDS")
+opr_ls_db <- opr_db$ls |> 
+  mutate(LogPrice = log1p(price_usd_l)) |> 
+  mutate(quarter = lubridate::quarter(date), year = lubridate::year(date)) |>
+  filter(if_all(c("LogPrice"), ~ filter_outliers(.x)))
+opr_as_db <- opr_db$as |> 
+  mutate(LogPrice = log1p(price_usd_l)) |> 
+  mutate(quarter = lubridate::quarter(ask_date), year = lubridate::year(ask_date)) |>
+  filter(if_all(c("LogPrice"), ~ filter_outliers(.x)))
+rm(list = c("opr_db"))
+
+ys <- 2019:2024
+qs <- 1:4
+
+Xcols <- c("DPC", "CPX", "CRD", "CDX", "North")
+
+tab1 <- list()
+tab2 <- list()
+qdates <- c()
+k <- 1
+
+for (k in seq_len(length.out = length(ys)*length(qs))) {
+  
+  yidx <- ((k-1) %/% 4) + 1
+  qidx <- ((k-1) %% 4) + 1
+  
+  y <- ys[yidx]
+  q <- qs[qidx]
+      
+  db_elm <- db |> filter(quarter == q, year == y)
+  
+  XcolsAs <- Xcols
+  if (y == 2024) {
+    XcolsAs <- c("DPC")
+  }
+  fit1 = lm_model(
+    dataset = opr_as_db |> filter(quarter == q, year == y),
+    Y = c("LogPrice"),
+    X = XcolsAs
+  )
+  td1 = get_estimates(fit1$model)
+  fit2 = lm_model(
+    dataset = opr_ls_db |> filter(quarter == q, year == y),
+    Y = c("LogPrice"),
+    X = Xcols
+  )
+  td2 = get_estimates(fit2$model)
+  
+  qdate = floor_date(make_date(y, (q*3)-2, 1), "quarter")
+  qdates <- c(qdates, qdate)
+  
+  tab1 = append(tab1, list(data.frame(date=qdate, estimate=td1[2,2], conf.low=td1[2,5], conf.high=td1[2,6])))
+  tab2 = append(tab2, list(data.frame(date=qdate, estimate=td2[2,2], conf.low=td2[2,5], conf.high=td2[2,6])))
+  
+}
+
+tab1 <- as.data.frame(do.call(rbind, tab1))
+tab2 <- as.data.frame(do.call(rbind, tab2))
+rownames(tab1) <- as.character(qdates)
+rownames(tab2) <- as.character(qdates)
+colnames(tab1) <- c("date", "estimate", "conf.low", "conf.high")
+colnames(tab2) <- c("date", "estimate", "conf.low", "conf.high")
+
+tab1 |>
+  ggplot(aes(x = date)) +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "#E69F00", alpha = 0.15) +
+  geom_line(aes(y = conf.low), color = "#D55E00", linetype = "dashed", linewidth = 0.5) +
+  geom_line(aes(y = conf.high), color = "#D55E00", linetype = "dashed", linewidth = 0.5) +
+  geom_line(aes(y = estimate), color = "#222222", linewidth = 1) +
+  labs(
+    # title = "Your Main Project Title",
+    # subtitle = "Optional descriptive subtitle line",
+    x = "Time (in years)",
+    y = "Estimate of DPC coefficient (with 95% conf. Int)",
+    # caption = "Data Source: Internal Database"
+  ) +
+  theme_minimal()
+
+tab2 |>
+  ggplot(aes(x = date)) +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "deepskyblue", alpha = 0.15) +
+  geom_line(aes(y = conf.low), color = "deepskyblue3", linetype = "dashed", linewidth = 0.5) +
+  geom_line(aes(y = conf.high), color = "deepskyblue3", linetype = "dashed", linewidth = 0.5) +
+  geom_line(aes(y = estimate), color = "navyblue", linewidth = 1) +
+  labs(
+    # title = "Your Main Project Title",
+    # subtitle = "Optional descriptive subtitle line",
+    x = "Time (in years)",
+    y = "Estimate of DPC coefficient (with 95% conf. Int)",
+    # caption = "Data Source: Internal Database"
+  ) +
+  theme_minimal()
+```
+
+La figure montre que les prix de sollicitation des parcelles sont moins fortement liés à la distance au centre que les prix de listing. Au début du métavers, la proximité au centre implique des prix de sollicitation plus élevés. Mais à partir de 2021, le lien positif s'affaiblit jusqu'à s'inverser: les parcelles plus éloignées du centre étaient alors demandées à des prix plus élevés que les parcelles proches. Durant la chute en 2022, la tendance s'inverse et le lien redevient faiblement positif. En fin de période (fin 2023 et toute l'année 2024), la forte variabibilité du lien entre localisation et prix de sollicitation est due au faible nombre de sollicitations (demandes sur la marketplace Decentraland) à partir de 2023. 
+
+Contrairement aux prix de sollicitation, les prix de listing restent globalement positivement et significativement liés à la proximité de la parcelle au centre du métavers. Le lien est fort en début de vie du métavers, s'affaiblit substantiellement en période de bulle (2021-2022) tout en restant globalement significatif, et revient à son état d'avant bulle à partir de 2023.
+
+### Effets de la localisation sur le spread prix-listing/prix-d-offre
+
+Pour chaque demande ou sollicitation de parcelle sur le marché, nous définissons le **spread rationnel des prix** comme le rapport entre le prix (USD) offert par le demandeur au moment de la demande et l'équivalent (USD) du prix demandé par le vendeur au moment de la demande (et non au moment du listing). Nous utilisons un spread rationnel plutôt qu'un spread soustractif pour deux raisons:
+
+- Le spread rationnel ici est facile à calculer: il se déduit par le rapport entre les prix cryptos de sollicitation et de listing, sans tenir compte du cours de la cryptomonnaie (MANA) aux deux dates de listing et de sollicitation;
+- Dans un modèle de régression, passer le spread rationnel en log revient à faire la différence des logs des deux prix crypto, ce qui rend l'interprétabilité plus aisée dans les cas où le spread fait partie des variables explicatives.
+
+Toutefois, pour des raisons de robustesse, nous régressons également le spread soustractif sur la localisation.
+
+Les tableaux @tbl-h10-v2-res-2a et @tbl-h10-v2-res-2b montre les résultats des régressions du **spread rationnel** et du **spread soustractif** sur la distance au centre dans chaque régime de marché. Les localisations par rapport et autres aménités et le temps déjà passé sur le marché sont intégrés comme variables de contrôle.
+
+```{r}
+#| label: tbl-h10-v2-res-2a
+#| tbl-cap: "Lien Spread Prix-Listing/Demande et localisation<br> Le spread est calculé par le ratio des prix cryptos (Prix Listing / Prix Sollicitation), et les régressions sont faites pour chaque régime de marché."
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+library(DescTools)
+library(ggplot2)
+
+#######################################
+## Regressions
+#######################################
+
+source("./models.R")
+
+my_gof <- list(
+  list("raw" = "q.controls",     "clean" = "FE Quarters", fmt = 0),
+  list("raw" = "loc.controls",     "clean" = "Loc Controls", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "r.squared", "clean" = "R2", "fmt" = 3),
+  list("raw" = "adj.r.squared", "clean" = "R2 Adj", "fmt" = 3),
+  list("raw" = "logLik",   "clean" = "Log Likelihood",    "fmt" = 2),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1),
+  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2)
+)
+
+spreads_db <- readRDS(file = "spreads_db.RDS")
+spreads_db <- spreads_db |> 
+  filter(if_all(c("spread_rt"), ~ filter_outliers(.x))) |>
+  mutate(Spread = spread_rt) |>
+  #mutate(SubSpread = sign(spread_ss) * log1p(abs(spread_ss))) |>
+  mutate(cTom = log1p(ctom)) |>
+  mutate(quarter = quarter(ask_date), year = year(ask_date))
+
+Xcols <- c("DPC", "CPX", "CRD", "CDX", "North", "cTom")
+qt_list <- list(
+  list(ys=2019:2020, qtc="Q2_2019", "Q3_2019", "Q4_2019", "Q1_2020", "Q2_2020", "Q3_2020", "Q4_2020"),
+  list(ys=2021, qtc=c("Q2_2021", "Q3_2021", "Q4_2021")),
+  list(ys=2022, qtc=c("Q2_2022", "Q3_2022", "Q4_2022")),
+  list(ys=2023:2024, qtc="Q2_2023", "Q3_2023", "Q4_2023", "Y_2024")
+)
+
+results <- vector(mode = "list", length = 4)
+rnames <- c("R1: 2019-2020", "R2: 2021", "R3: 2022", "R4: 2023-2024")
+k <- 1
+for (k in seq_len(length.out = length(results))) {
+  
+  db <- spreads_db |> 
+    filter(year %in% qt_list[[k]]$ys) |>
+    mutate(qname = if_else(year == 2024, "Y_2024", paste0("Q", quarter, "_", year))) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+  
+  fit = lm_model(
+    dataset = db,
+    Y = c("Spread"),
+    X = c(Xcols, qt_list[[k]]$qtc)
+  )
+  td = get_estimates(fit$model) |>
+    filter(!str_detect(term, "^Q\\d+_\\d+")) |>
+    filter(!str_detect(term, "^C.+")) |>
+    filter(!str_detect(term, "^North.+"))
+  gf = get_gof(fit$model)
+  gf[["q.controls"]] = "Yes"
+  gf[["loc.controls"]] = "Yes"
+  mod = list(tidy = td, glance = gf)
+  class(mod) <- "modelsummary_list"
+  results[[k]] = mod
+  
+}
+names(results) <- rnames
+
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(fontsize = 0.8)
+colnames(tab) <- c(" ", colnames(tab)[-1])
+
+tab
+```
+
+
+```{r fig.width=10, fig.height=4}
+#| label: tbl-h10-v2-res-2b
+#| tbl-cap: "Lien Spread Prix-Listing/Demande et localisation<br> Le spread est calculé par la différence des équivalents USD des prix cryptos (Prix Listing et Prix Sollicitation) au moment de la demande, et les régressions sont faites pour chaque régime de marché."
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+library(DescTools)
+library(ggplot2)
+
+#######################################
+## Regressions
+#######################################
+
+source("./models.R")
+
+my_gof <- list(
+  list("raw" = "q.controls",     "clean" = "FE Quarters", fmt = 0),
+  list("raw" = "loc.controls",     "clean" = "Loc Controls", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "r.squared", "clean" = "R2", "fmt" = 3),
+  list("raw" = "adj.r.squared", "clean" = "R2 Adj", "fmt" = 3),
+  list("raw" = "logLik",   "clean" = "Log Likelihood",    "fmt" = 2),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1),
+  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2)
+)
+
+spreads_db <- readRDS(file = "spreads_db.RDS")
+spreads_db <- spreads_db |> 
+  filter(if_all(c("spread_ss"), ~ filter_outliers(.x))) |>
+  mutate(Spread = sign(spread_ss) * log1p(abs(spread_ss))) |>
+  mutate(cTom = log1p(ctom)) |>
+  mutate(quarter = quarter(ask_date), year = year(ask_date))
+
+Xcols <- c("DPC", "CPX", "CRD", "CDX", "North", "cTom")
+qt_list <- list(
+  list(ys=2019:2020, qtc="Q2_2019", "Q3_2019", "Q4_2019", "Q1_2020", "Q2_2020", "Q3_2020", "Q4_2020"),
+  list(ys=2021, qtc=c("Q2_2021", "Q3_2021", "Q4_2021")),
+  list(ys=2022, qtc=c("Q2_2022", "Q3_2022", "Q4_2022")),
+  list(ys=2023:2024, qtc="Q2_2023", "Q3_2023", "Q4_2023", "Y_2024")
+)
+
+results <- vector(mode = "list", length = 4)
+rnames <- c("R1: 2019-2020", "R2: 2021", "R3: 2022", "R4: 2023-2024")
+k <- 1
+for (k in seq_len(length.out = length(results))) {
+  
+  db <- spreads_db |> 
+    filter(year %in% qt_list[[k]]$ys) |>
+    mutate(qname = if_else(year == 2024, "Y_2024", paste0("Q", quarter, "_", year))) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+  
+  fit = lm_model(
+    dataset = db,
+    Y = c("Spread"),
+    X = c(Xcols, qt_list[[k]]$qtc)
+  )
+  td = get_estimates(fit$model) |>
+    filter(!str_detect(term, "^Q\\d+_\\d+")) |>
+    filter(!str_detect(term, "^C.+")) |>
+    filter(!str_detect(term, "^North.+"))
+  gf = get_gof(fit$model)
+  gf[["q.controls"]] = "Yes"
+  gf[["loc.controls"]] = "Yes"
+  mod = list(tidy = td, glance = gf)
+  class(mod) <- "modelsummary_list"
+  results[[k]] = mod
+  
+}
+names(results) <- rnames
+
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(fontsize = 0.8)
+colnames(tab) <- c(" ", colnames(tab)[-1])
+
+tab
+```
+
+Les résultats suggèrent, contre toute attente, que le spread diminue avec l'éloignement: l'écart entre le prix d'offre pour la demande d'une parcelle et le prix de listing de celle-ci est d'autant plus fort que la parcelle est proche du centre. Cela est certainement dû au fait que les parcelles proches du centre sont listés à des prix trop excessifs pour les potentiels acheteurs, ces derniers répondant aux vendeurs par des prix plus éloignés des prix de listing.
+
+### Liquidité au niveau de la demande de parcelles
+
+Nous examinons les facteurs qui influencent la liquidité au niveau de la demande de parcelle, ou plus concrètement le taux d'acceptation d'une demande de parcelle. Nous axons notre analyse sur les parcelles listées sur le marché, et renégociées à un prix différent. Nous identifions trois facteurs potentiels, pouvant influencer l'acceptation de la renégociation de prix:
+
+- La localisation (principalement la distance au centre);
+- Le temps déjà passé sur le marché avant la demande (renégociation) de l'acheteur;
+- L'écart (ou spread) de prix entre le prix listé et le prix de renégociation.
+
+Il est à noter que le taux d'acceptation général des demandes de parcelles est très bas comparé aux taux de conversion en vente des listings. Cela signifie qu'en général, les ventes de parcelles proviennent beaucoup plus de listings concluants que de demandes acceptées. Concernant notre échantillon de parcelles listées ayant fait l'objet d'une demande de renégociation, seules 8.1% (920 sur 11395 demandes) des demandes ont été acceptées.
+
+Le tableau @tbl-h10-v2-res-3 montre les résultats des régressions par modèle de COX de la liquidité niveau demande, mesurée par la probabilité d'acceptation d'une demande, sur la localisation, le temps déjà passé sur le marché, et le spread de prix. Le spread considéré ici est le spread rationnel.Les localisations par rapport aux autres aménités sont intégrés comme variables de contrôle.
+
+```{r}
+#| label: tbl-h10-v2-res-3
+#| tbl-cap: "Lien Liquidité Demande - Localisation & Paramètres de renégociation<br> La liquidité de demande est mesurée par le taux d'acceptation de la renégociation, tandis que les paramètres de renégociation sont le temps déjà passé sur le marché et le spread de renégociation. Ce dernier est calculé par le ratio des prix cryptos (Prix Listing / Prix Sollicitation), et les régressions sont faites pour chaque régime de marché."
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+library(DescTools)
+library(ggplot2)
+
+#######################################
+## Regressions
+#######################################
+
+source("./models.R")
+
+my_gof <- list(
+  list("raw" = "q.controls",     "clean" = "FE Quarters", fmt = 0),
+  list("raw" = "loc.controls",     "clean" = "Loc Controls", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
+  list("raw" = "concordance",   "clean" = "Concordance",    "fmt" = 2),
+  list("raw" = "concordance.std",   "clean" = "Concordance Std",    "fmt" = 3),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1),
+  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2)
+)
+
+spreads_db <- readRDS(file = "spreads_db.RDS")
+spreads_db <- spreads_db |> 
+  #filter(if_all(c("spread_rt"), ~ filter_outliers(.x))) |>
+  #mutate(Spread = spread_rt) |>
+  mutate(cTom = log1p(ctom)) |>
+  filter(!is.na(tom) & tom > 0) |>
+  mutate(
+    Sold = as.numeric(status == "filled" & tom <= 365),
+    Tom = if_else(tom > 365, 365, tom),
+    Spread = log(Winsorize(spread_rt, val = quantile(spread_rt, probs = c(0.00, 0.99))))
+  ) |>
+  mutate(quarter = quarter(ask_date), year = year(ask_date))
+
+Xcols <- c("DPC", "CPX", "CRD", "CDX", "North", "cTom", "Spread")
+qt_list <- list(
+  list(ys=2019:2020, qtc="Q2_2019", "Q3_2019", "Q4_2019", "Q1_2020", "Q2_2020", "Q3_2020", "Q4_2020"),
+  list(ys=2021, qtc=c("Q2_2021", "Q3_2021", "Q4_2021")),
+  list(ys=2022, qtc=c("Q2_2022", "Q3_2022", "Q4_2022")),
+  list(ys=2023:2024, qtc="Q2_2023", "Q3_2023", "Q4_2023", "Y_2024")
+)
+
+results <- vector(mode = "list", length = 4)
+rnames <- c("R1: 2019-2020", "R2: 2021", "R3: 2022", "R4: 2023-2024")
+k <- 1
+for (k in seq_len(length.out = length(results))) {
+  
+  db <- spreads_db |> 
+    filter(year %in% qt_list[[k]]$ys) |>
+    mutate(qname = if_else(year == 2024, "Y_2024", paste0("Q", quarter, "_", year))) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+  
+  fit = cox_model(
+    db,
+    Y_time = "Tom",
+    Y_event = "Sold",
+    X = c(Xcols, qt_list[[k]]$qtc),
+    error_cluster = "asset_id"
+  )
+  td = get_estimates(fit) |>
+    filter(!str_detect(term, "^Q\\d+_\\d+")) |>
+    filter(!str_detect(term, "^C.+")) |>
+    filter(!str_detect(term, "^North.+"))
+  gf = get_gof(fit)
+  gf[["q.controls"]] = "Yes"
+  gf[["loc.controls"]] = "Yes"
+  gf[["concordance"]] = fit$concordance[6]
+  gf[["concordance.std"]] = fit$concordance[7]
+  mod = list(tidy = td, glance = gf)
+  class(mod) <- "modelsummary_list"
+  results[[k]] = mod
+  
+}
+names(results) <- rnames
+
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(fontsize = 0.8)
+colnames(tab) <- c(" ", colnames(tab)[-1])
+
+tab
+```
+
+Il apparaît clairement dans les résultats que dans tous les régimes de marché, seul le spread de renégociation influence la probabilité de conclusion de la renégociation: plus le spread est élevé, moins il y'a de chances que le vendeur accepte la renégociation.
+
+
 
 
 # Réferences {.unnumbered}

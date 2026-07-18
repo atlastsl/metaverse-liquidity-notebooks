@@ -41,6 +41,10 @@ Transactions <- TransactionsRaw |>
 
 LandContract <- "0xf87e31492faf9a91b02ee0deaad50d51d56d5d4d"
 
+################################
+## Database summary builder
+################################
+
 quarters_list <- unique(Transactions$quarter)
 quarters_list <- quarters_list[!is.na(quarters_list) & quarters_list != quarters_list[length(quarters_list)]]
 
@@ -194,9 +198,11 @@ TxSummary <- as_tibble(data.frame(quarter = c(format(zoo::as.yearqtr(quarters_li
     by = "quarter"
   )
 
+################################
+
 
 ################################
-## Regressions databases builder
+## Raw databases builder
 ################################
 
 # Actual date
@@ -205,7 +211,7 @@ date_now <- lubridate::now()
 # Listings on Dcl marketplace V1
 listings <- Transactions |>
   filter(asset_contract == LandContract & type == "order" & order_type == "list" & order_market == "dcl-marketplace-1") |>
-  select(hash, order_id, asset_id, maker, date, order_time_on_market, order_status, order_canceled_by, amount_usd) |>
+  select(hash, order_id, asset_id, maker, date, order_time_on_market, order_status, order_canceled_by, amount_usd, currency, amount) |>
   transmute( 
     # Rearrange listing database, create listing period (interval [Date, Date+Tom)), and 30 days lookback interval
     asset_id,
@@ -215,29 +221,155 @@ listings <- Transactions |>
     list_start = date,
     list_end = as.POSIXct(ifelse(order_status == "pending", date_now, date + dmilliseconds(floor(order_time_on_market*86400*1000))), tz = "UTC"),
     status = order_status,
-    value = amount_usd,
+    price_usd = amount_usd,
+    price_raw = amount,
     canceled_by = order_canceled_by
-  )
-listings <- listings |>
-  add_count(asset_id, date) |>
-  filter(n == 1) |>
-  bind_rows(
-    listings |> add_count(asset_id, date) |> filter(n > 1, tom > 0)
   ) |>
-  select(-n)
+  distinct(asset_id, date, .keep_all = T)
 
-# Asks on Dcl marketplace V
+# Joined listings (based on list_end and next list_start)
+cplistings <- listings |>
+  arrange(asset_id, date) |>
+  group_by(asset_id) |>
+  mutate(
+    prev_list_end = dplyr::lag(cummax(as.numeric(list_end))),
+    prev_status = dplyr::lag(status),
+    prev_canceled_by = dplyr::lag(canceled_by),
+    new_block = if_else(is.na(prev_list_end) | as.numeric(list_start) > prev_list_end + 5, 1L, if_else(prev_status == "canceled" & prev_canceled_by != "transfer", 0L, 1L)),
+    block = cumsum(new_block)
+  ) |>
+  ungroup() |>
+  group_by(asset_id, block) |>
+  summarise(
+    maker = first(maker),
+    tom = sum(tom),
+    date = first(date),
+    list_start = first(list_start),
+    list_end = last(list_end),
+    status = last(status),
+    relistings = n()-1,
+    price_raw_f = first(price_raw),
+    price_raw_l = last(price_raw),
+    price_usd_f = first(price_usd),
+    price_usd_l = last(price_usd),
+    canceled_by = last(canceled_by),
+    .groups = "drop"
+  ) |>
+  mutate(
+    price_usd_delta = price_usd_l - price_raw_f*(price_usd_l/price_raw_l),
+    tomc = time_length(list_end - list_start, unit = "second")/86400
+  ) |>
+  select(-block) |>
+  arrange(date)
+
+# Asks on Dcl marketplace V1
 asks <- Transactions |>
   filter(asset_contract == LandContract, type == "order", order_type == "ask", order_market == "dcl-marketplace-1") |>
-  select(asset_id, date, taker) |>
+  select(hash, order_id, asset_id, date, taker, order_time_on_market, order_status, order_canceled_by, amount_usd, currency, amount) |>
+  transmute( 
+    # Rearrange asks database, create asks periods (interval [Date, Date+Tom))
+    asset_id,
+    ask_date = date,
+    asker = taker,
+    tom = order_time_on_market,
+    ask_start = date,
+    ask_end = as.POSIXct(ifelse(order_status == "pending", date_now, date + dmilliseconds(floor(order_time_on_market*86400*1000))), tz = "UTC"),
+    status = order_status,
+    price_usd = amount_usd,
+    price_raw = amount,
+    canceled_by = order_canceled_by
+  ) |>
+  distinct(asset_id, ask_date, .keep_all = T) |>
+  left_join(
+    listings |> select(asset_id, list_start, list_end, list_price_raw = price_raw, list_price_usd = price_usd),
+    by = join_by(asset_id, ask_date >= list_start, ask_date < list_end)
+  ) |>
+  select(-list_end) |>
+  rename(list_date = list_start)
+
+# Joined Asks (based on ask_end and next ask_start)
+cpasks <- asks |>
+  arrange(asset_id, asker, ask_date) |>
+  group_by(asset_id, asker) |>
+  mutate(
+    prev_ask_end = dplyr::lag(cummax(as.numeric(ask_end))),
+    new_block = if_else(is.na(prev_ask_end) | as.numeric(ask_start) > prev_ask_end + 5, 1L, 0L),
+    block = cumsum(new_block)
+  ) |>
+  ungroup() |>
+  group_by(asset_id, asker, block) |>
+  summarise(
+    tom = sum(tom),
+    ask_date = first(ask_date),
+    ask_start = first(ask_start),
+    ask_end = last(ask_end),
+    status = last(status),
+    retries = n()-1,
+    price_raw_f = first(price_raw),
+    price_raw_l = last(price_raw),
+    price_usd_f = first(price_usd),
+    price_usd_l = last(price_usd),
+    canceled_by = last(canceled_by),
+    .groups = "drop"
+  ) |>
+  mutate(
+    price_usd_delta = price_usd_l - price_raw_f*(price_usd_l/price_raw_l),
+    tomc = time_length(ask_end - ask_start, unit = "second")/86400
+  ) |>
+  select(-block) |>
+  arrange(ask_date)
+
+# Listings - Asks Spreads on Dcl marketplace V1
+spreads <- Transactions |>
+  filter(asset_contract == LandContract, type == "order", order_type == "ask", order_market == "dcl-marketplace-1") |>
+  select(asset_id, date, taker, amount, amount_usd, order_time_on_market, order_status, order_canceled_by) |>
   transmute(
     asset_id,
     ask_date = date,
-    asker = taker
+    asker = taker,
+    ask_price = amount,
+    ask_price_usd = amount_usd,
+    tom = order_time_on_market,
+    status = order_status,
+    canceled_by = order_canceled_by
+  ) |>
+  distinct(asset_id, ask_date, .keep_all = T) |>
+  left_join(
+    listings |> select(asset_id, list_start, list_end, list_price = price_raw),
+    by = join_by(asset_id, ask_date >= list_start, ask_date < list_end)
+  ) |>
+  group_by(asset_id, ask_date) |>
+  filter(n() == 1) |>
+  ungroup() |>
+  filter(!is.na(list_start)) |>
+  # group_by(asset_id, list_start, taker) |>
+  # mutate(
+  #   nnn = n(),
+  # ) |>
+  # summarise(
+  #   list_end = first(list_end),
+  #   list_price = first(list_price),
+  #   ask_price = max(ask_price),
+  #   ask_price_usd = ask_price_usd[which.max(ask_price)],
+  #   .groups = "drop"
+  # ) |>
+  mutate(
+    spread = list_price - ask_price,
+    spread_ss = spread * (ask_price_usd / ask_price),
+    spread_rt = (list_price / ask_price),
+    ctom = time_length(ask_date - list_start, unit = "second")/86400
   )
+spreads <- locations_merger(spreads)
+saveRDS(spreads, file = "spreads_db.RDS")
 
-library(conflicted)
-conflicted::conflicts_prefer(dplyr::select)
+# 
+
+################################
+
+
+################################
+## Attention databases builder
+################################
 
 locations_merger <- function (database) {
   loc_merged_db <- database |>
@@ -298,7 +430,7 @@ database_builder <- function (interval_base, listings_base, asks_base) {
   listed_periods <- interval_base |>
     select(asset_id, date, interval_start, interval_end) |>
     left_join(
-      listings_base |> select(asset_id, past_list_start = list_start, past_list_end = list_end, value),
+      listings_base |> select(asset_id, past_list_start = list_start, past_list_end = list_end, value = price_usd),
       by = join_by(asset_id, interval_end > past_list_start, interval_start < past_list_end),
       relationship = "many-to-many"
     ) |>
@@ -356,7 +488,7 @@ database_builder <- function (interval_base, listings_base, asks_base) {
   # Step 5: Statistic of listed periods
   listed_periods_stats <- listed_periods |>
     left_join(
-      asks_base,
+      asks_base |> select(asset_id, ask_date, asker),
       by = join_by(asset_id, bintl_start <= ask_date, bintl_end > ask_date),
       relationship = "many-to-many"
     ) |>
@@ -383,7 +515,7 @@ database_builder <- function (interval_base, listings_base, asks_base) {
   # Step 6: Statistics of non listed periods
   nonlisted_periods_stats <- nonlisted_periods |>
     left_join(
-      asks_base,
+      asks_base |> select(asset_id, ask_date, asker),
       by = join_by(asset_id, bnonl_start <= ask_date, bnonl_end > ask_date),
       relationship = "many-to-many"
     ) |>
@@ -410,7 +542,7 @@ database_builder <- function (interval_base, listings_base, asks_base) {
   whole_interval_stats <- interval_base |>
     select(asset_id, date, interval_start, interval_end) |>
     left_join(
-      asks_base,
+      asks_base |> select(asset_id, ask_date, asker),
       by = join_by(asset_id, interval_start <= ask_date, interval_end > ask_date),
       relationship = "many-to-many"
     ) |>
@@ -420,7 +552,7 @@ database_builder <- function (interval_base, listings_base, asks_base) {
       .by = c("asset_id", "date")
     ) |>
     left_join(
-      listings_base |> select(asset_id, past_date = date, value),
+      listings_base |> select(asset_id, past_date = date, value = price_usd),
       by = join_by(asset_id, date > past_date)
     ) |>
     arrange(asset_id, date, past_date) |>
@@ -451,7 +583,7 @@ database_builder <- function (interval_base, listings_base, asks_base) {
     current_listing_period_stats <- interval_base |>
       select(asset_id, date, list_start, list_end) |>
       left_join(
-        asks_base,
+        asks_base |> select(asset_id, ask_date, asker),
         by = join_by(asset_id, list_start <= ask_date, list_end > ask_date),
         relationship = "many-to-many"
       ) |>
@@ -510,10 +642,81 @@ database_builder <- function (interval_base, listings_base, asks_base) {
   return(database)
 }
 
+gl_att_builder <- function () {
+  db <- data.table::CJ(
+      date = seq(
+        from = lubridate::floor_date(as.POSIXct("2019-01-01", tz="UTC"), unit = "day"),
+        to = lubridate::floor_date(as.POSIXct("2024-12-31", tz="UTC"), unit = "day"),
+        by = "day"
+      )
+    ) |>
+      mutate(
+        interval_start = floor_date(date - ddays(30), unit = "day"),
+        interval_end = date
+      ) |> 
+      left_join(
+        Transactions |>
+          filter(asset_contract == LandContract, lubridate::year(date) %in% 2018:2024) |>
+          filter(type == "transfer" & is_sale == T & sale_related_market == "dcl-marketplace-1") |>
+          select(sale_date = date, amount_usd),
+        by = join_by(interval_start <= sale_date, interval_end > sale_date)
+      ) |>
+      summarise(
+        vol_med = median(amount_usd),
+        vol_tot = sum(amount_usd),
+        vol_N = sum(!is.na(amount_usd)),
+        .by = "date"
+      ) |>
+      mutate(
+        vol_med = replace_na(vol_med, 0L),
+        vol_tot = replace_na(vol_tot, 0L),
+        vol_N = replace_na(vol_N, 0L)
+      )
+  return(db)
+}
+
+gt_att_builder <- function () {
+  r1_gt <- ts_gtrends("decentraland", geo = "US", time = "2018-12-01 2021-01-01")
+  r2_gt <- ts_gtrends("decentraland", geo = "US", time = "2020-12-01 2022-01-01")
+  r3_gt <- ts_gtrends("decentraland", geo = "US", time = "2021-12-01 2023-01-01")
+  r4_gt <- ts_gtrends("decentraland", geo = "US", time = "2022-12-01 2025-01-01")
+  
+  r1_gt <- r1_gt |> transmute(week = time, value) |> mutate(lvalue = dplyr::lag(value)) |>
+    reframe(date = seq(from = week, by = "day", length.out = 7), lvalue = lvalue, .by = c(week)) |>
+    filter(lubridate::year(date) %in% 2019:2020)
+  
+  r2_gt <- r2_gt |> transmute(week = time, value) |> mutate(lvalue = dplyr::lag(value)) |>
+    reframe(date = seq(from = week, by = "day", length.out = 7), lvalue = lvalue, .by = c(week)) |>
+    filter(lubridate::year(date) %in% 2021)
+  
+  r3_gt <- r3_gt |> transmute(week = time, value) |> mutate(lvalue = dplyr::lag(value)) |>
+    reframe(date = seq(from = week, by = "day", length.out = 7), lvalue = lvalue, .by = c(week)) |>
+    filter(lubridate::year(date) %in% 2022)
+  
+  r4_gt <- r4_gt |> transmute(week = time, value) |> mutate(lvalue = dplyr::lag(value)) |>
+    reframe(date = seq(from = week, by = "day", length.out = 7), lvalue = lvalue, .by = c(week)) |>
+    filter(lubridate::year(date) %in% 2023:2024)
+  
+  tab <- as_tibble(as.data.frame(do.call(rbind, list(r1_gt, r2_gt, r3_gt, r4_gt))))
+  colnames(tab) <- c("week", "date", "lagged.wtrend")
+  return(tab |> select(-week))
+}
+
+install.packages("remotes")
+remotes::install_github("trendecon/trendecon")
+
+################################
+
+
 
 #########################################################################################
 ##### 1. LOCATION AND ATTENTION
 #########################################################################################
+
+library(conflicted)
+conflicted::conflicts_prefer(dplyr::select)
+conflict_prefer("filter", "dplyr")
+conflict_prefer("select", "dplyr")
 
 # filter_parcels = 
 #   as.numeric(Transactions$date) < as.numeric(as.POSIXct("2021-01-01", tz="UTC")) &
@@ -532,9 +735,6 @@ lat_base <- data.table::CJ(
     to = lubridate::floor_date(as.POSIXct("2020-12-31", tz="UTC"), unit = "quarter"),
     by = "quarter"
   )
-) |> mutate(
-  interval_start = date,
-  interval_end = ceiling_date(date + dminutes(1), unit = "quarter")
 )
   
 lat_db <- database_builder(interval_base = lat_base, listings_base = listings, asks_base = asks)
@@ -596,20 +796,45 @@ alq_db <- database_builder(interval_base = alq_base, listings_base = listings, a
 
 saveRDS(alq_db, file = "alq_db_2019_2020_v2.RDS")
 
-library(conflicted)
-conflict_prefer("filter", "dplyr")
-conflict_prefer("select", "dplyr")
 
-alq_base_B21 <- listings |>
+alq_db_R2 <- listings |>
   mutate(
     interval_start = pmax(floor_date(date - ddays(30), unit = "day"), floor_date(min(Transactions$date, na.rm = T), unit = "day")),
-    interval_end = floor_date(date, unit = "day")
+    interval_end = floor_date(date, unit = "day"),
+    value = price_usd
   ) |> 
-  filter(lubridate::year(date) == 2021 & lubridate::month(date) >= 6)
+  filter(lubridate::year(date) %in% c(2021))
+alq_db_R2 <- database_builder(interval_base = alq_db_R2, listings_base = listings, asks_base = asks)
+saveRDS(alq_db_R2, file = "alq_db_2021.RDS")
 
-alq_db_B21 <- database_builder(interval_base = alq_base_B21, listings_base = listings, asks_base = asks)
 
-saveRDS(alq_db, file = "alq_db_2019_2020_B21.RDS")
+alq_db_R3 <- listings |>
+  mutate(
+    interval_start = pmax(floor_date(date - ddays(30), unit = "day"), floor_date(min(Transactions$date, na.rm = T), unit = "day")),
+    interval_end = floor_date(date, unit = "day"),
+    value = price_usd
+  ) |> 
+  filter(lubridate::year(date) %in% c(2022))
+alq_db_R3 <- database_builder(interval_base = alq_db_R3, listings_base = listings, asks_base = asks)
+saveRDS(alq_db_R3, file = "alq_db_2022.RDS")
+
+
+alq_db_R4 <- listings |>
+  mutate(
+    interval_start = pmax(floor_date(date - ddays(30), unit = "day"), floor_date(min(Transactions$date, na.rm = T), unit = "day")),
+    interval_end = floor_date(date, unit = "day"),
+    value = price_usd
+  ) |> 
+  filter(lubridate::year(date) %in% c(2023, 2024))
+alq_db_R4 <- database_builder(interval_base = alq_db_R4, listings_base = listings, asks_base = asks)
+saveRDS(alq_db_R4, file = "alq_db_2023_2024.RDS")
+
+
+glt_base <- gl_att_builder()
+saveRDS(glt_base, "glt_db.RDS")
+
+gtt_base <- gt_att_builder()
+saveRDS(gtt_base, "gtt_db.RDS")
 
 
 ###################################################################
