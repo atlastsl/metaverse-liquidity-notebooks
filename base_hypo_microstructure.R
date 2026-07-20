@@ -183,7 +183,134 @@ opr_as_db <- locations_merger(cpasks)
 saveRDS(list(ls=opr_ls_db, as=opr_as_db), file = "opr_db.RDS")
 
 # Spread db H10
+# In `base_hypo_dclmkp.R`
 
+# Relistings Database
+relisting_db_builder <- function (edit_time_length) {
+  x1 <- listings |>
+    arrange(asset_id, date) |>
+    group_by(asset_id) |>
+    mutate(
+      prev_list_end = dplyr::lag(cummax(as.numeric(list_end))),
+      prev_status = dplyr::lag(status),
+      prev_canceled_by = dplyr::lag(canceled_by),
+      prev_price_raw = dplyr::lag(price_raw),
+      prev_tom = dplyr::lag(tom),
+      cumm_tom = cumsum(tom),
+      is_new_listing = if_else(
+        is.na(prev_list_end),
+        1L,
+        if_else(
+          #as.numeric(list_start) <= prev_list_end + 5 & prev_status == "canceled" & prev_canceled_by != "transfer" & (prev_price_raw == price_raw | prev_tom < 30*30/86400),
+          as.numeric(list_start) <= prev_list_end + 5 & prev_status == "canceled" & prev_canceled_by != "transfer" & prev_tom < edit_time_length*60/86400,
+          0L,
+          1L
+        )
+      ),
+      listing = cumsum(is_new_listing)
+    ) |>
+    ungroup() |>
+    summarise(
+      date = first(date),
+      maker = first(maker),
+      tom = sum(tom),
+      list_start = first(list_start),
+      list_end = last(list_end),
+      status = last(status),
+      n_price_usd = last(price_usd),
+      n_price_raw = last(price_raw),
+      canceled_by = last(canceled_by),
+      edit_n = n()-1,
+      edit_price = last(price_raw)-first(price_raw),
+      .by = c("asset_id", "listing")
+    ) |>
+    rename(
+      price_usd = n_price_usd,
+      price_raw = n_price_raw,
+    ) |>
+    select(-listing)
+  
+  x3 <- x1 |>
+    arrange(asset_id, date) |>
+    group_by(asset_id) |>
+    mutate(
+      prev_list_end = dplyr::lag(cummax(as.numeric(list_end))),
+      prev_status = dplyr::lag(status),
+      prev_canceled_by = dplyr::lag(canceled_by),
+      prev_price_raw = dplyr::lag(price_raw),
+      prev_tom = dplyr::lag(tom),
+      is_new_listing = if_else(
+        is.na(prev_list_end),
+        1L,
+        if_else(
+          as.numeric(list_start) <= prev_list_end + 5 & prev_status == "canceled" & prev_canceled_by != "transfer",
+          0L,
+          1L
+        )
+      ),
+      listing = cumsum(is_new_listing)
+    ) |>
+    select(-prev_list_end, -prev_status, -prev_canceled_by, -prev_price_raw, -prev_tom) |>
+    ungroup() 
+  
+  x2 <- x3 |>
+    select(asset_id, date, list_start, list_end) |>
+    left_join(
+      asks |> select(asset_id, ask_date, ask_start, ask_end, asker, price_raw, price_usd),
+      by = join_by(asset_id, list_start <= ask_date, list_end > ask_date),
+      relationship = "many-to-many"
+    ) |>
+    filter(!is.na(ask_date)) |>
+    summarise(
+      asks_n = n(),
+      askers_n = n_distinct(asker),
+      ask_price = mean(price_raw),
+      .by = c("asset_id", "date")
+    ) |>
+    right_join(
+      x3,
+      by = join_by(asset_id, date)
+    ) |>
+    mutate(
+      asks_n = replace_na(asks_n, 0L),
+      askers_n = replace_na(askers_n, 0L),
+      ask_price = replace_na(ask_price, 0L),
+      ask_spread_rat = ask_price / price_raw
+    ) |>
+    group_by(asset_id, listing) |>
+    mutate(
+      update_v = if_else(is_new_listing == 0, 1L, NA),
+      update_p = if_else(is_new_listing == 0, if_else(dplyr::lag(price_raw) == price_raw, 0L, 1L), NA),
+      tom_cm = cumsum(tom),
+      tom_pv = if_else(is_new_listing == 0, cumsum(dplyr::lag(tom, default = 0)), NA),
+      spread_rat = if_else(is_new_listing == 0, price_raw / dplyr::lag(price_raw), NA),
+      spread_sub = if_else(is_new_listing == 0, price_usd * (1 - dplyr::lag(price_raw)/price_raw), NA),
+      spread_cm_rat = if_else(is_new_listing == 0, price_raw / first(price_raw), NA),
+      spread_cm_sub = if_else(is_new_listing == 0, price_usd * (1 - first(price_raw)/price_raw), NA),
+      ext_list_start = first(list_start),
+      ext_list_end = last(list_end)
+    ) |>
+    mutate(
+      fw_update_v = dplyr::lead(update_v),
+      fw_update_p = dplyr::lead(update_p),
+      fw_spread_rat = dplyr::lead(spread_rat),
+      fw_spread_sub = dplyr::lead(spread_sub),
+      ask_spread_sub = if_else(ask_price != 0, (ask_price - price_raw)*(dplyr::lead(price_usd)/dplyr::lead(price_raw)), NA)
+    ) |>
+    ungroup() |>
+    relocate(
+      ask_spread_sub, .after = ask_spread_rat
+    ) |>
+    relocate(
+      all_of(c("asks_n", "askers_n", "ask_price", "ask_spread_rat", "ask_spread_sub")), .after = fw_spread_sub
+    ) |>
+    arrange(date) |>
+    select(-is_new_listing, -listing)
+  
+  return(x2)
+}
+
+relistings <- relisting_db_builder(30)
 
 ################################
 
