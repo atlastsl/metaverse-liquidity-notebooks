@@ -185,9 +185,31 @@ saveRDS(list(ls=opr_ls_db, as=opr_as_db), file = "opr_db.RDS")
 # Spread db H10
 # In `base_hypo_dclmkp.R`
 
+# Transfers Database
+transfers <- Transactions |>
+  filter(asset_contract == LandContract & type == "transfer") |>
+  select(hash, asset_id, is_sale, sale_related_market, from, to, date, amount_usd, currency, amount) |>
+  transmute( 
+    # Rearrange listing database, create listing period (interval [Date, Date+Tom)), and 30 days lookback interval
+    hash,
+    asset_id,
+    is_sale,
+    market = sale_related_market,
+    sender = from,
+    recipient = to,
+    date,
+    price_usd = amount_usd,
+    price_raw = amount,
+    currency
+  ) |>
+  distinct(asset_id, date, .keep_all = T) |>
+  mutate(
+    price_usd = if_else(is_sale, price_usd, 0L)
+  )
+
 # Relistings Database
 relisting_db_builder <- function (edit_time_length) {
-  x1 <- listings |>
+  listing_edit_corrected <- listings |>
     arrange(asset_id, date) |>
     group_by(asset_id) |>
     mutate(
@@ -230,7 +252,7 @@ relisting_db_builder <- function (edit_time_length) {
     ) |>
     select(-listing)
   
-  x3 <- x1 |>
+  listing_updated_base <- listing_edit_corrected |>
     arrange(asset_id, date) |>
     group_by(asset_id) |>
     mutate(
@@ -253,7 +275,7 @@ relisting_db_builder <- function (edit_time_length) {
     select(-prev_list_end, -prev_status, -prev_canceled_by, -prev_price_raw, -prev_tom) |>
     ungroup() 
   
-  x2 <- x3 |>
+  listing_updated <- listing_updated_base |>
     select(asset_id, date, list_start, list_end) |>
     left_join(
       asks |> select(asset_id, ask_date, ask_start, ask_end, asker, price_raw, price_usd),
@@ -268,7 +290,7 @@ relisting_db_builder <- function (edit_time_length) {
       .by = c("asset_id", "date")
     ) |>
     right_join(
-      x3,
+      listing_updated_base,
       by = join_by(asset_id, date)
     ) |>
     mutate(
@@ -307,10 +329,140 @@ relisting_db_builder <- function (edit_time_length) {
     arrange(date) |>
     select(-is_new_listing, -listing)
   
-  return(x2)
+  listing_owner_in_lands <- listing_edit_corrected |>
+    select(asset_id, date, list_end, maker) |>
+    arrange(date) |>
+    left_join(
+      transfers |>
+        select(
+          sale_asset_id = asset_id,
+          transfer_date = date,
+          is_sale,
+          sender,
+          recipient,
+          sale_price_usd = price_usd,
+          sale_price_raw = price_raw,
+          sale_currency = currency
+        ) |>
+        arrange(transfer_date),
+      by = join_by(list_end >= transfer_date, maker == recipient),
+      relationship = "many-to-many"
+    ) |>
+    mutate(
+      recipient = maker
+    ) |>
+    select(-list_end)
+  listing_owner_out_lands <- listing_edit_corrected |>
+    select(asset_id, date, list_end, maker) |>
+    arrange(date) |>
+    left_join(
+      transfers |>
+        select(
+          sale_asset_id = asset_id,
+          transfer_date = date,
+          is_sale,
+          sender,
+          recipient,
+          sale_price_usd = price_usd,
+          sale_price_raw = price_raw,
+          sale_currency = currency
+        ) |>
+        arrange(transfer_date),
+      by = join_by(list_end >= transfer_date, maker == sender),
+      relationship = "many-to-many"
+    ) |>
+    mutate(
+      sender = maker
+    ) |>
+    select(-list_end)
+  listing_owner_transfers_base <- bind_rows(listing_owner_in_lands, listing_owner_out_lands)
+  
+  listing_owner_transfers <- listing_owner_transfers_base |>
+    group_by(asset_id, date) |>
+    summarise(
+      maker = first(maker),
+      received = sum(maker == recipient, na.rm = T),
+      sent = sum(maker == sender, na.rm = T),
+      owned = sum(maker == recipient, na.rm = T) - sum(maker == sender, na.rm = T),
+      # received = sum(maker == recipient & sender != EstateContract, na.rm = T),
+      # sent = sum(maker == sender & recipient != EstateContract, na.rm = T),
+      # owned = sum(maker == recipient & sender != EstateContract, na.rm = T) - sum(maker == sender & recipient != EstateContract, na.rm = T),
+      sale_price_usd = coalesce(last(sale_price_usd[which(sale_asset_id == asset_id & maker == recipient & is_sale)]), last(sale_price_usd[which(sale_asset_id == asset_id & maker == recipient)])),
+      sale_price_raw = coalesce(last(sale_price_raw[which(sale_asset_id == asset_id & maker == recipient & is_sale)]), last(sale_price_raw[which(sale_asset_id == asset_id & maker == recipient)])),
+      sale_currency = coalesce(last(sale_currency[which(sale_asset_id == asset_id & maker == recipient & is_sale)]), last(sale_currency[which(sale_asset_id == asset_id & maker == recipient)])),
+      .groups = "drop"
+    )
+  
+  listing_updated <- listing_updated |>
+    left_join(
+      listing_owner_transfers |> 
+        mutate(
+          acq_mode = if_else(sale_price_usd > 0, "paid", "free")
+        ) |>
+        select(
+          asset_id, 
+          date, 
+          maker_owned_parcels = owned, 
+          acq_mode,
+          acq_price_usd = sale_price_usd, 
+          acq_price_raw = sale_price_raw,
+          acq_price_ccy = sale_currency
+        ),
+      by = c("asset_id", "date")
+    )
+  
+  listing_updated = locations_merger(listing_updated)
+  
+  return(listing_updated)
 }
-
 relistings <- relisting_db_builder(30)
+saveRDS(relistings, file = "relistings.RDS")
+
+x1 <- listings |>
+  arrange(asset_id, date) |>
+  group_by(asset_id) |>
+  mutate(
+    prev_list_end = dplyr::lag(cummax(as.numeric(list_end))),
+    prev_status = dplyr::lag(status),
+    prev_canceled_by = dplyr::lag(canceled_by),
+    prev_price_raw = dplyr::lag(price_raw),
+    prev_tom = dplyr::lag(tom),
+    cumm_tom = cumsum(tom),
+    is_new_listing = if_else(
+      is.na(prev_list_end),
+      1L,
+      if_else(
+        #as.numeric(list_start) <= prev_list_end + 5 & prev_status == "canceled" & prev_canceled_by != "transfer" & (prev_price_raw == price_raw | prev_tom < 30*30/86400),
+        as.numeric(list_start) <= prev_list_end + 5 & prev_status == "canceled" & prev_canceled_by != "transfer" & prev_tom < 30*60/86400,
+        0L,
+        1L
+      )
+    ),
+    listing = cumsum(is_new_listing)
+  ) |>
+  ungroup() |>
+  summarise(
+    date = first(date),
+    maker = first(maker),
+    tom = sum(tom),
+    list_start = first(list_start),
+    list_end = last(list_end),
+    status = last(status),
+    n_price_usd = last(price_usd),
+    n_price_raw = last(price_raw),
+    canceled_by = last(canceled_by),
+    edit_n = n()-1,
+    edit_price = last(price_raw)-first(price_raw),
+    .by = c("asset_id", "listing")
+  ) |>
+  rename(
+    price_usd = n_price_usd,
+    price_raw = n_price_raw,
+  ) |>
+  select(-listing)
+  
+
+
 
 ################################
 

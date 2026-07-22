@@ -23,13 +23,16 @@ bibliography: references.bib
 
 # Mises à jour {.unnumbered}
 
+***21 Juillet 2026***
+
+- Section 6.3 (@sec-micro-anl-h9): Hypothèse [H9](#hyp-9) - Remise sur le marché des parcelles invendues et révisions de prix.
+
 ***17 Juillet 2026***
 
 - Sections 5.7 (@sec-emp-anl-1920v2-h6b) et 5.8 (@sec-emp-anl-1920v2-h6a) : Hypothèses [H6A](#hyp-6a) et [H6B](#hyp-6b) - Lien liquidité, localisation, temps et régimes de marché.
 - Section 6 et 6.1 (@sec-micro-anl) : Possible rédirection vers la microstructure: hypothèses de microstructure du marché des parcelles.
 - Section 6.2 (@sec-micro-anl-h8): Hypothèse [H8](#hyp-8) - Structure spatiale/locale de la liquidité.
 - Section 6.4 (@sec-micro-anl-h10): Hypothèse [H10](#hyp-10) - Liquidité listing vs liquidité demande/sollicitations.
-
 
 ***02 Juillet 2026***
 
@@ -4064,9 +4067,666 @@ Nous constatons que l'activité de marché locale détermine toujours significat
 - En régimes de récession à partir de 2022, la demande locale est liée positivement à la liquidité, tandis que l'offre locale n'est liée à la liquidité qu'en période de récession forte, et la liquidité passé n'est liée à la liquidité actuelle en période de récession faible.
 
 
-## Hypothèse [H9](#hyp-9): Révision des prix des invendus {#sec-micro-anl-h9}
+## Hypothèse [H9](#hyp-9): Gestion des invendus, remise sur le marché {#sec-micro-anl-h9}
 
-[*En cours de travail...*]{style="color: #0000FF;"}
+Dans cette section, nous analysons l'influence de la localisation (distance au centre) sur les stratégies de gestion des parcelles invendus par les vendeurs.
+
+En effet, notre base de données révèle que plusieurs vendeurs se retrouvent à renouveller leurs annonces d'offres de parcelle lorsque celle-ci, passé un certain temps, n'a pas trouvé prenneur. Ce renouvellement d'annonce prend deux formes: une simple *réactualisation* de l'annonce pour qu'elle apparaisse en top résultat sur la marketplace, et une *mise à jour de prix* qui vise à modifier le prix de la parcelle pour la rendre plus attractive.
+
+Nous faisons l'hypothèse que la localisation influence la remise sur le marché d'une parcelle invendue. Plus concrètement, que ce soit en période d'expansion ou de récession, une parcelle mal située est plus fréquemment remise sur le marché qu'une parcelle bien située, avec une décotte plus forte en période de récession, une surcotte moins forte en période d'expansion, et une fréquence (ou intensité) de remise sur le marché plus forte en récession qu'en expansion.
+
+### Visualisation du phénomène
+
+La figure @fig-h9-v2-res-1 illustre l'évolution du phénomène de remise sur le marché. 
+
+```{r fig.width=10, fig.height=4}
+#| label: fig-h9-v2-res-1
+#| layout-nrow: 2
+#| fig-cap: "Evolution de la remise sur le marché des invendus en fonction du temps"
+#| fig-subcap: 
+#| - "Nombre de remises sur le marché en fonction du temps"
+#| - "Décotte (ou surcotte) de remise sur le marché en fonction du temp"
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+relistings_db <- readRDS(file = "relistings.RDS")
+
+relst_tmev <- relistings_db |>
+  mutate(
+    quarter = floor_date(date, unit = "quarter"),
+    mana_price = price_usd / price_raw,
+  ) |>
+  summarise(
+    relst_rat = sum(fw_update_v, na.rm = T) / n(),
+    relst_price_rat = sum(fw_update_p, na.rm = T) / n(),
+    relst_spread = median(fw_spread_sub[which(fw_update_v == 1)], na.rm = T),
+    mana_price = last(mana_price[which(!is.na(mana_price))]),
+    .by = "quarter"
+  )
+
+k1 <- max(relst_tmev$relst_rat, na.rm = TRUE) / max(relst_tmev$relst_price_rat, na.rm = TRUE)
+k2 <- max(abs(relst_tmev$relst_spread), na.rm = TRUE) / max(relst_tmev$mana_price, na.rm = TRUE)
+
+ggplot(relst_tmev, aes(x = quarter)) +
+  geom_line(
+    aes(y = relst_rat, colour = "Ratio de remises sur le marché"), linewidth = 1
+  ) +
+  geom_line(
+    aes(y = relst_price_rat, colour = "Ratio de remises sur le marché avec modif. prix listing"), linewidth = 1
+  ) +
+  scale_y_continuous(
+    name = "Ratio RSM (%)",
+    sec.axis = sec_axis(
+      ~ . / 1,
+      name = "Ratio RSM + Prix modifié (%)"
+    )
+  ) +
+  scale_colour_manual(
+    values = c(
+      "Ratio de remises sur le marché" = "#D55E00", 
+      "Ratio de remises sur le marché avec modif. prix listing" = "#00bfff"
+    )
+  ) +
+  labs(x = NULL, colour = NULL) +
+  theme_minimal() +
+  theme(
+    axis.title.y = element_text(colour = "#D55E00"),
+    axis.title.y.right = element_text(colour = "#00bfff"),
+    legend.position = "top"
+  )
+
+ggplot(relst_tmev, aes(x = quarter)) +
+  geom_line(
+    aes(y = relst_spread, colour = "Décotte (ou surcotte) de remise sur le marché"), linewidth = 1
+  ) +
+  geom_line(
+    aes(y = mana_price * k2, colour = "Cours du MANA"), linewidth = 1
+  ) +
+  scale_y_continuous(
+    name = "Décotte (ou surcotte) (USD)",
+    sec.axis = sec_axis(
+      ~ . / k2,
+      name = "Prix MANA (USD)"
+    )
+  ) +
+  scale_colour_manual(
+    values = c(
+      "Décotte (ou surcotte) de remise sur le marché" = "#D55E00", 
+      "Cours du MANA" = "#00bfff"
+    )
+  ) +
+  labs(x = NULL, colour = NULL) +
+  theme_minimal() +
+  theme(
+    axis.title.y = element_text(colour = "#D55E00"),
+    axis.title.y.right = element_text(colour = "#00bfff"),
+    legend.position = "top"
+  )
+```
+
+Au lancement du métavers (2019-2020), la proportion de remise sur le marché avec révision de prix est significativement moins forte que la proportion de remise sur le marché totale, ce qui suggère qu'un nombre important de parcelles remises sur le marché le sont pour des raisons de visibilité, et d'affichage en top position sur la marketplace.
+
+A partir de 2021, moins de parcelles sont remises sur le marché, ce qui ramène en fin 2021 la proportion de remises sur le marché totale à converger vers celles de remises sur le marché avec révision de prix. En 2022, la proportion de remises sur le marché totale augmente légèrement par rapport à celle de fin 2021, mais la proportion de remises sur le marché avec révision de prix restée collée à la proportion de remises sur le marché totale. A partir de 2023, les deux courbes ne se séparent plus.
+
+Par ailleurs, le courbe d'amplitude de révision des prix (décottes / surcotte) est symétrique à celle de l'évolution du cours du MANA. En marché expansionniste, les prix des invendus remis sur le marché sont fortement décottés.
+
+### Effet de la localisation sur la probabilité de remise sur le marché
+
+Nous étudions dans cette section l'influence de la localisation (distance au centre) sur la probabilité de remise sur le marché d'une parcelle invendu. Nous intégrons comme variable de contrôle :
+
+- Le **temps sur le marché** déjà passé par la parcelle;
+- Une **indicatrice de sollicitation** (demande) de la parcelle durant le temps déjà passé sur le marché;
+- La **taille du portefeuille** du vendeur, ou plus précisément le nombre de parcelles détenues par le vendeur au moment de la remise sur le marché. Un vendeur.
+- L'**état de l'investissement** du vendeur sur la parcelle, ou plus précisément la différence entre le prix d'acquisition de la parcelle en USD et le prix de listing avant la remise sur le marché. L'urgence de vendre la parcelle peut être plus ou moins fort selon l'état latent du bénéfice d'investissement sur la parcelle. Nous déclinons deux versions de cette variable de contrôle: (1) une en pourcentage, et (2) une catégorielle à trois modalités (`FREE` pour les parcelles acquises gratuitement, `POS` pour les parcelles à rendement latent positif, et `NEG` pour les parcelles à rendement latent négatif).
+
+Nous considérons deux modes de remises sur le marché :
+
+- La remise sur le marché **simple**, qui consiste pour le vendeur à réactualiser son annonce, **mettant à jour ou pas** le prix de listing;
+- La remise sur le marché **avec révision de prix**, qui consiste pour le vendeur à réactualiser son annonce en **mettant à jour le prix** de listing.
+
+Les tableaux @fig-h9-v2-res-1a et @fig-h9-v2-res-1b présentent les résultats des régressions logistiques des probabilités de remise sur le marché des parcelles invendues en fonction de la distance au centre, des proximités aux autres aménités, et des variables de contrôle.
+
+```{r}
+#| label: fig-h9-v2-res-1a
+#| tbl-cap: "Lien Localisation - Probabilité de remise sur le marché (avec ET sans révision de prix).<br> Seules les parcelles invendues sont considérées pour l'analyse. Les régressions sont faites pour les quatre régimes de marché identifiés, et contrôlées pour les trimestres pour chaque régime."
+#| warning: false
+#| echo: false
+
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+library(DescTools)
+library(stringr)
+source("./models.R")
+
+my_gof <- list(
+  list("raw" = "q.controls",     "clean" = "FE Quarters", fmt = 0),
+  list("raw" = "loc.controls",     "clean" = "Loc Controls", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "mcfadden", "clean" = "McFadden R2", "fmt" = 3),
+  list("raw" = "r2.tjur", "clean" = "Tjur R2", "fmt" = 3),
+  list("raw" = "logLik",   "clean" = "Log Lik.",    "fmt" = 2),
+  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+)
+
+relst_db <- readRDS(file = "relistings.RDS")
+
+Xcols <- c(
+  "DPC", 
+  "Tom", "Asked", "Wallet", "PrcRet",
+  "CPX", "CRD", "CDX", "North"
+)
+XQtDummies <- list(
+  c("Q2_2019", "Q3_2019", "Q4_2019", 
+    "Q1_2020", "Q2_2020", "Q3_2020", "Q4_2020"),
+  c("Q2_2021", "Q3_2021", "Q4_2021"),
+  c("Q2_2022", "Q3_2022", "Q4_2022"),
+  c("Q2_2023", "Q3_2023", "Q4_2023", 
+    "Q1_2024", "Q2_2024", "Q3_2024", "Q4_2024")
+)
+ys <- list(
+  2019:2020,
+  2021,
+  2022,
+  2023:2024
+)
+
+results <- vector(mode = "list", length = 4)
+rnames <- c("R1: 2019-2020", "R2: 2021", "R3: 2022", "R4: 2023-2024")
+k <- 1
+for (k in seq_len(length.out = length(results))) {
+  
+  db <- relst_db |> 
+    filter(status == "expired" | status == "pending" | (status == "canceled" & canceled_by != "transfer")) |>
+    filter(!is.na(acq_mode) & maker_owned_parcels >= 0) |>
+    filter(!is.na(tom) & tom > 0) |>
+    filter(lubridate::year(date) %in% ys[[k]]) |>
+    mutate(
+      Relisted = replace_na(as.numeric(fw_update_v == 1), 0L),
+      Tom = log1p(tom),
+      Asked = factor(if_else(asks_n > 0, "Yes", "No"), levels = c("No", "Yes")),
+      Wallet = log1p(maker_owned_parcels),
+      PrcRet = factor(if_else(acq_mode == "free", "FREE", if_else(acq_price_usd >= price_usd, "NEG", "POS")), levels = c("FREE", "NEG", "POS"))
+    ) |>
+    mutate(quarter = quarter(date), year = year(date)) |> 
+    mutate(qname = paste0("Q", quarter, "_", year)) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+  
+  fit = logit_model(
+    dataset = db,
+    Y = "Relisted",
+    X = c(Xcols, XQtDummies[[k]])
+  )
+  td = get_estimates(fit) |>
+    filter(!str_detect(term, "^Q\\d+_\\d+")) |>
+    filter(!str_detect(term, "^C.+$")) |>
+    filter(!str_detect(term, "^Nor.+$"))
+  gf = get_gof(fit)
+  gf[["q.controls"]] = "Yes"
+  gf[["loc.controls"]] = "Yes"
+  mod = list(tidy = td, glance = gf)
+  class(mod) <- "modelsummary_list"
+  results[[k]] = mod
+  
+}
+names(results) <- rnames
+
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(fontsize = 0.8)
+colnames(tab) <- c(" ", colnames(tab)[-1])
+
+tab
+```
+
+
+```{r}
+#| label: fig-h9-v2-res-1b
+#| tbl-cap: "Lien Localisation - Probabilité de remise sur le marché (AVEC révision de prix).<br> Seules les parcelles invendues sont considérées pour l'analyse. Les régressions sont faites pour les quatre régimes de marché identifiés, et contrôlées pour les trimestres pour chaque régime."
+#| warning: false
+#| echo: false
+
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+library(DescTools)
+library(stringr)
+source("./models.R")
+
+my_gof <- list(
+  list("raw" = "q.controls",     "clean" = "FE Quarters", fmt = 0),
+  list("raw" = "loc.controls",     "clean" = "Loc Controls", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "mcfadden", "clean" = "McFadden R2", "fmt" = 3),
+  list("raw" = "r2.tjur", "clean" = "Tjur R2", "fmt" = 3),
+  list("raw" = "logLik",   "clean" = "Log Lik.",    "fmt" = 2),
+  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+)
+
+relst_db <- readRDS(file = "relistings.RDS")
+
+Xcols <- c(
+  "DPC", 
+  "Tom", "Asked", "Wallet", "PrcRet",
+  "CPX", "CRD", "CDX", "North"
+)
+XQtDummies <- list(
+  c("Q2_2019", "Q3_2019", "Q4_2019", 
+    "Q1_2020", "Q2_2020", "Q3_2020", "Q4_2020"),
+  c("Q2_2021", "Q3_2021", "Q4_2021"),
+  c("Q2_2022", "Q3_2022", "Q4_2022"),
+  c("Q2_2023", "Q3_2023", "Q4_2023", 
+    "Q1_2024", "Q2_2024", "Q3_2024", "Q4_2024")
+)
+ys <- list(
+  2019:2020,
+  2021,
+  2022,
+  2023:2024
+)
+
+results <- vector(mode = "list", length = 4)
+rnames <- c("R1: 2019-2020", "R2: 2021", "R3: 2022", "R4: 2023-2024")
+k <- 1
+for (k in seq_len(length.out = length(results))) {
+  
+  db <- relst_db |> 
+    filter(status == "expired" | status == "pending" | (status == "canceled" & canceled_by != "transfer")) |>
+    filter(!is.na(acq_mode) & maker_owned_parcels >= 0) |>
+    filter(!is.na(tom) & tom > 0) |>
+    filter(lubridate::year(date) %in% ys[[k]]) |>
+    mutate(
+      Relisted = replace_na(as.numeric(fw_update_p == 1), 0L),
+      Tom = log1p(tom),
+      Asked = factor(if_else(asks_n > 0, "Yes", "No"), levels = c("No", "Yes")),
+      Wallet = log1p(maker_owned_parcels),
+      PrcRet = factor(if_else(acq_mode == "free", "FREE", if_else(acq_price_usd >= price_usd, "NEG", "POS")), levels = c("FREE", "NEG", "POS"))
+    ) |>
+    mutate(quarter = quarter(date), year = year(date)) |> 
+    mutate(qname = paste0("Q", quarter, "_", year)) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+  
+  fit = logit_model(
+    dataset = db,
+    Y = "Relisted",
+    X = c(Xcols, XQtDummies[[k]])
+  )
+  td = get_estimates(fit) |>
+    filter(!str_detect(term, "^Q\\d+_\\d+")) |>
+    filter(!str_detect(term, "^C.+$")) |>
+    filter(!str_detect(term, "^Nor.+$"))
+  gf = get_gof(fit)
+  gf[["q.controls"]] = "Yes"
+  gf[["loc.controls"]] = "Yes"
+  mod = list(tidy = td, glance = gf)
+  class(mod) <- "modelsummary_list"
+  results[[k]] = mod
+  
+}
+names(results) <- rnames
+
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(fontsize = 0.8)
+colnames(tab) <- c(" ", colnames(tab)[-1])
+
+tab
+```
+
+Durant la phase de lancement du métavers, l'éloignement au centre diminue la probabilité de remise sur le marché pour un invendu. Cela témoigne du fait que durant la phase de lancement, peu d'intérêt était porté vers les parcelles éloignées du centre. En période d'expansion forte, la proximité au centre n'influence pas significativement la remise sur le marché des parcelles invendues. Durant cette période, la liquidité était forte et les parcelles invendues étaient remises sur le marché indépendamment de leur proximité au centre. En période de récession forte, l'éloignement au centre augmente l'urgence de vente de la parcelle. Les investisseurs de la période d'expansion forte ayant **acquis majoritairement les parcelles excentrées (*à prouver*)**, cherchent à s'en débarasser d'urgence pour ne pas essuyer de lourdes pertes. En période désert, la remise sur le marché des parcelles invendues se fait indépendamment de la proximité au centre.
+
+De plus, le temps déjà passé sur le marché et l'indicatrice de sollicitation de la parcelle affectent négativement la probabilité de remise sur le marché, tandis que la taille du portefeuille et le rendement latent de la parcelle affectent positivement la probabilité de remise sur le marché.
+
+<!--En outre, le temps déjà passé sur le marché affecte négativement la probabilité de remise sur le marché avec révision de prix, hormis en période de récession forte. Une parcelle ayant mis plus de temps sur le marché sans être vendue sera moins souvent relistée. De plus, l'effet de la taille du portefeuille sur la probabilité de remise sur le marché avec révision de prix est négatif en période de lancement uniquement, et positif partout ailleurs. Cela suggère que dans les premières années du métavers, les vendeurs ayant un portefeuille garni étaient moins enclins à relister les parcelles non vendus, tandis qu'à partir de 2022, ils l'étaient plus. Cela s'explique notamment en 2021 par le besoin d'obtenir une plus-value toujours plus haute en marché haussier, et en 2022 par l'impératif de limiter les pertes en marché baissier. De plus, l'effet du rendement de détention de la parcelle sur la probabilité de remise sur le marché avec révision de prix s'aligne avec celui de la taille du portefeuille.-->
+
+### Effet de la localisation sur la révision de prix des remises sur le marché
+
+Les tableaux @fig-h9-v2-res-2a et @fig-h9-v2-res-2b présentent les résultats des régressions des spreads de revision de prix sur la distance au centre, les proximités aux autres aménités, et les variables de contrôle.
+
+```{r}
+#| label: fig-h9-v2-res-2a
+#| tbl-cap: "Lien Localisation - Probabilité de revision de prix à la baisse pour remise sur le marché.<br> Seules les parcelles invendues et remises sur le marché sont considérées pour l'analyse. Les régressions sont faites pour les quatre régimes de marché identifiés, et contrôlées pour les trimestres pour chaque régime."
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+library(DescTools)
+library(stringr)
+source("./models.R")
+
+my_gof <- list(
+  list("raw" = "q.controls",     "clean" = "FE Quarters", fmt = 0),
+  list("raw" = "loc.controls",     "clean" = "Loc Controls", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "mcfadden", "clean" = "McFadden R2", "fmt" = 3),
+  list("raw" = "r2.tjur", "clean" = "Tjur R2", "fmt" = 3),
+  list("raw" = "logLik",   "clean" = "Log Lik.",    "fmt" = 2),
+  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+)
+
+relst_db <- readRDS(file = "relistings.RDS")
+
+Xcols <- c(
+  "DPC", 
+  "Tom", "Asked", "Wallet", "PrcRet",
+  "CPX", "CRD", "CDX", "North"
+)
+XQtDummies <- list(
+  c("Q2_2019", "Q3_2019", "Q4_2019", 
+    "Q1_2020", "Q2_2020", "Q3_2020", "Q4_2020"),
+  c("Q2_2021", "Q3_2021", "Q4_2021"),
+  c("Q2_2022", "Q3_2022", "Q4_2022"),
+  c("Q2_2023", "Q3_2023", "Q4_2023", 
+    "Q1_2024", "Q2_2024", "Q3_2024", "Q4_2024")
+)
+ys <- list(
+  2019:2020,
+  2021,
+  2022,
+  2023:2024
+)
+
+results <- vector(mode = "list", length = 4)
+rnames <- c("R1: 2019-2020", "R2: 2021", "R3: 2022", "R4: 2023-2024")
+k <- 1
+for (k in seq_len(length.out = length(results))) {
+  
+  db <- relst_db |> 
+    filter(fw_update_p == 1) |>
+    filter(!is.na(acq_mode) & maker_owned_parcels >= 0) |>
+    filter(!is.na(tom) & tom > 0) |>
+    filter(lubridate::year(date) %in% ys[[k]]) |>
+    mutate(
+      Lowered = as.numeric(fw_spread_rat < 1),
+      Tom = log1p(tom),
+      Asked = factor(if_else(asks_n > 0, "Yes", "No"), levels = c("No", "Yes")),
+      Wallet = log1p(maker_owned_parcels),
+      #PrcRet = (price_usd - )
+      PrcRet = factor(if_else(acq_mode == "free", "FREE", if_else(acq_price_usd >= price_usd, "NEG", "POS")), levels = c("FREE", "NEG", "POS"))
+    ) |>
+    mutate(quarter = quarter(date), year = year(date)) |> 
+    mutate(qname = paste0("Q", quarter, "_", year)) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+  
+  fit = logit_model(
+    dataset = db,
+    Y = "Lowered",
+    X = c(Xcols, XQtDummies[[k]])
+  )
+  td = get_estimates(fit) |>
+    filter(!str_detect(term, "^Q\\d+_\\d+")) |>
+    filter(!str_detect(term, "^C.+$")) |>
+    filter(!str_detect(term, "^Nor.+$"))
+  gf = get_gof(fit)
+  gf[["q.controls"]] = "Yes"
+  gf[["loc.controls"]] = "Yes"
+  mod = list(tidy = td, glance = gf)
+  class(mod) <- "modelsummary_list"
+  results[[k]] = mod
+  
+}
+names(results) <- rnames
+
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(fontsize = 0.8)
+colnames(tab) <- c(" ", colnames(tab)[-1])
+
+tab
+```
+
+C'est uniquement en régime récessif fort que la distance au centre affecte la probabilité de décotte lors de la révision de prix pour une remise sur le marché.
+
+```{r}
+#| label: fig-h9-v2-res-2b
+#| tbl-cap: "Lien Localisation - Spread (%) de revision de prix pour remise sur le marché.<br> Seules les parcelles invendues et remises sur le marché sont considérées pour l'analyse. Les régressions sont faites pour les quatre régimes de marché identifiés, et contrôlées pour les trimestres pour chaque régime."
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+library(DescTools)
+library(stringr)
+source("./models.R")
+
+my_gof <- list(
+  list("raw" = "q.controls",     "clean" = "FE Quarters", fmt = 0),
+  list("raw" = "loc.controls",     "clean" = "Loc Controls", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "r.squared", "clean" = "R2", "fmt" = 3),
+  list("raw" = "adj.r.squared", "clean" = "R2 Adj", "fmt" = 3),
+  list("raw" = "logLik",   "clean" = "Log Lik.",    "fmt" = 2),
+  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+)
+
+relst_db <- readRDS(file = "relistings.RDS")
+
+Xcols <- c(
+  "DPC", 
+  "Tom", "Asked", "Wallet", "PrcRet",
+  "CPX", "CRD", "CDX", "North"
+)
+XQtDummies <- list(
+  c("Q2_2019", "Q3_2019", "Q4_2019", 
+    "Q1_2020", "Q2_2020", "Q3_2020", "Q4_2020"),
+  c("Q2_2021", "Q3_2021", "Q4_2021"),
+  c("Q2_2022", "Q3_2022", "Q4_2022"),
+  c("Q2_2023", "Q3_2023", "Q4_2023", 
+    "Q1_2024", "Q2_2024", "Q3_2024", "Q4_2024")
+)
+ys <- list(
+  2019:2020,
+  2021,
+  2022,
+  2023:2024
+)
+
+results <- vector(mode = "list", length = 4)
+rnames <- c("R1: 2019-2020", "R2: 2021", "R3: 2022", "R4: 2023-2024")
+k <- 1
+for (k in seq_len(length.out = length(results))) {
+  
+  db <- relst_db |> 
+    filter(fw_update_p == 1) |>
+    filter(!is.na(acq_mode) & maker_owned_parcels >= 0) |>
+    filter(!is.na(tom) & tom > 0) |>
+    filter(lubridate::year(date) %in% ys[[k]]) |>
+    mutate(
+      Spread = fw_spread_rat-1,
+      Tom = log1p(tom),
+      Asked = factor(if_else(asks_n > 0, "Yes", "No"), levels = c("No", "Yes")),
+      Wallet = log1p(maker_owned_parcels),
+      #PrcRet = (price_usd/acq_price_usd)-1
+      PrcRet = factor(if_else(acq_mode == "free", "FREE", if_else(acq_price_usd >= price_usd, "NEG", "POS")), levels = c("FREE", "NEG", "POS"))
+    ) |>
+    filter(if_all(c("Spread"), ~ filter_outliers(.x))) |>
+    mutate(quarter = quarter(date), year = year(date)) |> 
+    mutate(qname = paste0("Q", quarter, "_", year)) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+  
+  fit = lm_model(
+    dataset = db,
+    Y = "Spread",
+    X = c(Xcols, XQtDummies[[k]])
+  )
+  td = get_estimates(fit$model) |>
+    filter(!str_detect(term, "^Q\\d+_\\d+")) |>
+    filter(!str_detect(term, "^C.+$")) |>
+    filter(!str_detect(term, "^Nor.+$"))
+  gf = get_gof(fit$model)
+  gf[["q.controls"]] = "Yes"
+  gf[["loc.controls"]] = "Yes"
+  mod = list(tidy = td, glance = gf)
+  class(mod) <- "modelsummary_list"
+  results[[k]] = mod
+  
+}
+names(results) <- rnames
+
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(fontsize = 0.8)
+colnames(tab) <- c(" ", colnames(tab)[-1])
+
+tab
+```
+
+Lorsque l'on se penche sur l'influence de la localisation sur l'écart (ou spread) entre le prix révisé et le prix initial, il apparait que les parcelles éloignées du centre ont un écart en pourcentage plus important en périodes d'expansion et de récession forte, et moins important en période désert. Ainsi, entre 2021 et 2022, les parcelles excentrées affichent une surcotte plus forte, ou, plus fidèlement à notre base de données, une décotte moins forte. Cela est certainement dû au fait que les parcelles proches du centre sont listées à des prix initiaux très forts. Ainsi, celles ne se vendant pas rapidement se voient dépréciées plus fortement également.
+
+
+### Effet de la localisation sur la liquidité des parcelles remises sur le marché
+
+Dans cette section, nous analysons l'effet de la localisation sur la liquidité des parcelles remises sur le marché, avec comme variables de contrôle supplémentaire la révision de prix appliquée (si elle a été appliquée).
+
+Le tableau @fig-h9-v2-res-3 présente les résultats de régression par modèle AFT du temps sur le marché sur la localisation et les variables de contrôle.
+
+```{r}
+#| label: fig-h9-v2-res-3
+#| tbl-cap: "Lien Liquidité (Time-on-market) - Localisation pour les parcelles remises sur le marché.<br> Seules les parcelles invendues et remises sur le marché sont incluses dans l'analyse. "
+#| warning: false
+#| echo: false
+
+library(lubridate)
+library(dplyr)
+library(tidyr)
+library(modelsummary)
+library(broom)
+library(tinytable)
+library(DescTools)
+library(stringr)
+source("./models.R")
+
+my_gof <- list(
+  list("raw" = "q.controls",     "clean" = "FE Quarters", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+)
+
+relst_db <- readRDS(file = "relistings.RDS")
+
+Xcols <- c(
+  "DPC", 
+  "LogPrice", "Spread", "TomPv",
+  "CPX", "CRD", "CDX", "North"
+)
+XQtDummies <- list(
+  c("Q2_2019", "Q3_2019", "Q4_2019", 
+    "Q1_2020", "Q2_2020", "Q3_2020", "Q4_2020"),
+  c("Q2_2021", "Q3_2021", "Q4_2021"),
+  c("Q2_2022", "Q3_2022", "Q4_2022"),
+  c("Q2_2023", "Q3_2023", "Q4_2023", 
+    "Q1_2024", "Q2_2024", "Q3_2024", "Q4_2024")
+)
+ys <- list(
+  2019:2020,
+  2021,
+  2022,
+  2023:2024
+)
+
+results <- vector(mode = "list", length = 4)
+rnames <- c("R1: 2019-2020", "R2: 2021", "R3: 2022", "R4: 2023-2024")
+k <- 1
+for (k in seq_len(length.out = length(results))) {
+  
+  db <- relst_db |> 
+    filter(update_v == 1) |>
+    filter(!is.na(acq_mode) & maker_owned_parcels >= 0) |>
+    filter(!is.na(tom_pv) & tom_pv > 0) |>
+    filter(!is.na(tom) & tom > 0) |>
+    filter(lubridate::year(date) %in% ys[[k]]) |>
+    mutate(
+      Sold = as.numeric(status == "filled" & tom <= 365),
+      Tom = if_else(tom > 365, 365, tom),
+      Spread = spread_cm_rat-1,
+      TomPv = log1p(tom_pv)
+    ) |>
+    mutate(
+      Spread = Winsorize(Spread, val = quantile(Spread, probs = c(0.01, 0.99))),
+      LogPrice = log(Winsorize(price_usd, val = quantile(price_usd, probs = c(0.01, 0.99))))
+    ) |>
+    mutate(quarter = quarter(date), year = year(date)) |> 
+    mutate(qname = paste0("Q", quarter, "_", year)) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+  
+  fit = aft_model(
+    db,
+    Y_time = "Tom",
+    Y_event = "Sold",
+    X = c(Xcols, XQtDummies[[k]]),
+    error_cluster = "asset_id"
+  )
+  td = get_estimates(fit) |>
+    filter(!str_detect(term, "^Q\\d+_\\d+")) |>
+    filter(!str_detect(term, "^C.+$")) |>
+    filter(!str_detect(term, "^Nor.+$"))
+  gf = get_gof(fit)
+  gf[["q.controls"]] = "Yes"
+  gf[["rmse"]] = NULL
+  mod = list(tidy = td, glance = gf)
+  class(mod) <- "modelsummary_list"
+  results[[k]] = mod
+  
+}
+names(results) <- rnames
+
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(fontsize = 0.8)
+colnames(tab) <- c(" ", colnames(tab)[-1])
+
+tab
+```
+
+Tenant compte du nouveau prix de listing, de l'intensité de la révision de prix et du temps déjà passé sur le marché, la localisation n'a plus aucune influence sur la liquidité des parcelles remises sur le marché.
+
 
 
 ## Hypothèse [H10](#hyp-10): Liquidité du point de vue des demandes de parcelles {#sec-micro-anl-h10}
