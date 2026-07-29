@@ -4189,10 +4189,10 @@ Nous considérons deux modes de remises sur le marché :
 - La remise sur le marché **simple**, qui consiste pour le vendeur à réactualiser son annonce, **mettant à jour ou pas** le prix de listing;
 - La remise sur le marché **avec révision de prix**, qui consiste pour le vendeur à réactualiser son annonce en **mettant à jour le prix** de listing.
 
-Les tableaux @fig-h9-v2-res-1a et @fig-h9-v2-res-1b présentent les résultats des régressions logistiques des probabilités de remise sur le marché des parcelles invendues en fonction de la distance au centre, des proximités aux autres aménités, et des variables de contrôle.
+Les tableaux @tbl-h9-v2-res-1a et @tbl-h9-v2-res-1b présentent les résultats des régressions logistiques des probabilités de remise sur le marché des parcelles invendues en fonction de la distance au centre, des proximités aux autres aménités, et des variables de contrôle.
 
 ```{r}
-#| label: fig-h9-v2-res-1a
+#| label: tbl-h9-v2-res-1a
 #| tbl-cap: "Lien Localisation - Probabilité de remise sur le marché (avec ET sans révision de prix).<br> Seules les parcelles invendues sont considérées pour l'analyse. Les régressions sont faites pour les quatre régimes de marché identifiés, et contrôlées pour les trimestres pour chaque régime."
 #| warning: false
 #| echo: false
@@ -4295,7 +4295,7 @@ tab
 
 
 ```{r}
-#| label: fig-h9-v2-res-1b
+#| label: tbl-h9-v2-res-1b
 #| tbl-cap: "Lien Localisation - Probabilité de remise sur le marché (AVEC révision de prix).<br> Seules les parcelles invendues sont considérées pour l'analyse. Les régressions sont faites pour les quatre régimes de marché identifiés, et contrôlées pour les trimestres pour chaque régime."
 #| warning: false
 #| echo: false
@@ -4404,10 +4404,10 @@ De plus, le temps déjà passé sur le marché et l'indicatrice de sollicitation
 
 ### Effet de la localisation sur la révision de prix des remises sur le marché
 
-Les tableaux @fig-h9-v2-res-2a et @fig-h9-v2-res-2b présentent les résultats des régressions des spreads de revision de prix sur la distance au centre, les proximités aux autres aménités, et les variables de contrôle.
+Les tableaux @tbl-h9-v2-res-2a et @tbl-h9-v2-res-2b présentent les résultats des régressions des spreads de revision de prix sur la distance au centre, les proximités aux autres aménités, et les variables de contrôle.
 
 ```{r}
-#| label: fig-h9-v2-res-2a
+#| label: tbl-h9-v2-res-2a
 #| tbl-cap: "Lien Localisation - Probabilité de revision de prix à la baisse pour remise sur le marché.<br> Seules les parcelles invendues et remises sur le marché sont considérées pour l'analyse. Les régressions sont faites pour les quatre régimes de marché identifiés, et contrôlées pour les trimestres pour chaque régime."
 #| warning: false
 #| echo: false
@@ -4511,7 +4511,7 @@ tab
 C'est uniquement en régime récessif fort que la distance au centre affecte la probabilité de décotte lors de la révision de prix pour une remise sur le marché.
 
 ```{r}
-#| label: fig-h9-v2-res-2b
+#| label: tbl-h9-v2-res-2b
 #| tbl-cap: "Lien Localisation - Spread (%) de revision de prix pour remise sur le marché.<br> Seules les parcelles invendues et remises sur le marché sont considérées pour l'analyse. Les régressions sont faites pour les quatre régimes de marché identifiés, et contrôlées pour les trimestres pour chaque régime."
 #| warning: false
 #| echo: false
@@ -4620,10 +4620,10 @@ Lorsque l'on se penche sur l'influence de la localisation sur l'écart (ou sprea
 
 Dans cette section, nous analysons l'effet de la localisation sur la liquidité des parcelles remises sur le marché, avec comme variables de contrôle supplémentaire la révision de prix appliquée (si elle a été appliquée).
 
-Le tableau @fig-h9-v2-res-3 présente les résultats de régression par modèle AFT du temps sur le marché sur la localisation et les variables de contrôle.
+Le tableau @tbl-h9-v2-res-3 présente les résultats de régression par modèle AFT du temps sur le marché sur la localisation et les variables de contrôle.
 
 ```{r}
-#| label: fig-h9-v2-res-3
+#| label: tbl-h9-v2-res-3
 #| tbl-cap: "Lien Liquidité (Time-on-market) - Localisation pour les parcelles remises sur le marché.<br> Seules les parcelles invendues et remises sur le marché sont incluses dans l'analyse. "
 #| warning: false
 #| echo: false
