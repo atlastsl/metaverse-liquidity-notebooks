@@ -23,6 +23,11 @@ bibliography: references.bib
 
 # Mises à jour {.unnumbered}
 
+***05 Août 2026***
+
+- Section @sec-data Données;
+  - Mise à jour de la sous-section @sec-database: Base de données
+
 ***04 Août 2026***
 
 - Mise à jour de la section @sec-hypothesis: Hypothèses de recherche
@@ -193,7 +198,7 @@ La figure @fig-decentraland-map illustre la disposition des parcelles et aménit
 
 Le reste de parcelles, en **vert**, sont des parcelles à usage privée, s'échangeant sur les marchés immobiliers virtuels. Chaque parcelle dans le métavers est identifiée par ses coordonnées cartésiennes $(X,Y)$, qui renseignent sur sa position exacte sur la carte.
 
-Le détenteur d'un ensemble de parcelles juxtaposées peut les combiner de manière à former un *unique* bien immobilier à partir de ces parcelles: il s'agit d'un **domaine** ou **estate**. Les domaines, à la différence des parcelles, se distinguent donc en plus de leurs localisations, par leurs tailles (nombre de parcelles desquelles elles sont constituées). Les domaines s'échangent également en marché secondaire. Nous intégrons les domaines à notre analyse à des fins de robustesse.
+Le détenteur d'un ensemble de parcelles juxtaposées peut les combiner de manière à former un *unique* bien immobilier à partir de ces parcelles: il s'agit d'un **domaine** ou **estate**. Les domaines, à la différence des parcelles, se distinguent donc en plus de leurs localisations, par leurs tailles (nombre de parcelles desquelles elles sont constituées). Les domaines s'échangent également en marché secondaire.
 
 
 ## Marché immobilier du métavers {#sec-virt-immo-market}
@@ -332,11 +337,97 @@ Concernant la seconde modalité de provision de liquidité, nous prenons comme b
 Pour évaluer les effets de la localisation sur le bénéfice de vente des parcelles, nous régressons le rendement de vente des parcelles sur la localisation, en contrôlant pour la proximité aux autres aménités, les trimestres d'acquisition et les trimestres de ventes. En guise de robustesse, nous examinons deux spécifications de ces régressions: une libre et une régime-dépendante. La première nous permet d'obtenir des effets de localisation indépendants des régimes, et la seconde des effets régimes-dépendants plus subtils. 
 
 
-# Données
+# Données {#sec-data}
 
-[*En cours de rédaction...*]{style="color: #0000FF;"}
+## Base de données {#sec-database}
+
+Toutes les unités de valeur numériques créées et stockées dans la blockchain, qu'elles soient fongibles (cryptomonnaies) ou non fongibles (NFT) sont en réalité des programmes informatiques (smart-contract ou contrat intelligent) s'exécutant sur le réseau blockchain. Ces programmes exécutent des actions journalisées (transactions) dans la base de données blockchain dont le contenu est en libre accès, et sont conçus sous des standards spécifiques, facilitant l'extraction d'informations pertinentes du contenu des transactions lues en blockchain.
+
+Toutes les ventes et transferts de propriétés de parcelles Decentraland peuvent ainsi être collectées directement à partir de la blockchain Ethereum, laquelle sert d'infrastructure décentralisée à un large écosystème de cryptomonnaies alternatives et de NFTs. Jusqu'en 2025, la marketplace officielle de Decentraland (DCL Marketplace) fonctionnait également sous la forme d'un smart-contract, et donc avec historisation des transactions propres à la marketplace (annonces de vente et demandes de parcelles).
+
+Nous avons collecté l'ensemble des transactions stockées sur la blockchain relatives aux parcelles et aux domaines du métavers Decentraland entre mars 2018 et mai 2026: cela comprend les émissions de parcelles, les ventes de parcelles et domaines via les différentes plateformes marketplace, les transferts de propriétés, les annonces de vente et les demandes de parcelles et domaines faites via Dcl Marketplace, soit au total 437 511 transactions.
+
+Les autres marketplaces de ventes de parcelles pair à pair sont indépendantes de Decentraland, et opèrent selon leurs propres règles. [Opensea](https://opensea.io) et [Rarible](https://rarible.com), qui sont les plus populaires, n'opèrent pas la gestion des ordres via un contrat intelligent, ce qui rend impossible de collecter les annonces de vente et les demandes de parcelles via la blockchain. Ils fournissent néanmoins des API^[Application Programming Interface: Interface via laquelle il est possible de communiquer (échanger et recevoir des données) d'une application ou d'un système tiers] permettant de collecter ces données.
+
+```{r}
+#| label: tbl-vol-summary-1
+#| tbl-cap: "Volumes annuels de vente en marché primaire et en marchés secondaires"
+#| warning: false
+#| echo: false
+#| 
+library(tinytable)
+library(labelled) 
+
+vol_smr <- readRDS(file = "artdata/volsummary.RDS") |>
+  select(year, fsales, ssales_l1, ssales_e1, ssales_l2, ssales_e2)
+colnames(vol_smr) <- c("Year", "Lands", "Lands", "Estates", "Lands", "Estates")
+
+tt(
+  vol_smr,
+  digits = 2,
+  notes = "L'année 2026 inclut uniquement les données de janvier à mai 2026.<br> Les volumes sont exprimés en milliers de dollars.<br>Source: Données collectées par les auteurs", 
+  replace = "-"
+) |> 
+style_tt(fontsize = 0.9) |>
+style_tt(i = 9, line = "b", line_width = 0.1) |>
+format_tt(replace = "-") |>
+group_tt(
+  j = list(
+    "1st Sales<br>   " = 2, 
+    "2nd Market<br>Dcl Marketplace" = 3:4, 
+    "2nd Market<br>3rd Party Marketplaces" = 5:6
+  )
+)
+```
 
 
+Le tableau @tbl-vol-summary-1 présente les volumes de ventes annuels des parcelles et des domaines Decentraland en marché primaire et en marchés secondaire. Il confirme les observations faites à partir des figures @fig-land-sales-volume-ts et @fig-land-sales-volume-2nd-ts. Les émissions de parcelles se sont terminées en janvier 2019, d'où les valeurs nulles de volumes en marché primaire à partir de 2020. Les volumes de vente en marchés secondaires suivent une tendance croissante jusqu'en 2021, qui correspond à la période de boom crypto-nft-métavers, avant de chuter drastiquement en 2022, qui correspond à la période de crash crypto-nft-métavers. La chute des ventes sur Dcl Marketplace est plus forte que celle sur les marketplaces tierces. A partir de 2024, la majorité des ventes en marché secondaires sont faites via les marketplaces tierces.
+
+```{r}
+#| label: tbl-vol-summary-2
+#| tbl-cap: "Nombres annuels de listings et de demandes sur Dcl Marketplace"
+#| warning: false
+#| echo: false
+#| 
+library(tinytable)
+library(labelled) 
+
+vol_smr <- readRDS(file = "artdata/volsummary.RDS") |>
+  select(year, lsts_l, lsts_e, asks_l, asks_e)
+colnames(vol_smr) <- c("Year", "Lands", "Estates", "Lands", "Estates")
+
+tt(
+  vol_smr,
+  digits = 2,
+  notes = "L'année 2026 inclut uniquement les données de janvier à mai 2026.<br>Source: Données collectées par les auteurs", 
+  replace = "-"
+) |> 
+style_tt(fontsize = 0.9) |>
+style_tt(i = 9, line = "b", line_width = 0.1) |>
+format_tt(replace = "-") |>
+group_tt(
+  j = list(
+    "Listings" = 2:3, 
+    "Demandes" = 4:5
+  )
+)
+```
+
+Le tableau @tbl-vol-summary-2 présente l'évolution de la quantité de liquidité sur Dcl Marketplace au fil des années. 2019 apparait comme ayant été l'année la plus dynamique sur Dcl Marketplace. C'est l'année qui suit directement celle des ventes en marché primaires. La tendance est ensuite baissière durant l'entièreté de l'horizon temporel observé. La vitesse de décroissance est encore plus fulgurante entre 2021 et 2023, à partir du crash crypto-nft-métavers. A partir de 2025, le marché Dcl Marketplace est complètement déserté, au profit, comme nous le montrent la figure @fig-land-sales-volume-2nd-ts et le tableau @tbl-vol-summary-2, des marketplaces tierces.
+
+Notre analyse portera donc exclusivement sur les données d'annonce, de ventes et de demandes de parcelles entre 2019 et 2024, faites via Dcl Marketplace. Nous excluons les données issues de marketplaces tierces car n'étant ni complètes, ni fiables. En effet, chez [Rarible](https://rarible.com), les données de listings et ventes collectées agrègent plusieurs transactions de diverses marketplaces pour les listings, et les données de demandes sont en nombre limité, et chez [Opensea](https://opensea.io), les données disponibles ne comportent pas de transactions antérieures à septembre 2024, comportent énormément de valeurs manquantes sur les dates nécessaires pour déduire les temps sur marché, et sont également énormément bruitées. 
+
+Nous excluons également de notre analyse les domaines pour deux raisons: 
+
+- Le volume de transactions de parcelles est suffisamment important pour évaluer empiriquement les hypothèses formulées;
+- Contrairement aux parcelles dont les localisations sont invariantes dans le temps, les domaines voient leurs tailles varier dans le temps et leur potentiellement leurs localisations relatives aux aménités, ce qui complexifierait grandement le formattage des données sans potentielle réelle valeur ajoutée.
+
+Les domaines restent néanmoins importants dans l'analyse de la microstructure locale aux niveau des parcelles, car nous y intégrons dans le voisinage d'une parcelle à la fois les parcelles et les domaines proches.
+
+Nous avons également collecté les coordonnées géographiques de l'ensemble des parcelles du métavers, desquelles nous avons construit les variables de localisation, dont la distance au centre et les indicatrices de proximité aux autres aménités.
+
+
+## Statistiques descriptives
 
 
 # Résultats

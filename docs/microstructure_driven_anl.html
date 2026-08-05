@@ -188,7 +188,11 @@ window.Quarto = {
   <li><a href="#temps-sur-le-marché-et-conversion-en-vente" id="toc-temps-sur-le-marché-et-conversion-en-vente" class="nav-link" data-scroll-target="#temps-sur-le-marché-et-conversion-en-vente"><span class="header-section-number">3.1</span> Temps sur le marché et conversion en vente</a></li>
   <li><a href="#provision-de-liquidité-et-bénéfices" id="toc-provision-de-liquidité-et-bénéfices" class="nav-link" data-scroll-target="#provision-de-liquidité-et-bénéfices"><span class="header-section-number">3.2</span> Provision de liquidité et bénéfices</a></li>
   </ul></li>
-  <li><a href="#données" id="toc-données" class="nav-link" data-scroll-target="#données"><span class="header-section-number">4</span> Données</a></li>
+  <li><a href="#sec-data" id="toc-sec-data" class="nav-link" data-scroll-target="#sec-data"><span class="header-section-number">4</span> Données</a>
+  <ul class="collapse">
+  <li><a href="#sec-database" id="toc-sec-database" class="nav-link" data-scroll-target="#sec-database"><span class="header-section-number">4.1</span> Base de données</a></li>
+  <li><a href="#statistiques-descriptives" id="toc-statistiques-descriptives" class="nav-link" data-scroll-target="#statistiques-descriptives"><span class="header-section-number">4.2</span> Statistiques descriptives</a></li>
+  </ul></li>
   <li><a href="#résultats" id="toc-résultats" class="nav-link" data-scroll-target="#résultats"><span class="header-section-number">5</span> Résultats</a></li>
   <li><a href="#réferences" id="toc-réferences" class="nav-link" data-scroll-target="#réferences">Réferences</a></li>
   </ul>
@@ -235,6 +239,13 @@ window.Quarto = {
 
 <section id="mises-à-jour" class="level1 unnumbered">
 <h1 class="unnumbered">Mises à jour</h1>
+<p><strong><em>05 Août 2026</em></strong></p>
+<ul>
+<li>Section <a href="#sec-data" class="quarto-xref">Section&nbsp;4</a> Données;
+<ul>
+<li>Mise à jour de la sous-section <a href="#sec-database" class="quarto-xref">Section&nbsp;4.1</a>: Base de données</li>
+</ul></li>
+</ul>
 <p><strong><em>04 Août 2026</em></strong></p>
 <ul>
 <li>Mise à jour de la section <a href="#sec-hypothesis" class="quarto-xref">Section&nbsp;1.4</a>: Hypothèses de recherche</li>
@@ -395,7 +406,7 @@ Figure&nbsp;2: <em>Source: <a href="https://www.binance.com/ar/square/post/27454
 <li>Les <strong>districts</strong> en <strong>bleu</strong>, qui désignent des groupes de parcelles rassemblées autour d’un thème ou d’une communauté. En somme, les districts sont des quartiers thématiques ou communautaires dans le métavers. Ces quartiers ne sont pas à vendre et possèdent leurs propres règles de gouvernance. Ils ont été à la suite de proposition soumises par des utilisateurs et validées ensuite par l’instance de gouvernance du métavers.</li>
 </ul>
 <p>Le reste de parcelles, en <strong>vert</strong>, sont des parcelles à usage privée, s’échangeant sur les marchés immobiliers virtuels. Chaque parcelle dans le métavers est identifiée par ses coordonnées cartésiennes <span class="math inline">\((X,Y)\)</span>, qui renseignent sur sa position exacte sur la carte.</p>
-<p>Le détenteur d’un ensemble de parcelles juxtaposées peut les combiner de manière à former un <em>unique</em> bien immobilier à partir de ces parcelles: il s’agit d’un <strong>domaine</strong> ou <strong>estate</strong>. Les domaines, à la différence des parcelles, se distinguent donc en plus de leurs localisations, par leurs tailles (nombre de parcelles desquelles elles sont constituées). Les domaines s’échangent également en marché secondaire. Nous intégrons les domaines à notre analyse à des fins de robustesse.</p>
+<p>Le détenteur d’un ensemble de parcelles juxtaposées peut les combiner de manière à former un <em>unique</em> bien immobilier à partir de ces parcelles: il s’agit d’un <strong>domaine</strong> ou <strong>estate</strong>. Les domaines, à la différence des parcelles, se distinguent donc en plus de leurs localisations, par leurs tailles (nombre de parcelles desquelles elles sont constituées). Les domaines s’échangent également en marché secondaire.</p>
 </section>
 <section id="sec-virt-immo-market" class="level2" data-number="2.2">
 <h2 data-number="2.2" class="anchored" data-anchor-id="sec-virt-immo-market"><span class="header-section-number">2.2</span> Marché immobilier du métavers</h2>
@@ -531,9 +542,334 @@ X'\beta = \sum_{r \in \text{Régimes}} \left[ \beta_{0,r} + \beta_{loc,r} X_{loc
 <p>Pour évaluer les effets de la localisation sur le bénéfice de vente des parcelles, nous régressons le rendement de vente des parcelles sur la localisation, en contrôlant pour la proximité aux autres aménités, les trimestres d’acquisition et les trimestres de ventes. En guise de robustesse, nous examinons deux spécifications de ces régressions: une libre et une régime-dépendante. La première nous permet d’obtenir des effets de localisation indépendants des régimes, et la seconde des effets régimes-dépendants plus subtils.</p>
 </section>
 </section>
-<section id="données" class="level1" data-number="4">
+<section id="sec-data" class="level1" data-number="4">
 <h1 data-number="4"><span class="header-section-number">4</span> Données</h1>
-<p><span style="color: #0000FF;"><em>En cours de rédaction…</em></span></p>
+<section id="sec-database" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="sec-database"><span class="header-section-number">4.1</span> Base de données</h2>
+<p>Toutes les unités de valeur numériques créées et stockées dans la blockchain, qu’elles soient fongibles (cryptomonnaies) ou non fongibles (NFT) sont en réalité des programmes informatiques (smart-contract ou contrat intelligent) s’exécutant sur le réseau blockchain. Ces programmes exécutent des actions journalisées (transactions) dans la base de données blockchain dont le contenu est en libre accès, et sont conçus sous des standards spécifiques, facilitant l’extraction d’informations pertinentes du contenu des transactions lues en blockchain.</p>
+<p>Toutes les ventes et transferts de propriétés de parcelles Decentraland peuvent ainsi être collectées directement à partir de la blockchain Ethereum, laquelle sert d’infrastructure décentralisée à un large écosystème de cryptomonnaies alternatives et de NFTs. Jusqu’en 2025, la marketplace officielle de Decentraland (DCL Marketplace) fonctionnait également sous la forme d’un smart-contract, et donc avec historisation des transactions propres à la marketplace (annonces de vente et demandes de parcelles).</p>
+<p>Nous avons collecté l’ensemble des transactions stockées sur la blockchain relatives aux parcelles et aux domaines du métavers Decentraland entre mars 2018 et mai 2026: cela comprend les émissions de parcelles, les ventes de parcelles et domaines via les différentes plateformes marketplace, les transferts de propriétés, les annonces de vente et les demandes de parcelles et domaines faites via Dcl Marketplace, soit au total 437 511 transactions.</p>
+<p>Les autres marketplaces de ventes de parcelles pair à pair sont indépendantes de Decentraland, et opèrent selon leurs propres règles. <a href="https://opensea.io">Opensea</a> et <a href="https://rarible.com">Rarible</a>, qui sont les plus populaires, n’opèrent pas la gestion des ordres via un contrat intelligent, ce qui rend impossible de collecter les annonces de vente et les demandes de parcelles via la blockchain. Ils fournissent néanmoins des API<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> permettant de collecter ces données.</p>
+<div class="cell">
+<div id="tbl-vol-summary-1" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-vol-summary-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1: Volumes annuels de vente en marché primaire et en marchés secondaires
+</figcaption>
+<div aria-describedby="tbl-vol-summary-1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<!-- preamble start -->
+
+    <script src="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.js"></script>
+
+    <script>
+      // Create table-specific functions using external factory
+      const tableFns_mfyffm38yuvtjvaz118p = TinyTable.createTableFunctions("tinytable_mfyffm38yuvtjvaz118p");
+      // tinytable span after
+      window.addEventListener('load', function () {
+          var cellsToStyle = [
+            // tinytable style arrays after
+          { positions: [ { i: '-1', j: 6 } ], css_id: 'tinytable_css_45h3xncfn3gv8i34pgif',}, 
+          { positions: [ { i: '-1', j: 4 } ], css_id: 'tinytable_css_tq9p2cav5tulzoyh8ixw',}, 
+          { positions: [ { i: '-1', j: 3 }, { i: '-1', j: 5 } ], css_id: 'tinytable_css_vxrd520qkj8kqxj4gf0o',}, 
+          { positions: [ { i: '-1', j: 2 } ], css_id: 'tinytable_css_qp2dd0sc6flxzca74ojh',}, 
+          { positions: [ { i: '9', j: 1 }, { i: '10', j: 1 }, { i: '9', j: 2 }, { i: '10', j: 2 }, { i: '9', j: 3 }, { i: '10', j: 3 }, { i: '9', j: 4 }, { i: '10', j: 4 }, { i: '9', j: 5 }, { i: '10', j: 5 }, { i: '9', j: 6 }, { i: '10', j: 6 } ], css_id: 'tinytable_css_dutjt96ytizw3p089jfz',}, 
+          { positions: [ { i: '1', j: 1 }, { i: '2', j: 1 }, { i: '3', j: 1 }, { i: '4', j: 1 }, { i: '5', j: 1 }, { i: '6', j: 1 }, { i: '7', j: 1 }, { i: '8', j: 1 }, { i: '1', j: 2 }, { i: '2', j: 2 }, { i: '3', j: 2 }, { i: '4', j: 2 }, { i: '5', j: 2 }, { i: '6', j: 2 }, { i: '7', j: 2 }, { i: '8', j: 2 }, { i: '1', j: 3 }, { i: '2', j: 3 }, { i: '3', j: 3 }, { i: '4', j: 3 }, { i: '5', j: 3 }, { i: '6', j: 3 }, { i: '7', j: 3 }, { i: '8', j: 3 }, { i: '1', j: 4 }, { i: '2', j: 4 }, { i: '3', j: 4 }, { i: '4', j: 4 }, { i: '5', j: 4 }, { i: '6', j: 4 }, { i: '7', j: 4 }, { i: '8', j: 4 }, { i: '1', j: 5 }, { i: '2', j: 5 }, { i: '3', j: 5 }, { i: '4', j: 5 }, { i: '5', j: 5 }, { i: '6', j: 5 }, { i: '7', j: 5 }, { i: '8', j: 5 }, { i: '1', j: 6 }, { i: '2', j: 6 }, { i: '3', j: 6 }, { i: '4', j: 6 }, { i: '5', j: 6 }, { i: '6', j: 6 }, { i: '7', j: 6 }, { i: '8', j: 6 } ], css_id: 'tinytable_css_6awgx7ebaydj3y7g3g9d',}, 
+          { positions: [ { i: '0', j: 1 }, { i: '0', j: 2 }, { i: '0', j: 3 }, { i: '0', j: 4 }, { i: '0', j: 5 }, { i: '0', j: 6 } ], css_id: 'tinytable_css_zq2xlkl6q89v5hrps9bu',}, 
+          { positions: [ { i: '-1', j: 1 } ], css_id: 'tinytable_css_i6b3451lcjycbx78ah6r',}, 
+          ];
+
+          // Loop over the arrays to style the cells
+          cellsToStyle.forEach(function (group) {
+              group.positions.forEach(function (cell) {
+                  tableFns_mfyffm38yuvtjvaz118p.styleCell(cell.i, cell.j, group.css_id);
+              });
+          });
+      });
+    </script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.css">
+    <style>
+    /* tinytable css entries after */
+    #tinytable_mfyffm38yuvtjvaz118p td.tinytable_css_45h3xncfn3gv8i34pgif, #tinytable_mfyffm38yuvtjvaz118p th.tinytable_css_45h3xncfn3gv8i34pgif {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: black; --line-color-left: black; --line-color-right: black; --line-color-top: black; --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center; font-size: 0.9em }
+    #tinytable_mfyffm38yuvtjvaz118p td.tinytable_css_tq9p2cav5tulzoyh8ixw, #tinytable_mfyffm38yuvtjvaz118p th.tinytable_css_tq9p2cav5tulzoyh8ixw {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: black; --line-color-left: black; --line-color-right: black; --line-color-top: black; --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 3%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center; font-size: 0.9em }
+    #tinytable_mfyffm38yuvtjvaz118p td.tinytable_css_vxrd520qkj8kqxj4gf0o, #tinytable_mfyffm38yuvtjvaz118p th.tinytable_css_vxrd520qkj8kqxj4gf0o {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: black; --line-color-left: black; --line-color-right: black; --line-color-top: black; --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 3%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center; font-size: 0.9em }
+    #tinytable_mfyffm38yuvtjvaz118p td.tinytable_css_qp2dd0sc6flxzca74ojh, #tinytable_mfyffm38yuvtjvaz118p th.tinytable_css_qp2dd0sc6flxzca74ojh {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: black; --line-color-left: black; --line-color-right: black; --line-color-top: black; --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 3%; --trim-bottom-right: 3%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center; font-size: 0.9em }
+    #tinytable_mfyffm38yuvtjvaz118p td.tinytable_css_dutjt96ytizw3p089jfz, #tinytable_mfyffm38yuvtjvaz118p th.tinytable_css_dutjt96ytizw3p089jfz {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: black; --line-color-left: black; --line-color-right: black; --line-color-top: black; --line-width-bottom: 0.1em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; font-size: 0.9em }
+    #tinytable_mfyffm38yuvtjvaz118p td.tinytable_css_6awgx7ebaydj3y7g3g9d, #tinytable_mfyffm38yuvtjvaz118p th.tinytable_css_6awgx7ebaydj3y7g3g9d { font-size: 0.9em }
+    #tinytable_mfyffm38yuvtjvaz118p td.tinytable_css_zq2xlkl6q89v5hrps9bu, #tinytable_mfyffm38yuvtjvaz118p th.tinytable_css_zq2xlkl6q89v5hrps9bu {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: black; --line-color-left: black; --line-color-right: black; --line-color-top: black; --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; font-size: 0.9em }
+    #tinytable_mfyffm38yuvtjvaz118p td.tinytable_css_i6b3451lcjycbx78ah6r, #tinytable_mfyffm38yuvtjvaz118p th.tinytable_css_i6b3451lcjycbx78ah6r {  position: relative; --border-bottom: 0; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: black; --line-color-left: black; --line-color-right: black; --line-color-top: black; --line-width-bottom: 0.1em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center; font-size: 0.9em }
+    </style>
+    <div class="container">
+      <table class="tinytable" id="tinytable_mfyffm38yuvtjvaz118p" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
+        
+        <thead>
+<tr>
+<th scope="col" align="center" colspan="1" data-row="-1" data-col="1"> </th>
+<th scope="col" align="center" colspan="1" data-row="-1" data-col="2">1st Sales<br>   </th>
+<th scope="col" align="center" colspan="2" data-row="-1" data-col="3">2nd Market<br>Dcl Marketplace</th>
+<th scope="col" align="center" colspan="2" data-row="-1" data-col="5">2nd Market<br>3rd Party Marketplaces</th>
+</tr>
+              <tr>
+                <th scope="col" data-row="0" data-col="1">Year</th>
+                <th scope="col" data-row="0" data-col="2">Lands</th>
+                <th scope="col" data-row="0" data-col="3">Lands</th>
+                <th scope="col" data-row="0" data-col="4">Estates</th>
+                <th scope="col" data-row="0" data-col="5">Lands</th>
+                <th scope="col" data-row="0" data-col="6">Estates</th>
+              </tr>
+        </thead>
+        <tfoot><tr><td colspan="6">L'année 2026 inclut uniquement les données de janvier à mai 2026.<br> Les volumes sont exprimés en milliers de dollars.<br>Source: Données collectées par les auteurs</td></tr></tfoot>
+        <tbody>
+                <tr>
+                  <td data-row="1" data-col="1">2018</td>
+                  <td data-row="1" data-col="2">12592</td>
+                  <td data-row="1" data-col="3">1520</td>
+                  <td data-row="1" data-col="4">2238</td>
+                  <td data-row="1" data-col="5">8.3</td>
+                  <td data-row="1" data-col="6">0.27</td>
+                </tr>
+                <tr>
+                  <td data-row="2" data-col="1">2019</td>
+                  <td data-row="2" data-col="2">9.7</td>
+                  <td data-row="2" data-col="3">2021</td>
+                  <td data-row="2" data-col="4">2652</td>
+                  <td data-row="2" data-col="5">32.4</td>
+                  <td data-row="2" data-col="6">2.26</td>
+                </tr>
+                <tr>
+                  <td data-row="3" data-col="1">2020</td>
+                  <td data-row="3" data-col="2">-</td>
+                  <td data-row="3" data-col="3">2021</td>
+                  <td data-row="3" data-col="4">2342</td>
+                  <td data-row="3" data-col="5">271.4</td>
+                  <td data-row="3" data-col="6">109.19</td>
+                </tr>
+                <tr>
+                  <td data-row="4" data-col="1">2021</td>
+                  <td data-row="4" data-col="2">-</td>
+                  <td data-row="4" data-col="3">39200</td>
+                  <td data-row="4" data-col="4">44340</td>
+                  <td data-row="4" data-col="5">30120.7</td>
+                  <td data-row="4" data-col="6">808.19</td>
+                </tr>
+                <tr>
+                  <td data-row="5" data-col="1">2022</td>
+                  <td data-row="5" data-col="2">-</td>
+                  <td data-row="5" data-col="3">22039</td>
+                  <td data-row="5" data-col="4">35742</td>
+                  <td data-row="5" data-col="5">26666.3</td>
+                  <td data-row="5" data-col="6">213.39</td>
+                </tr>
+                <tr>
+                  <td data-row="6" data-col="1">2023</td>
+                  <td data-row="6" data-col="2">-</td>
+                  <td data-row="6" data-col="3">856</td>
+                  <td data-row="6" data-col="4">1943</td>
+                  <td data-row="6" data-col="5">1464.9</td>
+                  <td data-row="6" data-col="6">18.58</td>
+                </tr>
+                <tr>
+                  <td data-row="7" data-col="1">2024</td>
+                  <td data-row="7" data-col="2">-</td>
+                  <td data-row="7" data-col="3">285</td>
+                  <td data-row="7" data-col="4">695</td>
+                  <td data-row="7" data-col="5">870.7</td>
+                  <td data-row="7" data-col="6">6.34</td>
+                </tr>
+                <tr>
+                  <td data-row="8" data-col="1">2025</td>
+                  <td data-row="8" data-col="2">-</td>
+                  <td data-row="8" data-col="3">233</td>
+                  <td data-row="8" data-col="4">464</td>
+                  <td data-row="8" data-col="5">626.4</td>
+                  <td data-row="8" data-col="6">144.34</td>
+                </tr>
+                <tr>
+                  <td data-row="9" data-col="1">2026</td>
+                  <td data-row="9" data-col="2">-</td>
+                  <td data-row="9" data-col="3">100</td>
+                  <td data-row="9" data-col="4">94</td>
+                  <td data-row="9" data-col="5">59.1</td>
+                  <td data-row="9" data-col="6">54.26</td>
+                </tr>
+                <tr>
+                  <td data-row="10" data-col="1">Total</td>
+                  <td data-row="10" data-col="2">12601.7</td>
+                  <td data-row="10" data-col="3">68276</td>
+                  <td data-row="10" data-col="4">90510</td>
+                  <td data-row="10" data-col="5">60120.2</td>
+                  <td data-row="10" data-col="6">1356.83</td>
+                </tr>
+        </tbody>
+      </table>
+    </div>
+<!-- hack to avoid NA insertion in last line -->
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p>Le tableau <a href="#tbl-vol-summary-1" class="quarto-xref">Table&nbsp;1</a> présente les volumes de ventes annuels des parcelles et des domaines Decentraland en marché primaire et en marchés secondaire. Il confirme les observations faites à partir des figures <a href="#fig-land-sales-volume-ts" class="quarto-xref">Figure&nbsp;1</a> et <a href="#fig-land-sales-volume-2nd-ts" class="quarto-xref">Figure&nbsp;4</a>. Les émissions de parcelles se sont terminées en janvier 2019, d’où les valeurs nulles de volumes en marché primaire à partir de 2020. Les volumes de vente en marchés secondaires suivent une tendance croissante jusqu’en 2021, qui correspond à la période de boom crypto-nft-métavers, avant de chuter drastiquement en 2022, qui correspond à la période de crash crypto-nft-métavers. La chute des ventes sur Dcl Marketplace est plus forte que celle sur les marketplaces tierces. A partir de 2024, la majorité des ventes en marché secondaires sont faites via les marketplaces tierces.</p>
+<div class="cell">
+<div id="tbl-vol-summary-2" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-vol-summary-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;2: Nombres annuels de listings et de demandes sur Dcl Marketplace
+</figcaption>
+<div aria-describedby="tbl-vol-summary-2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<!-- preamble start -->
+
+    <script src="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.js"></script>
+
+    <script>
+      // Create table-specific functions using external factory
+      const tableFns_v62wpvbp7iz6r6odoss0 = TinyTable.createTableFunctions("tinytable_v62wpvbp7iz6r6odoss0");
+      // tinytable span after
+      window.addEventListener('load', function () {
+          var cellsToStyle = [
+            // tinytable style arrays after
+          { positions: [ { i: '-1', j: 5 } ], css_id: 'tinytable_css_gud73vpzwz0dculstlgh',}, 
+          { positions: [ { i: '-1', j: 3 } ], css_id: 'tinytable_css_l48840igxo564ol85bh1',}, 
+          { positions: [ { i: '-1', j: 2 }, { i: '-1', j: 4 } ], css_id: 'tinytable_css_1s7j7skpk0zi8j4p9wn8',}, 
+          { positions: [ { i: '9', j: 1 }, { i: '10', j: 1 }, { i: '9', j: 2 }, { i: '10', j: 2 }, { i: '9', j: 3 }, { i: '10', j: 3 }, { i: '9', j: 4 }, { i: '10', j: 4 }, { i: '9', j: 5 }, { i: '10', j: 5 } ], css_id: 'tinytable_css_t4dmymlvx6c2ps2xj71y',}, 
+          { positions: [ { i: '1', j: 1 }, { i: '2', j: 1 }, { i: '3', j: 1 }, { i: '4', j: 1 }, { i: '5', j: 1 }, { i: '6', j: 1 }, { i: '7', j: 1 }, { i: '8', j: 1 }, { i: '1', j: 2 }, { i: '2', j: 2 }, { i: '3', j: 2 }, { i: '4', j: 2 }, { i: '5', j: 2 }, { i: '6', j: 2 }, { i: '7', j: 2 }, { i: '8', j: 2 }, { i: '1', j: 3 }, { i: '2', j: 3 }, { i: '3', j: 3 }, { i: '4', j: 3 }, { i: '5', j: 3 }, { i: '6', j: 3 }, { i: '7', j: 3 }, { i: '8', j: 3 }, { i: '1', j: 4 }, { i: '2', j: 4 }, { i: '3', j: 4 }, { i: '4', j: 4 }, { i: '5', j: 4 }, { i: '6', j: 4 }, { i: '7', j: 4 }, { i: '8', j: 4 }, { i: '1', j: 5 }, { i: '2', j: 5 }, { i: '3', j: 5 }, { i: '4', j: 5 }, { i: '5', j: 5 }, { i: '6', j: 5 }, { i: '7', j: 5 }, { i: '8', j: 5 } ], css_id: 'tinytable_css_lar6o15xwaa9rz2fn74y',}, 
+          { positions: [ { i: '0', j: 1 }, { i: '0', j: 2 }, { i: '0', j: 3 }, { i: '0', j: 4 }, { i: '0', j: 5 } ], css_id: 'tinytable_css_616btmkfvkuet0q633ql',}, 
+          { positions: [ { i: '-1', j: 1 } ], css_id: 'tinytable_css_gaoqevrgw0m83fceun0p',}, 
+          ];
+
+          // Loop over the arrays to style the cells
+          cellsToStyle.forEach(function (group) {
+              group.positions.forEach(function (cell) {
+                  tableFns_v62wpvbp7iz6r6odoss0.styleCell(cell.i, cell.j, group.css_id);
+              });
+          });
+      });
+    </script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.css">
+    <style>
+    /* tinytable css entries after */
+    #tinytable_v62wpvbp7iz6r6odoss0 td.tinytable_css_gud73vpzwz0dculstlgh, #tinytable_v62wpvbp7iz6r6odoss0 th.tinytable_css_gud73vpzwz0dculstlgh {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: black; --line-color-left: black; --line-color-right: black; --line-color-top: black; --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center; font-size: 0.9em }
+    #tinytable_v62wpvbp7iz6r6odoss0 td.tinytable_css_l48840igxo564ol85bh1, #tinytable_v62wpvbp7iz6r6odoss0 th.tinytable_css_l48840igxo564ol85bh1 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: black; --line-color-left: black; --line-color-right: black; --line-color-top: black; --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 3%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center; font-size: 0.9em }
+    #tinytable_v62wpvbp7iz6r6odoss0 td.tinytable_css_1s7j7skpk0zi8j4p9wn8, #tinytable_v62wpvbp7iz6r6odoss0 th.tinytable_css_1s7j7skpk0zi8j4p9wn8 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: black; --line-color-left: black; --line-color-right: black; --line-color-top: black; --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 3%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center; font-size: 0.9em }
+    #tinytable_v62wpvbp7iz6r6odoss0 td.tinytable_css_t4dmymlvx6c2ps2xj71y, #tinytable_v62wpvbp7iz6r6odoss0 th.tinytable_css_t4dmymlvx6c2ps2xj71y {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: black; --line-color-left: black; --line-color-right: black; --line-color-top: black; --line-width-bottom: 0.1em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; font-size: 0.9em }
+    #tinytable_v62wpvbp7iz6r6odoss0 td.tinytable_css_lar6o15xwaa9rz2fn74y, #tinytable_v62wpvbp7iz6r6odoss0 th.tinytable_css_lar6o15xwaa9rz2fn74y { font-size: 0.9em }
+    #tinytable_v62wpvbp7iz6r6odoss0 td.tinytable_css_616btmkfvkuet0q633ql, #tinytable_v62wpvbp7iz6r6odoss0 th.tinytable_css_616btmkfvkuet0q633ql {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: black; --line-color-left: black; --line-color-right: black; --line-color-top: black; --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; font-size: 0.9em }
+    #tinytable_v62wpvbp7iz6r6odoss0 td.tinytable_css_gaoqevrgw0m83fceun0p, #tinytable_v62wpvbp7iz6r6odoss0 th.tinytable_css_gaoqevrgw0m83fceun0p {  position: relative; --border-bottom: 0; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: black; --line-color-left: black; --line-color-right: black; --line-color-top: black; --line-width-bottom: 0.1em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center; font-size: 0.9em }
+    </style>
+    <div class="container">
+      <table class="tinytable" id="tinytable_v62wpvbp7iz6r6odoss0" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
+        
+        <thead>
+<tr>
+<th scope="col" align="center" colspan="1" data-row="-1" data-col="1"> </th>
+<th scope="col" align="center" colspan="2" data-row="-1" data-col="2">Listings</th>
+<th scope="col" align="center" colspan="2" data-row="-1" data-col="4">Demandes</th>
+</tr>
+              <tr>
+                <th scope="col" data-row="0" data-col="1">Year</th>
+                <th scope="col" data-row="0" data-col="2">Lands</th>
+                <th scope="col" data-row="0" data-col="3">Estates</th>
+                <th scope="col" data-row="0" data-col="4">Lands</th>
+                <th scope="col" data-row="0" data-col="5">Estates</th>
+              </tr>
+        </thead>
+        <tfoot><tr><td colspan="5">L'année 2026 inclut uniquement les données de janvier à mai 2026.<br>Source: Données collectées par les auteurs</td></tr></tfoot>
+        <tbody>
+                <tr>
+                  <td data-row="1" data-col="1">2018</td>
+                  <td data-row="1" data-col="2">9075</td>
+                  <td data-row="1" data-col="3">3848</td>
+                  <td data-row="1" data-col="4">-</td>
+                  <td data-row="1" data-col="5">-</td>
+                </tr>
+                <tr>
+                  <td data-row="2" data-col="1">2019</td>
+                  <td data-row="2" data-col="2">19818</td>
+                  <td data-row="2" data-col="3">9426</td>
+                  <td data-row="2" data-col="4">9465</td>
+                  <td data-row="2" data-col="5">4356</td>
+                </tr>
+                <tr>
+                  <td data-row="3" data-col="1">2020</td>
+                  <td data-row="3" data-col="2">15781</td>
+                  <td data-row="3" data-col="3">6952</td>
+                  <td data-row="3" data-col="4">6099</td>
+                  <td data-row="3" data-col="5">2786</td>
+                </tr>
+                <tr>
+                  <td data-row="4" data-col="1">2021</td>
+                  <td data-row="4" data-col="2">12445</td>
+                  <td data-row="4" data-col="3">4751</td>
+                  <td data-row="4" data-col="4">1622</td>
+                  <td data-row="4" data-col="5">1758</td>
+                </tr>
+                <tr>
+                  <td data-row="5" data-col="1">2022</td>
+                  <td data-row="5" data-col="2">7088</td>
+                  <td data-row="5" data-col="3">3532</td>
+                  <td data-row="5" data-col="4">1707</td>
+                  <td data-row="5" data-col="5">4180</td>
+                </tr>
+                <tr>
+                  <td data-row="6" data-col="1">2023</td>
+                  <td data-row="6" data-col="2">2760</td>
+                  <td data-row="6" data-col="3">1797</td>
+                  <td data-row="6" data-col="4">358</td>
+                  <td data-row="6" data-col="5">983</td>
+                </tr>
+                <tr>
+                  <td data-row="7" data-col="1">2024</td>
+                  <td data-row="7" data-col="2">1360</td>
+                  <td data-row="7" data-col="3">1050</td>
+                  <td data-row="7" data-col="4">148</td>
+                  <td data-row="7" data-col="5">327</td>
+                </tr>
+                <tr>
+                  <td data-row="8" data-col="1">2025</td>
+                  <td data-row="8" data-col="2">28</td>
+                  <td data-row="8" data-col="3">2</td>
+                  <td data-row="8" data-col="4">343</td>
+                  <td data-row="8" data-col="5">252</td>
+                </tr>
+                <tr>
+                  <td data-row="9" data-col="1">2026</td>
+                  <td data-row="9" data-col="2">56</td>
+                  <td data-row="9" data-col="3">-</td>
+                  <td data-row="9" data-col="4">192</td>
+                  <td data-row="9" data-col="5">76</td>
+                </tr>
+                <tr>
+                  <td data-row="10" data-col="1">Total</td>
+                  <td data-row="10" data-col="2">68411</td>
+                  <td data-row="10" data-col="3">31358</td>
+                  <td data-row="10" data-col="4">19934</td>
+                  <td data-row="10" data-col="5">14718</td>
+                </tr>
+        </tbody>
+      </table>
+    </div>
+<!-- hack to avoid NA insertion in last line -->
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p>Le tableau <a href="#tbl-vol-summary-2" class="quarto-xref">Table&nbsp;2</a> présente l’évolution de la quantité de liquidité sur Dcl Marketplace au fil des années. 2019 apparait comme ayant été l’année la plus dynamique sur Dcl Marketplace. C’est l’année qui suit directement celle des ventes en marché primaires. La tendance est ensuite baissière durant l’entièreté de l’horizon temporel observé. La vitesse de décroissance est encore plus fulgurante entre 2021 et 2023, à partir du crash crypto-nft-métavers. A partir de 2025, le marché Dcl Marketplace est complètement déserté, au profit, comme nous le montrent la figure <a href="#fig-land-sales-volume-2nd-ts" class="quarto-xref">Figure&nbsp;4</a> et le tableau <a href="#tbl-vol-summary-2" class="quarto-xref">Table&nbsp;2</a>, des marketplaces tierces.</p>
+<p>Notre analyse portera donc exclusivement sur les données d’annonce, de ventes et de demandes de parcelles entre 2019 et 2024, faites via Dcl Marketplace. Nous excluons les données issues de marketplaces tierces car n’étant ni complètes, ni fiables. En effet, chez <a href="https://rarible.com">Rarible</a>, les données de listings et ventes collectées agrègent plusieurs transactions de diverses marketplaces pour les listings, et les données de demandes sont en nombre limité, et chez <a href="https://opensea.io">Opensea</a>, les données disponibles ne comportent pas de transactions antérieures à septembre 2024, comportent énormément de valeurs manquantes sur les dates nécessaires pour déduire les temps sur marché, et sont également énormément bruitées.</p>
+<p>Nous excluons également de notre analyse les domaines pour deux raisons:</p>
+<ul>
+<li>Le volume de transactions de parcelles est suffisamment important pour évaluer empiriquement les hypothèses formulées;</li>
+<li>Contrairement aux parcelles dont les localisations sont invariantes dans le temps, les domaines voient leurs tailles varier dans le temps et leur potentiellement leurs localisations relatives aux aménités, ce qui complexifierait grandement le formattage des données sans potentielle réelle valeur ajoutée.</li>
+</ul>
+<p>Les domaines restent néanmoins importants dans l’analyse de la microstructure locale aux niveau des parcelles, car nous y intégrons dans le voisinage d’une parcelle à la fois les parcelles et les domaines proches.</p>
+<p>Nous avons également collecté les coordonnées géographiques de l’ensemble des parcelles du métavers, desquelles nous avons construit les variables de localisation, dont la distance au centre et les indicatrices de proximité aux autres aménités.</p>
+</section>
+<section id="statistiques-descriptives" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="statistiques-descriptives"><span class="header-section-number">4.2</span> Statistiques descriptives</h2>
+</section>
 </section>
 <section id="résultats" class="level1" data-number="5">
 <h1 data-number="5"><span class="header-section-number">5</span> Résultats</h1>
@@ -647,7 +983,13 @@ Yolanda, Jasmine. 2020. <em>ANALISIS SURVIVAL PADA FINANCIAL DISTRESS MENGGUNAKA
 
 </section>
 
-</main> <!-- /main -->
+
+<div id="quarto-appendix" class="default"><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
+
+<ol>
+<li id="fn1"><p>Application Programming Interface: Interface via laquelle il est possible de communiquer (échanger et recevoir des données) d’une application ou d’un système tiers<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section></div></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";
