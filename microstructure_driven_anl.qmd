@@ -321,7 +321,7 @@ X'\beta = \sum_{r \in \text{Régimes}} \left[ \beta_{0,r} + \beta_{loc,r} X_{loc
 \end{align}
 $$ {#eq-regs-spec}
 
-où $X_{loc}$ désigne la variable de localisation, $X_{att}$ désigne les variables d'attention générale suscitée par le métavers, $X_{micro}$ désigne les variables de microstructure locale, $X_{ctrl}$ désigne les variables de contrôle, $\lambda_{tr}$ désigne les effets fixes trimestrielles régimes-dépendants, et $\mathbb{1}_{r}$ désigne l'indicatrice de régime. Les variables de contrôle incluent les indicatrices de proximité aux autres aménités et les prix de demande des parcelles listées.
+où $X_{loc}$ désigne la variable de localisation, $X_{att}$ désigne les variables d'attention générale suscitée par le métavers, $X_{micro}$ désigne les variables de microstructure locale, $X_{ctrl}$ désigne les variables de contrôle, $\lambda_{tr}$ désigne les effets fixes trimestrielles régimes-dépendants, et $\mathbb{1}_{r}$ désigne l'indicatrice de régime. Les variables de contrôle incluent les indicatrices de proximité aux autres aménités et les prix de demande des parcelles listées. L'attention ou l'intérêt général suscité par le métavers n'étant pas directement observable, nous le substituons par deux mesures qui approximent deux dimensions de celui-ci: l'intérêt des investisseurs que nous mesurons par le volume de ventes, et l'intérêt du grand public mesuré par les indices de recherche du mot `decentraland` sur le moteur de recherche Google.
 
 La convexité du lien entre localisation et liquidité est examinée en appliquant les modèles AFT et Cox sur chaque décile de distance au centre, avec une attention particulière portée sur les premiers déciles, et la progression des coefficients de régressions en fonction des déciles.
 
@@ -388,7 +388,7 @@ Le tableau @tbl-vol-summary-1 présente les volumes de ventes annuels des parcel
 #| tbl-cap: "Nombres annuels de listings et de demandes sur Dcl Marketplace"
 #| warning: false
 #| echo: false
-#| 
+
 library(tinytable)
 library(labelled) 
 
@@ -428,6 +428,99 @@ Nous avons également collecté les coordonnées géographiques de l'ensemble de
 
 
 ## Statistiques descriptives
+
+Nous démonbrons environ 68 000 listings de parcelles entre 2018 et 2026 sur Dcl Marketplace. Parmi les listings ne se concluant pas par une vente, certains arrivent à expiration, tandis que d'autres sont annulés par le vendeur. Parmi les parcelles dont les listings ont été annulés par le vendeur, certaines sont quasi-instantanément remises sur le marché. Ainsi, nous considérons comme étant un seul et même listing deux annonces de ventes adjacentes concernant la même parcelle, et dont la première est annulée moins d'une heure après sa publication. Nous considérons ainsi la seconde annonce peut être considérée comme une modification de la première, plutôt que comme une remise sur le marché pour faute d'échec de vente. De cette correction apportée aux modifications d'annonces de vente, il en résulte 65 053 listings au total, dont 56 553 entre 2019 et 2024.
+
+```{r}
+#| label: tbl-desc-summary-liq
+#| tbl-cap: "Statistiques descriptives des mesures de liquidité des parcelles Decentraland pour les listings de 2019 à 2024"
+#| warning: false
+#| echo: false
+
+library(tinytable)
+
+listings <- readRDS(file = "artdata/listings.RDS")
+
+smr <- listings |>
+  filter(!is.na(regime)) |>
+  mutate(
+    DPCt = exp(DPC)-1
+  ) |>
+  reframe(
+    y = c("q 1%", "q 10%", "Median", "q 90%", "q 99%", "Mean", "Sd"),
+    tom_all = c(
+      quantile(tom, c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(tom), 
+      sd(tom)
+    ),
+    tom_sales = c(
+      quantile(tom[which(status == "filled")], c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(tom[which(status == "filled")]), 
+      sd(tom[which(status == "filled")])
+    ),
+    n_listings = c(NA, NA, NA, NA, NA, n(), NA),
+    n_sales = c(NA, NA, NA, NA, NA, sum(status == "filled"), NA),
+    lsr = c(NA, NA, NA, NA, NA, mean(status == "filled"), NA),
+    loc_all = c(
+      quantile(DPCt, c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(DPCt), 
+      sd(DPCt)
+    ),
+    loc_sales = c(
+      quantile(DPCt[which(status == "filled")], c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(DPCt[which(status == "filled")]), 
+      sd(DPCt[which(status == "filled")])
+    ),
+    att_vol = c(quantile(att_vol, c(0.01, 0.1, 0.5, 0.9, 0.99))/1000, mean(att_vol)/1000, sd(att_vol)/1000),
+    att_gt = c(quantile(att_gt, c(0.01, 0.1, 0.5, 0.9, 0.99)), mean(att_gt), sd(att_gt)),
+    .by = "regime"
+  ) |>
+  mutate(
+    tom_all = round(tom_all, digits = 3),
+    tom_sales = round(tom_sales, digits = 3),
+  ) |>
+  select(-regime)
+colnames(smr) <- c("Stat.", "All listings", "Converted into sales", "# Listings", "# Sales", "% Sales", "All listings", "Converted into sales", "30 prev. days sales vol (10<sup>3</sup>USD)", "Google Trends Index")
+
+tt(
+  smr,
+  digits = 3,
+  notes = "Les échelles des indices Google Trends diffèrent suivant les régimes, et les volumes de ventes sont en milliers de dollars.", 
+  replace = "-",
+  width = c(0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1)
+) |> 
+style_tt(fontsize = 0.9) |>
+format_tt(replace = "-") |>
+group_tt(
+  j = list(
+    "Time on market (days)" = 2:3, 
+    "Listings & Sales Volumes" = 4:6,
+    "Distance to Central Plaza (# parcels)" = 7:8, 
+    "Global Attention" = 9:10
+  )
+) |>
+group_tt(
+  i = list(
+    "Normal Regime (2019-2020)" = 1,
+    "Expansion/Boom Regime (2021)" = 8,
+    "Recession/Crash Regime (2022)" = 15,
+    "Low recession/Desert Regime (2023-2024)" = 22
+  )
+) |>
+format_tt(j = 2:3, digits = 3) |>
+style_tt(i = 8, line = "b", line_width = 0.1) |>
+style_tt(i = 16, line = "b", line_width = 0.1) |>
+style_tt(i = 24, line = "b", line_width = 0.1)
+```
+
+
+Le tableau @tbl-desc-summary-liq présente les statistiques descriptives des mesures de liquidité, de localisation et d'attention globale suscitée par le métavers. Les temps sur marché des parcelles vendues sont globalement inférieures aux temps sur marché de toutes les annonces de vente, dans tous les régimes de marché. En régime normal, seules 11% des listings ont été convertis en ventes. Dans les autres régimes, ce nombre dépasse 20%, en particulier pour les régimes extrêmes, avec 25% pour le régime d'expansion en 2021, et près de 30% pour le régime de récession en 2022. Toutefois, ces taux de conversion sont grandement affectés par la quantité d'annonces de ventes décroissante dans le temps: de 33 640 entre 2019 et 2020, elle descend à 3 968 entre 2023 et 2024, soit une baisse d'un facteur 9.5 environ. Cela s'explique notamment par la perte d'intérêt pour le métavers après la crise de 2022, et la migration de l'activité transactionnelle vers les plateformes marketplace tierces.
+
+Le fait le plus remarquable concerne la comparaison entre les distances au centre des parcelles listées et celles des parcelles vendues. En effet, pour tous les régimes de marché, les distances des parcelles vendues sont légèrement supérieures à celles de l'ensemble des parcelles listées, ce qui semble signifier que ce sont les parcelles excentrées qui se vendent mieux. L'explication la plus probable à cette différence est le prix demandé par le vendeur. Les parcelles proches du centre sont beaucoup plus surpricées par les vendeurs, ce qui repousse les acheteurs. Toutefois, les différences entre localisations des parcelles vendues et celles listées restent faibles.
+
+Les mesures d'attention globales confirment les observations faites à partir du tableau @tbl-vol-summary-1 sur l'évolution de l'activité transactionnelle dans le temps. De plus, concernant l'indice de recherche Google Trends, son 99e percentile en régime de récession (2022) est très éloigné de sa valeur maximale (100), contrairement aux autres régimes. Cela confirme le désintérêt pour le métavers durant cette période, dûe à la désillusion occasionnée par la crise de 2022.
+
+
 
 
 # Résultats

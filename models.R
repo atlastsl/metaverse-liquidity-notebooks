@@ -4,6 +4,7 @@ library(lmtest)
 library(sandwich)
 library(pscl)
 library(survival)
+library(MASS)
 
 lm_model <- function (dataset, Y, X, correct = T) {
   fml <- as.formula(paste0(Y, " ~ ", paste0(X, collapse = " + ")))
@@ -77,4 +78,10 @@ cox_model <- function (dataset, Y_time, Y_event, X, error_cluster = NULL) {
     data = dataset
   )
   return(fit)
+}
+
+ord_model <- function (dataset, Y, X) {
+  fml <- as.formula(paste0(Y, " ~ ", paste0(X, collapse = " + ")))
+  res <- polr(fml, data = dataset, Hess = TRUE)
+  return(res)
 }
