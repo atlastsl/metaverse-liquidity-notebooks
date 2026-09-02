@@ -198,7 +198,7 @@ listings_db_builder <- function () {
   listed_periods <- interval_base |>
     select(asset_id, date, interval_start, interval_end) |>
     left_join(
-      listings_base |> select(asset_id, past_list_start = list_start, past_list_end = list_end, value = price_usd),
+      listings_base |> select(asset_id, past_list_start = list_start, past_list_end = list_end, value = price_usd, status),
       by = join_by(asset_id, interval_end > past_list_start, interval_start < past_list_end),
       relationship = "many-to-many"
     ) |>
@@ -224,6 +224,7 @@ listings_db_builder <- function () {
       bintl_end = max(intl_end),
       bintl_mvalue = mean(value),
       bintl_n = n(),
+      bintl_status = last(status),
       .groups = "drop"
     ) |>
     select(-block)
@@ -256,6 +257,7 @@ listings_db_builder <- function () {
     summarise(
       ndays_li_30d = sum(time_length(bintl_end - bintl_start, unit = "second"), na.rm = T)/86400,
       mvalue_li_30d = sum(bintl_mvalue * bintl_n, na.rm = T) / sum(bintl_n),
+      nfilled_li_30d = sum(bintl_status == "filled"),
       .by = c("asset_id", "date")
     )
   
@@ -304,7 +306,7 @@ listings_db_builder <- function () {
     mutate(
       across(
         c(
-          ndays_li_30d, mvalue_li_30d,
+          ndays_li_30d, mvalue_li_30d, nfilled_li_30d,
           asks_ul_30d, askers_ul_30d,
           asks_ll_30d, askers_ll_30d, ndays_ll_30d
         ),
