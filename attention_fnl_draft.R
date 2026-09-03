@@ -16,8 +16,10 @@ library(conflicted)
 conflicted::conflicts_prefer(dplyr::select)
 conflict_prefer("filter", "dplyr")
   
+artdatalst = readRDS(file = "artdata/artdatalst.RDS")
 
-x = listings |> filter(!is.na(regime), as.numeric(date) >= 1554076800) |>
+#x = listings |> filter(!is.na(regime), as.numeric(date) >= 1554076800) |>
+x = artdatalst$listings |> filter(!is.na(regime), as.numeric(date) >= 1554076800, nfilled_li_30d == 0) |>
   # select(asset_id, date, asks_ll_30d, nfilled_li_30d) |>
   # mutate(
   #   att = asks_ll_30d + nfilled_li_30d
@@ -26,7 +28,7 @@ x = listings |> filter(!is.na(regime), as.numeric(date) >= 1554076800) |>
     # att_ll = if_else(asks_ll_30d == 0, "Z", if_else(asks_ll_30d == 1, "B", if_else(asks_ll_30d < 5, "A", "S"))),
     # att_ul = if_else(asks_ul_30d == 0, "Z", if_else(asks_ul_30d == 1, "B", if_else(asks_ul_30d < 5, "A", "S"))),
     # att_ul = if_else(asks_ul_30d == 0, "Z", if_else(asks_ll_30d <= 3, "L", "H")),
-    # asks_ll_30d = asks_ll_30d + nfilled_li_30d,
+    asks_ll_30d = asks_ll_30d,
     att_ll = if_else(asks_ll_30d == 0, "Z", if_else(asks_ll_30d <= 3, "L", "H"))
   ) |>
   mutate(
@@ -34,6 +36,7 @@ x = listings |> filter(!is.na(regime), as.numeric(date) >= 1554076800) |>
     # att_ul = factor(att_ul, levels = c("Z", "B", "A", "S"), ordered = T),
     # att_ul = factor(att_ul, levels = c("Z", "L", "H"), ordered = T),
     att_ll = factor(att_ll, levels = c("Z", "L", "H"), ordered = T),
+    att_ll_u = factor(att_ll, levels = levels(att_ll), ordered = F),
     att_dmn = as.numeric(asks_ll_30d > 0),
     att_dmf = factor(if_else(asks_ll_30d > 0, "Y", "N"), levels = c("N", "Y")),
     mvalue_li_30d = log1p(Winsorize(mvalue_li_30d, val = quantile(mvalue_li_30d, probs = c(0, 0.99)))),
@@ -142,7 +145,7 @@ liq_model_func <- function (reg, type = "aft", att = F) {
   qlist <- unique(dat$quarter)
   Xcols <- c("DPC", "CRD", "CPX", "CDX", "North", "LogPrice")
   if (att) {
-    Xcols <- c(Xcols, c("att_ll", "att_ll:nndays_li_30d"))
+    Xcols <- c(Xcols, c("att_ll_u", "att_ll_u:nndays_li_30d"))
     #Xcols <- c(Xcols, c("att_dmn", "att_dmn:nndays_li_30d"))
   }
   Xcols <- c(Xcols, qlist[-1])

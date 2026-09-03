@@ -3,3 +3,5 @@
 **/*.quarto_ipynb
 img.RData
 artdata/artimg.RData
+artdata/*.RData
+artdata/*.RDS
