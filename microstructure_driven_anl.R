@@ -156,9 +156,11 @@ volume_summary_builder <- function (filter_func, aggr_func = function(db){return
     filter(filter_func(.data)) |>
     distinct(asset_id, date, .keep_all = T) |>
     mutate(year = as.character(year(date))) |>
+    mutate(month = lubridate::month(date)) |>
     summarise(
       fs_vol = aggr_func(.data),
-      .by = c("year")
+      #.by = c("year")
+      .by = c("year", "month")
     ) |>
     bind_rows(
       Tx_DclMkp |>
@@ -166,6 +168,7 @@ volume_summary_builder <- function (filter_func, aggr_func = function(db){return
         distinct(asset_id, date, .keep_all = T) |>
         summarise(
           year = "Total",
+          month = 0,
           fs_vol = aggr_func(.data),
         )
     )
@@ -219,6 +222,24 @@ vol_smr <- tibble(data.frame(year=c(as.character(2018:2026), "Total"))) |>
   left_join(asks_e |> rename(asks_e = fs_vol), by = c("year"))
 rm(list = c("fsales", "ssales_l1", "ssales_e1", "ssales_l2", "ssales_e2", "lsts_l", "lsts_e", "asks_l", "asks_e"))
 saveRDS(vol_smr, file = "artdata/volsummary.RDS")
+
+vol_smr_month <- tibble(
+  rbind(
+    data.table::CJ(year = as.character(2018:2026), month = 1:12),
+    data.frame(year = "Total", month = 0)
+  )
+) |>
+  left_join(fsales |> rename(fsales = fs_vol), by = c("year", "month")) |>
+  left_join(ssales_l1 |> rename(ssales_l1 = fs_vol), by = c("year", "month")) |>
+  left_join(ssales_e1 |> rename(ssales_e1 = fs_vol), by = c("year", "month")) |>
+  left_join(ssales_l2 |> rename(ssales_l2 = fs_vol), by = c("year", "month")) |>
+  left_join(ssales_e2 |> rename(ssales_e2 = fs_vol), by = c("year", "month")) |>
+  left_join(lsts_l |> rename(lsts_l = fs_vol), by = c("year", "month")) |>
+  left_join(lsts_e |> rename(lsts_e = fs_vol), by = c("year", "month")) |>
+  left_join(asks_l |> rename(asks_l = fs_vol), by = c("year", "month")) |>
+  left_join(asks_e |> rename(asks_e = fs_vol), by = c("year", "month"))
+rm(list = c("fsales", "ssales_l1", "ssales_e1", "ssales_l2", "ssales_e2", "lsts_l", "lsts_e", "asks_l", "asks_e"))
+saveRDS(vol_smr, file = "artdata/volsummarymonth.RDS")
 
 
 ### Listings database construction & summary ###

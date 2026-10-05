@@ -41,15 +41,17 @@ source("models.R")
 
 artdatalst = readRDS(file = "artdata/artdatalst.RDS")
 
-db = artdatalst$listings |> filter(!is.na(regime), as.numeric(date) >= 1554076800, nfilled_li_30d == 0) |>
+db = artdatalst$listings |> 
+  #filter(!is.na(regime), as.numeric(date) >= 1554076800, nfilled_li_30d == 0) |>
+  filter(!is.na(regime), as.numeric(date) >= 1554076800) |>
   mutate(
     att = if_else(asks_ll_30d == 0, "Z", if_else(asks_ll_30d <= 3, "L", "H")),
     att_ll_f = factor(att, levels = c("Z", "L", "H"), ordered = T),
     att_ll_u = factor(att, levels = c("Z", "L", "H"), ordered = F),
     att_dm_n = as.numeric(asks_ll_30d > 0),
     att_dm_f = factor(if_else(asks_ll_30d > 0, "Y", "N"), levels = c("N", "Y")),
-    P30dOnMarketTime = ndays_li_30d/30,
-    P30dOnMarket = factor(if_else(ndays_li_30d > 0, "Y", "N"), levels = c("N", "Y"))
+    MktExpoTime = ndays_li_30d/30,
+    MktExpoOn = factor(if_else(ndays_li_30d > 0, "Y", "N"), levels = c("N", "Y"))
   ) |>
   arrange(date)
 ```
@@ -60,14 +62,15 @@ db = artdatalst$listings |> filter(!is.na(regime), as.numeric(date) >= 155407680
 ```{r}
 #| echo: false
 
-liq_model_func <- function (reg, type = "aft", att = F) {
+liq_model_func <- function (reg, type = "aft") {
   dat = db |> filter(regime == reg) |>
     filter(!is.na(tom) & tom > 0) |>
     mutate(
       sold = as.numeric(status == "filled" & tom <= 365),
       tom = if_else(tom > 365, 365, tom),
-      LogPrice = log(Winsorize(price_usd, val = quantile(price_usd, probs = c(0.01, 0.99)))),
-      P30dLogPrice = log1p(Winsorize(mvalue_li_30d, val = quantile(mvalue_li_30d, probs = c(0, 0.99)))),
+      LogPrice = log(
+        Winsorize(price_usd, val = quantile(price_usd, probs = c(0.01, 0.99)))
+      ),
       Attention = att_ll_u
     ) |>
     mutate(
@@ -80,9 +83,6 @@ liq_model_func <- function (reg, type = "aft", att = F) {
   
   qlist <- unique(dat$quarter)
   Xcols <- c("DPC", "CRD", "CPX", "CDX", "North", "LogPrice")
-  if (att) {
-    Xcols <- c(Xcols, c("Attention", "Attention:P30dOnMarketTime"))
-  }
   Xcols <- c(Xcols, qlist[-1])
   model <- NULL
   
@@ -128,7 +128,7 @@ my_gof <- list(
 
 results <- vector(mode = "list", length = length(regs))
 for (k in seq_along(regs)) {
-  fit_raw = liq_model_func(regs[k], type = "aft", F)
+  fit_raw = liq_model_func(regs[k], type = "aft")
   td_raw = get_estimates(fit_raw, ci_method = "wald") |>
     filter(!str_detect(term, "^Q\\d+_\\d+"))
   gf_raw = get_gof(fit_raw)
@@ -173,7 +173,7 @@ my_gof <- list(
 
 results <- vector(mode = "list", length = length(regs))
 for (k in seq_along(regs)) {
-  fit_raw = liq_model_func(regs[k], type = "cox", F)
+  fit_raw = liq_model_func(regs[k], type = "cox")
   td_raw = get_estimates(fit_raw, ci_method = "wald") |>
     filter(!str_detect(term, "^Q\\d+_\\d+"))
   gf_raw = get_gof(fit_raw)
@@ -202,22 +202,20 @@ tab
 
 # Résultat 2: Test hypothèses induites par l'attention médiatrice
 
-## Convexité du lien localisation-liquidité
+## Convexité du lien Localisation - Liquidité
 
 ```{r}
-#| label: tbl-res2-conv
-#| tbl-cap: "Convexité du lien localisation-liquidité en régime de marché normal"
-#| warning: false
 #| echo: false
 
-liq_model_func <- function (reg, decile, type = "aft", att = F) {
+convexity_liq_model_func <- function (reg, decile, type = "aft") {
   dat = db |> filter(regime == reg) |>
     filter(!is.na(tom) & tom > 0) |>
     mutate(
       sold = as.numeric(status == "filled" & tom <= 365),
       tom = if_else(tom > 365, 365, tom),
-      LogPrice = log(Winsorize(price_usd, val = quantile(price_usd, probs = c(0.01, 0.99)))),
-      P30dLogPrice = log1p(Winsorize(mvalue_li_30d, val = quantile(mvalue_li_30d, probs = c(0, 0.99)))),
+      LogPrice = log(
+        Winsorize(price_usd, val = quantile(price_usd, probs = c(0.01, 0.99)))
+      ),
       Attention = att_ll_u
     ) |>
     mutate(
@@ -255,57 +253,132 @@ liq_model_func <- function (reg, decile, type = "aft", att = F) {
   return(fit)
 }
 
-deciles <- 1:10
-my_gof <- list(
-  list("raw" = "qt.fe",     "clean" = "Quarters FE", fmt = 0),
-  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
-  list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
-  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
-  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
-)
-
-results <- vector(mode = "list", length = length(deciles))
-for (k in seq_along(deciles)) {
-  fit_raw = liq_model_func("Normal", decile = deciles[k], type = "aft", F)
-  td_raw = get_estimates(fit_raw, ci_method = "wald") |>
-    filter(term == "DPC")
-  gf_raw = get_gof(fit_raw)
-  gf_raw[["qt.fe"]] = "Yes"
-  mod_raw = list(tidy = td_raw, glance = gf_raw)
-  class(mod_raw) <- "modelsummary_list"
+convexity_liq_model_summ <- function (reg) {
+  deciles <- 1:10
+  my_gof <- list(
+    list("raw" = "qt.fe",     "clean" = "Quarters FE", fmt = 0),
+    list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+    list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
+    list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+    list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+  )
   
-  results[[k]] = mod_raw
+  results <- vector(mode = "list", length = length(deciles))
+  for (k in seq_along(deciles)) {
+    fit_raw = convexity_liq_model_func(reg, decile = deciles[k], type = "aft")
+    td_raw = get_estimates(fit_raw, ci_method = "wald") |>
+      filter(term == "DPC")
+    gf_raw = get_gof(fit_raw)
+    gf_raw[["qt.fe"]] = "Yes"
+    mod_raw = list(tidy = td_raw, glance = gf_raw)
+    class(mod_raw) <- "modelsummary_list"
+    
+    results[[k]] = mod_raw
+  }
+  
+  names(results) <- paste0("Decile ", deciles)
+  
+  tab <- modelsummary(
+    results, 
+    gof_map = my_gof,
+    stars = TRUE, statistic = "p.value", output = "tinytable"
+  ) |> style_tt(fontsize = 0.8)
+  colnames(tab) <- c(" ", colnames(tab)[-1])
+  
+  tab
 }
+```
 
-names(results) <- paste0("Decile ", deciles)
+### Régime normal
 
-tab <- modelsummary(
-  results, 
-  gof_map = my_gof,
-  stars = TRUE, statistic = "p.value", output = "tinytable"
-) |> style_tt(fontsize = 0.8)
-colnames(tab) <- c(" ", colnames(tab)[-1])
+```{r}
+#| label: tbl-res2-conv-a
+#| tbl-cap: "Convexité du lien localisation-liquidité en régime de marché normal"
+#| warning: false
+#| echo: false
 
-tab
+convexity_liq_model_summ("Normal")
+```
+
+### Régime expansion
+
+```{r}
+#| label: tbl-res2-conv-b
+#| tbl-cap: "Convexité du lien localisation-liquidité en régime de marché expansion"
+#| warning: false
+#| echo: false
+
+convexity_liq_model_summ("Boom")
+```
+
+### Régime récession
+
+```{r}
+#| label: tbl-res2-conv-c
+#| tbl-cap: "Convexité du lien localisation-liquidité en régime de marché récession"
+#| warning: false
+#| echo: false
+
+convexity_liq_model_summ("Crash")
+```
+
+### Régime désert
+
+```{r}
+#| label: tbl-res2-conv-d
+#| tbl-cap: "Convexité du lien localisation-liquidité en régime de marché désert"
+#| warning: false
+#| echo: false
+
+convexity_liq_model_summ("Desert")
 ```
 
 
-## Effet de l'attention global sur le lien localisation-liquidité
+## Effet de l'attention global sur le lien Localisation-Liquidité
 
 ```{r}
 #| echo: false
 
-liq_model_func <- function (reg, type = "aft", att = "att_gt") {
+dat = db |> filter(regime == "Normal") |>
+  filter(!is.na(tom) & tom > 0) |>
+  mutate(
+    sold = as.numeric(status == "filled" & tom <= 365),
+    tom = if_else(tom > 365, 365, tom),
+    LogPrice = log(
+      Winsorize(price_usd, val = quantile(price_usd, probs = c(0.01, 0.99)))
+    ),
+    att_vol = att_vol / 1000,
+    Attention = att_vol,
+    y1 = min(DPC),
+    y2 = max(DPC),
+    x1 = min(Attention),
+    x2 = max(Attention),
+    a = (y2-y1)/(x2-x1),
+    b = (y1*x2-y2*x1)/(x2-x1),
+    Attention = a*Attention + b
+  ) |>
+  select(-c(x1, x2, y1, y2, a, b))
+
+globalatt_liq_model_func <- function (reg, type = "aft", att = "att_gt") {
   dat = db |> filter(regime == reg) |>
     filter(!is.na(tom) & tom > 0) |>
     mutate(
       sold = as.numeric(status == "filled" & tom <= 365),
       tom = if_else(tom > 365, 365, tom),
-      LogPrice = log(Winsorize(price_usd, val = quantile(price_usd, probs = c(0.01, 0.99)))),
-      P30dLogPrice = log1p(Winsorize(mvalue_li_30d, val = quantile(mvalue_li_30d, probs = c(0, 0.99)))),
+      LogPrice = log(
+        Winsorize(price_usd, val = quantile(price_usd, probs = c(0.01, 0.99)))
+      ),
       att_vol = att_vol / 1000000,
-      Attention = .data[[att]]
+      Attention = .data[[att]],
+      y1 = min(DPC),
+      y2 = max(DPC),
+      x1 = min(Attention),
+      x2 = max(Attention),
+      a = (y2-y1)/(x2-x1),
+      b = (y1*x2-y2*x1)/(x2-x1),
+      Attention = a*Attention + b
     ) |>
+    select(-c(x1, x2, y1, y2, a, b)) |>
     mutate(
       year = year(date),
       quarter = paste0("Q", quarter(date), "_", year),
@@ -339,92 +412,63 @@ liq_model_func <- function (reg, type = "aft", att = "att_gt") {
   }
   return(fit)
 }
+
+globalatt_liq_model_sum <- function (att) {
+  regs <- c("Normal", "Boom", "Crash", "Desert")
+  my_gof <- list(
+    list("raw" = "qt.fe",     "clean" = "Quarters FE", fmt = 0),
+    list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+    list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
+    list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+    list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+  )
+  
+  results <- vector(mode = "list", length = length(regs))
+  for (k in seq_along(regs)) {
+    fit_raw = globalatt_liq_model_func(regs[k], type = "aft", att)
+    td_raw = get_estimates(fit_raw, ci_method = "wald") |>
+      filter(!str_detect(term, "^Q\\d+_\\d+"))
+    gf_raw = get_gof(fit_raw)
+    gf_raw[["qt.fe"]] = "Yes"
+    mod_raw = list(tidy = td_raw, glance = gf_raw)
+    class(mod_raw) <- "modelsummary_list"
+    
+    results[[k]] = mod_raw
+  }
+  
+  names(results) <- regs
+  
+  tab <- modelsummary(
+    results, 
+    gof_map = my_gof,
+    stars = TRUE, statistic = "p.value", output = "tinytable"
+  ) |> style_tt(fontsize = 0.8)
+  colnames(tab) <- c(" ", colnames(tab)[-1])
+  
+  tab
+}
 ```
 
-
-**Attention globale mesurée par le volume de transactions 30j avant le listing**
+### Attention globale = Volume de transactions 30j avant le listing
 
 ```{r}
 #| label: tbl-res2-gbl-a
-#| tbl-cap: "Effet de l'attention global (volume de transactions) sur le lien localisation-liquidité"
+#| tbl-cap: "Effet de l'attention global (volume de transactions) sur le lien Localisation - Liquidité"
 #| warning: false
 #| echo: false
 
-regs <- c("Normal", "Boom", "Crash", "Desert")
-my_gof <- list(
-  list("raw" = "qt.fe",     "clean" = "Quarters FE", fmt = 0),
-  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
-  list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
-  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
-  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
-)
-
-results <- vector(mode = "list", length = length(regs))
-for (k in seq_along(regs)) {
-  fit_raw = liq_model_func(regs[k], type = "aft", "att_vol")
-  td_raw = get_estimates(fit_raw, ci_method = "wald") |>
-    filter(!str_detect(term, "^Q\\d+_\\d+"))
-  gf_raw = get_gof(fit_raw)
-  gf_raw[["qt.fe"]] = "Yes"
-  mod_raw = list(tidy = td_raw, glance = gf_raw)
-  class(mod_raw) <- "modelsummary_list"
-  
-  results[[k]] = mod_raw
-}
-
-names(results) <- regs
-
-tab <- modelsummary(
-  results, 
-  gof_map = my_gof,
-  stars = TRUE, statistic = "p.value", output = "tinytable"
-) |> style_tt(fontsize = 0.8)
-colnames(tab) <- c(" ", colnames(tab)[-1])
-
-tab
+globalatt_liq_model_sum("att_vol")
 ```
 
-
-**Attention globale mesurée par l'indice Google Trends**
+### Attention globale = Indice Google Trends
 
 ```{r}
 #| label: tbl-res2-gbl-b
-#| tbl-cap: "Effet de l'attention global (indice Google Trends) sur le lien localisation-liquidité"
+#| tbl-cap: "Effet de l'attention global (Google Trends) sur le lien Localisation - Liquidité"
 #| warning: false
 #| echo: false
 
-regs <- c("Normal", "Boom", "Crash", "Desert")
-my_gof <- list(
-  list("raw" = "qt.fe",     "clean" = "Quarters FE", fmt = 0),
-  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
-  list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
-  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
-  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
-)
-
-results <- vector(mode = "list", length = length(regs))
-for (k in seq_along(regs)) {
-  fit_raw = liq_model_func(regs[k], type = "aft", "att_gt")
-  td_raw = get_estimates(fit_raw, ci_method = "wald") |>
-    filter(!str_detect(term, "^Q\\d+_\\d+"))
-  gf_raw = get_gof(fit_raw)
-  gf_raw[["qt.fe"]] = "Yes"
-  mod_raw = list(tidy = td_raw, glance = gf_raw)
-  class(mod_raw) <- "modelsummary_list"
-  
-  results[[k]] = mod_raw
-}
-
-names(results) <- regs
-
-tab <- modelsummary(
-  results, 
-  gof_map = my_gof,
-  stars = TRUE, statistic = "p.value", output = "tinytable"
-) |> style_tt(fontsize = 0.8)
-colnames(tab) <- c(" ", colnames(tab)[-1])
-
-tab
+globalatt_liq_model_sum("att_gt")
 ```
 
 
@@ -437,7 +481,13 @@ tab
 att_model_func <- function (reg) {
   dat = db |> filter(regime == reg) |>
     mutate(
-      P30dLogPrice = log1p(Winsorize(mvalue_li_30d, val = quantile(mvalue_li_30d, probs = c(0, 0.99)))),
+      MktExpoLogPrice = log1p(
+        Winsorize(
+          mvalue_li_30d,
+          val = quantile(mvalue_li_30d, probs = c(0, 0.99))
+        )
+      ),
+      MktExpoOn = as.numeric(mvalue_li_30d > 0),
       Attention = att_ll_f
     ) |>
     mutate(
@@ -446,9 +496,13 @@ att_model_func <- function (reg) {
     ) |>
     mutate(qname = quarter) |> 
     mutate(v = 1) |> 
-    pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0) 
+
   qlist <- unique(dat$quarter)
-  Xcols <- c("DPC", "CRD", "CPX", "CDX", "North", "P30dOnMarketTime", "P30dOnMarketTime:DPC", "P30dLogPrice")
+  Xcols <- c(
+    "DPC", "CRD", "CPX", "CDX", "North", 
+    "MktExpoOn", "MktExpoTime", "MktExpoTime:DPC", "MktExpoLogPrice"
+  )
   Xcols <- c(Xcols, qlist[-1])
   fit <- ord_model(dataset = dat, Y = c("Attention"), X = Xcols)
   return(fit)
@@ -460,8 +514,9 @@ liq_model_func <- function (reg, type = "aft", att = F) {
     mutate(
       sold = as.numeric(status == "filled" & tom <= 365),
       tom = if_else(tom > 365, 365, tom),
-      LogPrice = log(Winsorize(price_usd, val = quantile(price_usd, probs = c(0.01, 0.99)))),
-      P30dLogPrice = log1p(Winsorize(mvalue_li_30d, val = quantile(mvalue_li_30d, probs = c(0, 0.99)))),
+      LogPrice = log(
+        Winsorize(price_usd, val = quantile(price_usd, probs = c(0.01, 0.99)))
+      ),
       Attention = att_ll_u
     ) |>
     mutate(
@@ -475,7 +530,7 @@ liq_model_func <- function (reg, type = "aft", att = F) {
   qlist <- unique(dat$quarter)
   Xcols <- c("DPC", "CRD", "CPX", "CDX", "North", "LogPrice")
   if (att) {
-    Xcols <- c(Xcols, c("Attention", "Attention:P30dOnMarketTime"))
+    Xcols <- c(Xcols, c("Attention", "Attention:MktExpoTime"))
   }
   Xcols <- c(Xcols, qlist[-1])
   model <- NULL
@@ -502,6 +557,7 @@ liq_model_func <- function (reg, type = "aft", att = F) {
 }
 ```
 
+
 ## Lien Localisation - Attention
 
 ```{r}
@@ -511,7 +567,7 @@ liq_model_func <- function (reg, type = "aft", att = F) {
 #| echo: false
 
 regs <- c("Normal", "Boom", "Crash", "Desert")
-  
+
 my_gof <- list(
   list("raw" = "qt.fe",     "clean" = "Quarters FE", fmt = 0),
   list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
@@ -607,13 +663,318 @@ tab
 
 ```{r}
 #| echo: false
-bootres = readRDS("artdata/boot_results.RDS")
+
+predict_liq <- function (fit, dat, t, what = NULL) {
+  eta <- predict(fit, newdata = dat, type = "lp")
+  lambda <- exp(eta)
+  shape <- 1 / (fit$scale)
+  if (what == "sale") {
+    1-exp(-(t/lambda)^shape)
+  }
+  else if (what == "rmst") {
+    sapply(lambda, function(l){
+      integrate(
+        f = function(x) exp(-(x/l)^shape),
+        lower = 0,
+        upper = t
+      )$value
+    })
+  }
+  else{
+    exp(-(t/lambda)^shape)
+  }
+}
+
+med_anl_once_func <- function (
+    boot_idx, 
+    dat, 
+    u_eval_func = function(x) median(x[x > 0]),
+    x_eval_func = median,
+    xstar_eval_func = function(x) quantile(x, 0.1),
+    liq_params = NULL, 
+    predict_mode = "sim", 
+    n_sims = 1000
+  ) {
+  # ================================================================
+  # Params:
+  # - `boot_idx`: Bootstrap indexes
+  # - `dat`: Full database
+  # - `u_eval_func`: Function for instantiate moderation variable
+  # - `x_eval_func`: Function for instantiate control value of interest variable
+  # - `xstar_eval_func`: Function for instantiate treatment value of interest variable
+  # - `liq_params`: Liquidity parameters (measure: sale | rmst; sale = probability of sale after `t` days on market; rmst = restricted mean days on market until `t` days)
+  # - `predict_mode`: Either `sim` for simulation or `exp` for expectation
+  # - `n_sims`: Number of Monte-Carlo simulations
+  # ================================================================
+  
+  # ================================================================
+  # Variables:
+  # ================================================================
+  # current bootstrap loop database
+  boot_dat = dat[boot_idx, ]
+  
+  # mediator model main regressors
+  X_med_vars = c("DPC*MktExpoTime")
+  # mediator model controls
+  Ct_med_vars = c("MktExpoLogPrice", "MktExpoOn")
+  # outcome model main regressors
+  X_out_vars = c("DPC", "att_ll_u", "att_ll_u:MktExpoTime")
+  # outcome model controls
+  Ct_out_vars = c("LogPrice")
+  # all (mediator and outcome) models controls
+  Ct_loc_vars = c("CRD", "CPX", "CDX", "North")
+  # quarters fixed effects
+  qlist <- unique(boot_dat$quarter)[-1]
+  
+  # mediator variable
+  Y_med_var = c("att_ll_f")
+  Y_med_exp_var = c("att_ll_u")
+  
+  # outcome variable
+  Y_out_time_var = "tom"
+  Y_out_event_var = "sold"
+  
+  # moderation variable
+  mod_var = "MktExpoTime"
+  
+  # X variable
+  x_var = "DPC"
+  
+  # Liquidity params
+  liq_measure = "sale"
+  liq_horizon = 30
+  if (!is.null(liq_params)) {
+    if (!is.null(liq_params$measure)){
+      liq_measure = liq_params$measure
+    }
+    if (!is.null(liq_params$horizon)){
+      liq_horizon = liq_params$horizon
+    }
+  }
+  
+  # ================================================================
+  # STEP 1 - Initialization, fitting mediation & outcome models
+  # ================================================================
+  # fitting mediator model
+  med_fit <- ord_model(
+    dataset = boot_dat, 
+    Y = Y_med_var, 
+    X = c(X_med_vars, Ct_loc_vars, Ct_med_vars, qlist)
+  )
+  # fitting outcome model
+  out_fit <- aft_model(
+    boot_dat,
+    Y_time = Y_out_time_var,
+    Y_event = Y_out_event_var,
+    X = c(X_out_vars, Ct_loc_vars, Ct_out_vars, qlist),
+    error_cluster = "asset_id"
+  )
+  
+  # ================================================================
+  # STEP 2 - Counterfactual worlds variables
+  # ================================================================
+  # x       = "control" value of DPC
+  x = x_eval_func(boot_dat[[x_var]])
+  # x_star  = "treatment" value of DPC
+  x_star = xstar_eval_func(boot_dat[[x_var]])
+  # u_eval  = "level" of moderation variable at which we eval mediation
+  u_eval = u_eval_func(boot_dat[[mod_var]])
+  
+  # ================================================================
+  # STEP 3 - Counterfactual worlds databases
+  # ================================================================
+  # counterfactuals databases: one with `x` and one with `xstar`
+  # and all other covariates stay at observed values
+  boot_dat_x <- boot_dat
+  boot_dat_x[[x_var]] <- x
+  boot_dat_x[[mod_var]] = u_eval
+  boot_dat_xstar <- boot_dat
+  boot_dat_xstar[[x_var]] <- x_star
+  boot_dat_xstar[[mod_var]] = u_eval
+  
+  # ================================================================
+  # STEP 4 - Mediator predictions across all counterfactuals db
+  # ================================================================
+  Y_med_probs_x <- NULL
+  Y_med_probs_xstar <- NULL
+  # if reg mediator has more than 2 categories
+  if (is.factor(boot_dat[[Y_med_var]])) {
+    Y_med_probs_x <- predict(med_fit, newdata = boot_dat_x, type = "probs")
+    Y_med_probs_xstar <- predict(med_fit, newdata = boot_dat_xstar, type = "probs")
+  }
+  # else, reg mediator is binary
+  else {
+    Y_med_probs_x <- predict(med_fit, newdata = boot_dat_x, type = "response")
+    Y_med_probs_x <- cbind(1-Y_med_probs_x, Y_med_probs_x)
+    colnames(Y_med_probs_x) <- levels(boot_dat[[Y_med_exp_var]])
+    Y_med_probs_xstar <- predict(med_fit, newdata = boot_dat_xstar, type = "response")
+    Y_med_probs_xstar <- cbind(1-Y_med_probs_xstar, Y_med_probs_xstar)
+    colnames(Y_med_probs_xstar) <- levels(boot_dat[[Y_med_exp_var]])
+  }
+  
+  # ================================================================
+  # STEP 5 - Outcome prediction utility function
+  # ================================================================
+  # Categories of mediator
+  levels_med <- colnames(Y_med_probs_x)
+  
+  # predict liquidity outcome for a counterfactual world
+  predict_liq_func <- function (med_val, dpc_val) {
+    med_val_vec <- NULL
+    if (length(med_val) == 1) {
+      med_val_vec <- rep(med_val, nrow(boot_dat))
+    } else {
+      med_val_vec <- med_val
+    }
+    d <- boot_dat
+    d[[Y_med_exp_var]] <- factor(med_val_vec, levels = levels_med)
+    d[[x_var]] = dpc_val
+    d[[mod_var]] = u_eval
+    predict_liq(out_fit, dat = d, t = liq_horizon, what = liq_measure)
+  }
+  
+  # ================================================================
+  # STEP 6-A1 - Predict mediator & outcome by Monte carlo simulation 
+  # ================================================================
+  liq_x_med_x <- NULL
+  liq_x_med_xstar <- NULL
+  liq_xstar_med_xstar <- NULL
+  liq_xstar_med_x <- NULL
+  # browser()
+  if (predict_mode == "sim") {
+    
+    # build random value of mediator according predicted probabilities of categories
+    random_Y_med_func <- function (probs_mat) {
+      apply(probs_mat, 1, function (p) sample(levels_med, size = 1, prob = p))
+    }
+    # simulations of mediator given `x` and `xstar`
+    sim_med_given_x <- replicate(n_sims, random_Y_med_func(Y_med_probs_x), simplify = F)
+    sim_med_given_xstar <- replicate(n_sims, random_Y_med_func(Y_med_probs_xstar), simplify = F)
+    
+    # prediction of liquidity outcomes for all counter factual worlds
+    liq_x_med_x <- mean(sapply(sim_med_given_x, predict_liq_func, dpc_val = x))
+    liq_x_med_xstar <- mean(sapply(sim_med_given_xstar, predict_liq_func, dpc_val = x))
+    liq_xstar_med_xstar <- mean(sapply(sim_med_given_xstar, predict_liq_func, dpc_val = x_star))
+    liq_xstar_med_x <- mean(sapply(sim_med_given_x, predict_liq_func, dpc_val = x_star))
+    
+  }
+  # ================================================================
+  # STEP 6-A2 - Predict mediator & outcome by Expectations 
+  # ================================================================
+  else {
+    
+    # prediction of liquidity outcomes for all counter factual worlds
+    liq_x_med_all <- sapply(levels_med, predict_liq_func, dpc_val = x)
+    liq_xstar_med_all <- sapply(levels_med, predict_liq_func, dpc_val = x_star)
+    
+    liq_x_med_x <- mean(rowSums(liq_x_med_all * Y_med_probs_x))
+    liq_x_med_xstar <- mean(rowSums(liq_x_med_all * Y_med_probs_xstar))
+    liq_xstar_med_xstar <- mean(rowSums(liq_xstar_med_all * Y_med_probs_xstar))
+    liq_xstar_med_x <- mean(rowSums(liq_xstar_med_all * Y_med_probs_x))
+    
+  }
+  
+  # ================================================================
+  # STEP 7 - Evaluate mediation effets
+  # ================================================================
+  TE = liq_xstar_med_xstar - liq_x_med_x
+  TNIE = liq_xstar_med_xstar - liq_xstar_med_x
+  PNDE = liq_xstar_med_x - liq_x_med_x
+  PNIE = liq_x_med_xstar - liq_x_med_x
+  TNDE = liq_xstar_med_xstar - liq_x_med_xstar
+  
+  eff <- c(TE, TNIE, PNDE, PNIE, TNDE)
+  names(eff) <- c("TE", "TNIE", "PNDE", "PNIE", "TNDE")
+  
+  return(eff)
+}
+
+
+med_anl_bootstrap <- function (
+    reg, 
+    mkt_exposure = 0, 
+    liq_measure = "sale"
+    ) {
+  u_eval_func <- NULL
+  if (mkt_exposure > 0) {
+    if (mkt_exposure >= 1) {
+      u_eval_func <- function(x) 1
+    } else {
+      u_eval_func <- function(x) median(x[x > 0])
+    }
+  } else {
+    u_eval_func <- function(x) 0
+  }
+  
+  dat = db |> filter(regime == reg) |>
+    filter(!is.na(tom) & tom > 0) |>
+    mutate(
+      sold = as.numeric(status == "filled" & tom <= 365),
+      tom = if_else(tom > 365, 365, tom),
+      LogPrice = log(
+        Winsorize(price_usd, val = quantile(price_usd, probs = c(0.01, 0.99)))
+      ),
+      MktExpoLogPrice = log1p(
+        Winsorize(
+          mvalue_li_30d,
+          val = quantile(mvalue_li_30d, probs = c(0, 0.99))
+        )
+      ),
+      MktExpoOn = as.numeric(mvalue_li_30d > 0)
+    ) |>
+    mutate(
+      year = year(date),
+      quarter = paste0("Q", quarter(date), "_", year)
+    ) |>
+    mutate(qname = quarter) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+  
+  i <- 0
+  boot_results <- replicate(499, {
+    idx <- sample(seq_len(nrow(dat)), replace = TRUE)
+    r = med_anl_once_func(
+      boot_idx = idx,
+      dat,
+      u_eval_func = u_eval_func,
+      predict_mode = "exp",
+      liq_params = list(horizon=30, measure=liq_measure)
+    )
+    i <<- i + 1
+    cat("Running bootstrap replicate:", i, "of", 499, "\r")
+    r
+  })
+  
+  return(boot_results)
+}
 ```
+
+
+### Régime normal
+
+```{r}
+set.seed(117)
+brf <- med_anl_bootstrap("Normal", mkt_exposure = 0, liq_measure = "sale")
+set.seed(117)
+brt <- med_anl_bootstrap("Normal", mkt_exposure = 0.5, liq_measure = "sale")
+set.seed(117)
+brl <- med_anl_bootstrap("Normal", mkt_exposure = 1, liq_measure = "sale")
+```
+```{r}
+set.seed(117)
+brf2 <- med_anl_bootstrap("Normal", mkt_exposure = 0, liq_measure = "rmst")
+set.seed(117)
+brt2 <- med_anl_bootstrap("Normal", mkt_exposure = 0.5, liq_measure = "rmst")
+set.seed(117)
+brl2 <- med_anl_bootstrap("Normal", mkt_exposure = 1, liq_measure = "rmst")
+```
+
 
 
 **Intervalle de confiance effet total**
 
 ```{r}
+bootres = readRDS("artdata/boot_results.RDS")
 quantile(bootres[1, ], c(0.025, 0.975))
 ```
 
@@ -628,3 +989,144 @@ quantile(bootres[3, ], c(0.025, 0.975))
 ```{r}
 quantile(bootres[2, ], c(0.025, 0.975))
 ```
+
+
+# Lien Localisation - Attention
+
+```{r}
+price_model_func <- function (reg) {
+  dat = db |> filter(regime == reg) |>
+    mutate(
+      P30dLogPrice = log1p(mvalue_li_30d)
+    ) |>
+    filter(if_all(c("P30dLogPrice"), ~ filter_outliers(.x))) |>
+    mutate(
+      year = year(date),
+      quarter = paste0("Q", quarter(date), "_", year)
+    ) |>
+    mutate(qname = quarter) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+  
+  qlist <- unique(dat$quarter)
+  Xcols <- c("DPC", "CRD", "CPX", "CDX", "North")
+  Xcols <- c(Xcols, qlist[-1])
+  fit <- lm_model(dataset = dat, Y = c("P30dLogPrice"), X = Xcols)
+  return(fit)
+}
+
+price_model_summary <- function () {
+  regs <- c("Normal", "Boom", "Crash", "Desert")
+  
+  my_gof <- list(
+    list("raw" = "qt.fe",     "clean" = "Quarters FE", fmt = 0),
+    list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+    list("raw" = "r.squared", "clean" = "R2", "fmt" = 3),
+    list("raw" = "r.squared.adj", "clean" = "R2 Adj", "fmt" = 3),
+    list("raw" = "logLik",   "clean" = "Log Lik.",    "fmt" = 2),
+    list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2),
+    list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+    list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+  )
+  
+  results <- vector(mode = "list", length = length(regs))
+  for (k in seq_along(regs)) {
+    fit = price_model_func(regs[k])
+    td = get_estimates(fit$model) |>
+      filter(!str_detect(term, "^Q\\d+_\\d+"))
+    gf = get_gof(fit$model)
+    gf[["qt.fe"]] = "Yes"
+    mod = list(tidy = td, glance = gf)
+    class(mod) <- "modelsummary_list"
+    results[[k]] = mod
+  }
+  
+  names(results) <- regs
+  tab <- modelsummary(
+    results, 
+    gof_map = my_gof,
+    stars = TRUE, statistic = "p.value", output = "tinytable"
+  ) |> style_tt(fontsize = 0.8)
+  colnames(tab) <- c(" ", colnames(tab)[-1])
+  
+  tab
+}
+
+price_model_summary()
+```
+
+
+```{r}
+att_model_func <- function (reg, quartile) {
+  dat = db |> filter(regime == reg) |>
+    mutate(
+      P30dLogPrice = log1p(Winsorize(mvalue_li_30d, val = quantile(mvalue_li_30d, probs = c(0, 0.99)))),
+      Attention = att_ll_f
+    ) |>
+    mutate(
+      year = year(date),
+      quarter = paste0("Q", quarter(date), "_", year)
+    ) |>
+    mutate(qname = quarter) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0) |>
+    filter(
+      P30dLogPrice >= quantile(P30dLogPrice, (quartile-1)*0.25), 
+      P30dLogPrice < quantile(P30dLogPrice, quartile*0.25)
+    )
+  
+  qlist <- unique(dat$quarter)
+  Xcols <- c("DPC", "CRD", "CPX", "CDX", "North", "P30dOnMarketTime", "P30dOnMarketTime:DPC")
+  Xcols <- c(Xcols, qlist[-1])
+  fit <- ord_model(dataset = dat, Y = c("Attention"), X = Xcols)
+  return(fit)
+}
+
+pr_quartiles_att_model_func <- function (reg) {
+  quartiles <- 1:4
+  
+  my_gof <- list(
+    list("raw" = "qt.fe",     "clean" = "Quarters FE", fmt = 0),
+    list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+    list("raw" = "mcfadden", "clean" = "R2 McFadden", "fmt" = 3),
+    list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel", "fmt" = 3),
+    list("raw" = "r.squared", "clean" = "R2", "fmt" = 3),
+    list("raw" = "r.squared.adj", "clean" = "R2 Adj", "fmt" = 3),
+    list("raw" = "logLik",   "clean" = "Log Lik.",    "fmt" = 2),
+    list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2),
+    list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+    list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+  )
+  
+  results <- vector(mode = "list", length = length(regs))
+  for (k in seq_along(quartiles)) {
+    fit = att_model_func(reg, quartiles[k])
+    td = get_estimates(fit, ci_method = "wald") |>
+      filter(!str_detect(term, "^Q\\d+_\\d+"))
+    gf = get_gof(fit)
+    gf[["qt.fe"]] = "Yes"
+    gf[["mcfadden"]] = PseudoR2(fit)
+    mod = list(tidy = td, glance = gf)
+    class(mod) <- "modelsummary_list"
+    results[[k]] = mod
+  }
+  
+  names(results) <- paste0("Normal<br> Prix Quart ", quartiles)
+  tab <- modelsummary(
+    results, 
+    gof_map = my_gof,
+    stars = TRUE, statistic = "p.value", output = "tinytable"
+  ) |> style_tt(fontsize = 0.8)
+  colnames(tab) <- c(" ", colnames(tab)[-1])
+  
+  tab
+}
+```
+
+```{r}
+pr_quartiles_att_model_func("Normal")
+```
+
+
+
+

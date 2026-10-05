@@ -62,19 +62,30 @@ library(ggplot2)
 
 tmp <- readRDS(file = "transactions.RDS")
 p <- tmp |>
-  filter(type == "transfer", asset_contract == "0xf87e31492faf9a91b02ee0deaad50d51d56d5d4d", is_sale == T, !is.na(amount_usd)) |>
+  filter(
+    type == "transfer", 
+    #asset_contract == "0xf87e31492faf9a91b02ee0deaad50d51d56d5d4d", 
+    is_sale == T, 
+    !is.na(amount_usd)
+  ) |>
   select(date, amount_usd) |>
-  mutate(week = lubridate::floor_date(date, unit = "week", week_start = 1)) |>
+  mutate(
+    week = lubridate::floor_date(date, unit = "week", week_start = 1)
+  ) |>
   summarise(
     vol = sum(amount_usd, na.rm=T),
     .by = c("week")
+  ) |>
+  mutate(
+    vol = vol/1000
   ) |>
   ggplot(aes(x = week)) +
   geom_line(aes(y = vol), color = "#333", linewidth = 0.7) +
   labs(
     x = "Time (in years)",
-    y = "Volume ($ USD)"
+    y = "Volume (K $US)"
   ) +
+  scale_y_log10() +
   theme_minimal()
 rm(list = c("tmp"))
 
@@ -229,7 +240,12 @@ library(ggplot2)
 
 tmp <- readRDS(file = "transactions.RDS")
 p <- tmp |>
-  filter(type == "transfer", asset_contract == "0xf87e31492faf9a91b02ee0deaad50d51d56d5d4d", is_sale == T, !is.na(amount_usd)) |>
+  filter(
+    type == "transfer", 
+    asset_contract == "0xf87e31492faf9a91b02ee0deaad50d51d56d5d4d", 
+    is_sale == T, 
+    !is.na(amount_usd)
+  ) |>
   select(date, amount_usd, sale_related_market) |>
   filter(sale_related_market %in% c("dcl-marketplace-1", "dcl-marketplace-2", "third-party-marketplace")) |>
   mutate(
@@ -242,13 +258,14 @@ p <- tmp |>
     .by = c("month")
   ) |>
   mutate(
-    vol_diff = vol_dcl - vol_3pm
+    vol_diff = (vol_dcl - vol_3pm)/1000000
   ) |>
   ggplot(aes(x = month)) +
   geom_line(aes(y = vol_diff), color = "#333", linewidth = 0.7) +
+  geom_hline(yintercept = 0, color = "red", linewidth = 0.7) +
   labs(
     x = "Time (in years)",
-    y = "Vol DCL Mkp - Vol Autres Mkps ($ USD)"
+    y = "Volume difference (Millions $US)"
   ) +
   theme_minimal()
 rm(list = c("tmp"))
@@ -439,12 +456,14 @@ Nous démonbrons environ 68 000 listings de parcelles entre 2018 et 2026 sur Dcl
 
 library(tinytable)
 
-listings <- readRDS(file = "artdata/listings.RDS")
+#listings <- readRDS(file = "artdata/listings.RDS")
+listings <- readRDS(file = "artdata/artdatalst.RDS")$listings
 
 smr <- listings |>
   filter(!is.na(regime)) |>
   mutate(
-    DPCt = exp(DPC)-1
+    DPCt = exp(DPC)-1,
+    exposure = ndays_li_30d/30
   ) |>
   reframe(
     y = c("q 1%", "q 10%", "Median", "q 90%", "q 99%", "Mean", "Sd"),
@@ -458,8 +477,8 @@ smr <- listings |>
       mean(tom[which(status == "filled")]), 
       sd(tom[which(status == "filled")])
     ),
-    n_listings = c(NA, NA, NA, NA, NA, n(), NA),
-    n_sales = c(NA, NA, NA, NA, NA, sum(status == "filled"), NA),
+    #n_listings = c(NA, NA, NA, NA, NA, n(), NA),
+    #n_sales = c(NA, NA, NA, NA, NA, sum(status == "filled"), NA),
     lsr = c(NA, NA, NA, NA, NA, mean(status == "filled"), NA),
     loc_all = c(
       quantile(DPCt, c(0.01, 0.1, 0.5, 0.9, 0.99)), 
@@ -471,18 +490,52 @@ smr <- listings |>
       mean(DPCt[which(status == "filled")]), 
       sd(DPCt[which(status == "filled")])
     ),
-    att_vol = c(quantile(att_vol, c(0.01, 0.1, 0.5, 0.9, 0.99))/1000, mean(att_vol)/1000, sd(att_vol)/1000),
-    att_gt = c(quantile(att_gt, c(0.01, 0.1, 0.5, 0.9, 0.99)), mean(att_gt), sd(att_gt)),
+    att_all = c(
+      quantile(asks_ll_30d, c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(asks_ll_30d), 
+      sd(asks_ll_30d)
+    ),
+    att_sales = c(
+      quantile(asks_ll_30d[which(status == "filled")], c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(asks_ll_30d[which(status == "filled")]), 
+      sd(asks_ll_30d[which(status == "filled")])
+    ),
+    expo_all = c(
+      quantile(exposure/30, c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(exposure/30), 
+      sd(exposure)
+    ),
+    expo_sales = c(
+      quantile(exposure[which(status == "filled")], c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(exposure[which(status == "filled")]), 
+      sd(exposure[which(status == "filled")])
+    ),
+    #att_vol = c(quantile(att_vol, c(0.01, 0.1, 0.5, 0.9, 0.99))/1000, mean(att_vol)/1000, sd(att_vol)/1000),
+    #att_gt = c(quantile(att_gt, c(0.01, 0.1, 0.5, 0.9, 0.99)), mean(att_gt), sd(att_gt)),
     .by = "regime"
   ) |>
   mutate(
     tom_all = round(tom_all, digits = 3),
     tom_sales = round(tom_sales, digits = 3),
+    expo_all = round(expo_all*100, digits = 3),
+    expo_sales = round(expo_sales*100, digits = 3),
   ) |>
   select(-regime)
-colnames(smr) <- c("Stat.", "All listings", "Converted into sales", "# Listings", "# Sales", "% Sales", "All listings", "Converted into sales", "30 prev. days sales vol (10<sup>3</sup>USD)", "Google Trends Index")
+#colnames(smr) <- c("Stat.", "All listings", "Converted into sales", "# Listings", "# Sales", "% Sales", "All listings", "Converted into sales", "30 prev. days sales vol (10<sup>3</sup>USD)", "Google Trends Index")
+colnames(smr) <- c(
+  "Stat.", 
+  "All listings", 
+  "Converted into sales", 
+  "% Sales", 
+  "All listings", 
+  "Converted into sales",
+  "All listings", 
+  "Converted into sales", 
+  "All listings", 
+  "Converted into sales"
+)
 
-tt(
+p = tt(
   smr,
   digits = 3,
   notes = "Les échelles des indices Google Trends diffèrent suivant les régimes, et les volumes de ventes sont en milliers de dollars.", 
@@ -494,9 +547,10 @@ format_tt(replace = "-") |>
 group_tt(
   j = list(
     "Time on market (days)" = 2:3, 
-    "Listings & Sales Volumes" = 4:6,
-    "Distance to Central Plaza (# parcels)" = 7:8, 
-    "Global Attention" = 9:10
+    "% Sales" = 4:4,
+    "Distance to Central Plaza (# parcels)" = 5:6, 
+    "Attention (# bids)" = 7:8, 
+    "Past exposure (% on 30d)" = 9:10
   )
 ) |>
 group_tt(
@@ -508,9 +562,12 @@ group_tt(
   )
 ) |>
 format_tt(j = 2:3, digits = 3) |>
+format_tt(j = 9:10, digits = 3) |>
 style_tt(i = 8, line = "b", line_width = 0.1) |>
 style_tt(i = 16, line = "b", line_width = 0.1) |>
 style_tt(i = 24, line = "b", line_width = 0.1)
+
+print(p, "latex")
 ```
 
 
