@@ -555,3 +555,143 @@ p <- ggplot(x, aes(x = att_ll, y = DPC)) +
 p
 
 
+
+
+
+
+
+
+
+# Lien Localisation - Attention
+
+
+price_model_func <- function (reg) {
+  dat = db |> filter(regime == reg) |>
+    mutate(
+      P30dLogPrice = log1p(mvalue_li_30d)
+    ) |>
+    filter(if_all(c("P30dLogPrice"), ~ filter_outliers(.x))) |>
+    mutate(
+      year = year(date),
+      quarter = paste0("Q", quarter(date), "_", year)
+    ) |>
+    mutate(qname = quarter) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+  
+  qlist <- unique(dat$quarter)
+  Xcols <- c("DPC", "CRD", "CPX", "CDX", "North")
+  Xcols <- c(Xcols, qlist[-1])
+  fit <- lm_model(dataset = dat, Y = c("P30dLogPrice"), X = Xcols)
+  return(fit)
+}
+
+price_model_summary <- function () {
+  regs <- c("Normal", "Boom", "Crash", "Desert")
+  
+  my_gof <- list(
+    list("raw" = "qt.fe",     "clean" = "Quarters FE", fmt = 0),
+    list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+    list("raw" = "r.squared", "clean" = "R2", "fmt" = 3),
+    list("raw" = "r.squared.adj", "clean" = "R2 Adj", "fmt" = 3),
+    list("raw" = "logLik",   "clean" = "Log Lik.",    "fmt" = 2),
+    list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2),
+    list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+    list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+  )
+  
+  results <- vector(mode = "list", length = length(regs))
+  for (k in seq_along(regs)) {
+    fit = price_model_func(regs[k])
+    td = get_estimates(fit$model) |>
+      filter(!str_detect(term, "^Q\\d+_\\d+"))
+    gf = get_gof(fit$model)
+    gf[["qt.fe"]] = "Yes"
+    mod = list(tidy = td, glance = gf)
+    class(mod) <- "modelsummary_list"
+    results[[k]] = mod
+  }
+  
+  names(results) <- regs
+  tab <- modelsummary(
+    results, 
+    gof_map = my_gof,
+    stars = TRUE, statistic = "p.value", output = "tinytable"
+  ) |> style_tt(fontsize = 0.8)
+  colnames(tab) <- c(" ", colnames(tab)[-1])
+  
+  tab
+}
+
+price_model_summary()
+
+
+
+
+att_model_func <- function (reg, quartile) {
+  dat = db |> filter(regime == reg) |>
+    mutate(
+      P30dLogPrice = log1p(Winsorize(mvalue_li_30d, val = quantile(mvalue_li_30d, probs = c(0, 0.99)))),
+      Attention = att_ll_f
+    ) |>
+    mutate(
+      year = year(date),
+      quarter = paste0("Q", quarter(date), "_", year)
+    ) |>
+    mutate(qname = quarter) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0) |>
+    filter(
+      P30dLogPrice >= quantile(P30dLogPrice, (quartile-1)*0.25), 
+      P30dLogPrice < quantile(P30dLogPrice, quartile*0.25)
+    )
+  
+  qlist <- unique(dat$quarter)
+  Xcols <- c("DPC", "CRD", "CPX", "CDX", "North", "P30dOnMarketTime", "P30dOnMarketTime:DPC")
+  Xcols <- c(Xcols, qlist[-1])
+  fit <- ord_model(dataset = dat, Y = c("Attention"), X = Xcols)
+  return(fit)
+}
+
+pr_quartiles_att_model_func <- function (reg) {
+  quartiles <- 1:4
+  
+  my_gof <- list(
+    list("raw" = "qt.fe",     "clean" = "Quarters FE", fmt = 0),
+    list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+    list("raw" = "mcfadden", "clean" = "R2 McFadden", "fmt" = 3),
+    list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel", "fmt" = 3),
+    list("raw" = "r.squared", "clean" = "R2", "fmt" = 3),
+    list("raw" = "r.squared.adj", "clean" = "R2 Adj", "fmt" = 3),
+    list("raw" = "logLik",   "clean" = "Log Lik.",    "fmt" = 2),
+    list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2),
+    list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+    list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+  )
+  
+  results <- vector(mode = "list", length = length(regs))
+  for (k in seq_along(quartiles)) {
+    fit = att_model_func(reg, quartiles[k])
+    td = get_estimates(fit, ci_method = "wald") |>
+      filter(!str_detect(term, "^Q\\d+_\\d+"))
+    gf = get_gof(fit)
+    gf[["qt.fe"]] = "Yes"
+    gf[["mcfadden"]] = PseudoR2(fit)
+    mod = list(tidy = td, glance = gf)
+    class(mod) <- "modelsummary_list"
+    results[[k]] = mod
+  }
+  
+  names(results) <- paste0("Normal<br> Prix Quart ", quartiles)
+  tab <- modelsummary(
+    results, 
+    gof_map = my_gof,
+    stars = TRUE, statistic = "p.value", output = "tinytable"
+  ) |> style_tt(fontsize = 0.8)
+  colnames(tab) <- c(" ", colnames(tab)[-1])
+  
+  tab
+}
+
+
+pr_quartiles_att_model_func("Normal")

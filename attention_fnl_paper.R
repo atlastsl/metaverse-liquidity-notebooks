@@ -19,6 +19,7 @@ EstateContract <- "0x959e104e1a4db6317fa58f8295f586e1a978c297"
 
 ####################################
 ####### DATABASES ##################
+####################################
 
 ## Dcl Marketplace Data
 Tx_DclMkp <- read_excel("../Donnees/OnChainDataAll4.xlsx") |> filter(!is.na(type))
@@ -36,68 +37,235 @@ Locations <- read_excel(
     "numeric", "numeric", "numeric", "numeric", "numeric", "text"
   )
 )
+LocationsEstates <- read_excel(
+  "../Donnees/LocationsEstates.xlsx"
+)
+
+####################################
+####### Summary Statistics #########
+####################################
+
+saveRDS(
+  Tx_DclMkp |> mutate(quarter = lubridate::quarter(date)),
+  file = "artdata/transactions.RDS"
+)
+
+volume_summary_builder <- function (period, filter_func, aggr_func = function(db){return(sum(db[["amount_usd"]])/1000)}) {
+  smr <- NULL
+  if (period == "year") {
+    smr <- Tx_DclMkp |>
+      filter(filter_func(.data)) |>
+      distinct(asset_id, date, .keep_all = T) |>
+      mutate(year = as.character(year(date))) |>
+      summarise(
+        fs_vol = aggr_func(.data),
+        .by = c("year")
+      ) |>
+      bind_rows(
+        Tx_DclMkp |>
+          filter(filter_func(.data)) |>
+          distinct(asset_id, date, .keep_all = T) |>
+          summarise(
+            year = "Total",
+            fs_vol = aggr_func(.data),
+          )
+      ) 
+  } else {
+    smr <- Tx_DclMkp |>
+      filter(filter_func(.data)) |>
+      distinct(asset_id, date, .keep_all = T) |>
+      mutate(year = as.character(year(date))) |>
+      mutate(month = lubridate::month(date)) |>
+      summarise(
+        fs_vol = aggr_func(.data),
+        .by = c("year", "month")
+      ) |>
+      bind_rows(
+        Tx_DclMkp |>
+          filter(filter_func(.data)) |>
+          distinct(asset_id, date, .keep_all = T) |>
+          summarise(
+            year = "Total",
+            month = 0,
+            fs_vol = aggr_func(.data),
+          )
+      )
+  }
+  return(smr)
+}
+
+volume_summary_func <- function (period) {
+  fsales <- volume_summary_builder(period, function(db) {
+    return(db[["type"]] == "transfer" & db[["is_sale"]] == T & db[["sale_related_market"]] %in% c("auction-1", "auction-2"))
+  })
+  ssales_l1 <- volume_summary_builder(period, function(db) {
+    return(db[["type"]] == "transfer" & db[["is_sale"]] == T & db[["asset_contract"]] == LandContract & db[["sale_related_market"]] %in% c("dcl-marketplace-1", "dcl-marketplace-2"))
+  })
+  ssales_e1 <- volume_summary_builder(period, function(db) {
+    return(db[["type"]] == "transfer" & db[["is_sale"]] == T & db[["asset_contract"]] == EstateContract & db[["sale_related_market"]] %in% c("dcl-marketplace-1", "dcl-marketplace-2"))
+  })
+  ssales_l2 <- volume_summary_builder(period, function(db) {
+    return(db[["type"]] == "transfer" & db[["is_sale"]] == T & db[["asset_contract"]] == LandContract & db[["sale_related_market"]] %in% c("third-party-marketplace"))
+  })
+  ssales_e2 <- volume_summary_builder(period, function(db) {
+    return(db[["type"]] == "transfer" & db[["is_sale"]] == T & db[["asset_contract"]] == EstateContract & db[["sale_related_market"]] %in% c("third-party-marketplace"))
+  })
+  lsts_l <- volume_summary_builder(period, function(db) {
+    return(db[["type"]] == "order" & db[["order_type"]] == "list" & db[["asset_contract"]] == LandContract & db[["order_market"]] %in% c("dcl-marketplace-1", "dcl-marketplace-2"))
+  }, function(db) {
+    return(dplyr::n())
+  })
+  lsts_e <- volume_summary_builder(period, function(db) {
+    return(db[["type"]] == "order" & db[["order_type"]] == "list" & db[["asset_contract"]] == EstateContract & db[["order_market"]] %in% c("dcl-marketplace-1", "dcl-marketplace-2"))
+  }, function(db) {
+    return(dplyr::n())
+  })
+  asks_l <- volume_summary_builder(period, function(db) {
+    return(db[["type"]] == "order" & db[["order_type"]] == "ask" & db[["asset_contract"]] == LandContract & db[["order_market"]] %in% c("dcl-marketplace-1", "dcl-marketplace-2"))
+  }, function(db) {
+    return(dplyr::n())
+  })
+  asks_e <- volume_summary_builder(period, function(db) {
+    return(db[["type"]] == "order" & db[["order_type"]] == "ask" & db[["asset_contract"]] == EstateContract & db[["order_market"]] %in% c("dcl-marketplace-1", "dcl-marketplace-2"))
+  }, function(db) {
+    return(dplyr::n())
+  })
+  vol_smr <- NULL
+  if (period == "year") {
+    vol_smr <- tibble(data.frame(year=c(as.character(2018:2026), "Total"))) |>
+      left_join(fsales |> rename(fsales = fs_vol), by = c("year")) |>
+      left_join(ssales_l1 |> rename(ssales_l1 = fs_vol), by = c("year")) |>
+      left_join(ssales_e1 |> rename(ssales_e1 = fs_vol), by = c("year")) |>
+      left_join(ssales_l2 |> rename(ssales_l2 = fs_vol), by = c("year")) |>
+      left_join(ssales_e2 |> rename(ssales_e2 = fs_vol), by = c("year")) |>
+      left_join(lsts_l |> rename(lsts_l = fs_vol), by = c("year")) |>
+      left_join(lsts_e |> rename(lsts_e = fs_vol), by = c("year")) |>
+      left_join(asks_l |> rename(asks_l = fs_vol), by = c("year")) |>
+      left_join(asks_e |> rename(asks_e = fs_vol), by = c("year"))
+  } else {
+    vol_smr <- tibble(
+      rbind(
+        data.table::CJ(year = as.character(2018:2026), month = 1:12),
+        data.frame(year = "Total", month = 0)
+      )
+    ) |>
+      left_join(fsales |> rename(fsales = fs_vol), by = c("year", "month")) |>
+      left_join(ssales_l1 |> rename(ssales_l1 = fs_vol), by = c("year", "month")) |>
+      left_join(ssales_e1 |> rename(ssales_e1 = fs_vol), by = c("year", "month")) |>
+      left_join(ssales_l2 |> rename(ssales_l2 = fs_vol), by = c("year", "month")) |>
+      left_join(ssales_e2 |> rename(ssales_e2 = fs_vol), by = c("year", "month")) |>
+      left_join(lsts_l |> rename(lsts_l = fs_vol), by = c("year", "month")) |>
+      left_join(lsts_e |> rename(lsts_e = fs_vol), by = c("year", "month")) |>
+      left_join(asks_l |> rename(asks_l = fs_vol), by = c("year", "month")) |>
+      left_join(asks_e |> rename(asks_e = fs_vol), by = c("year", "month"))
+  }
+  return(vol_smr)
+}
+
+voly_smr <- volume_summary_func("year")
+saveRDS(voly_smr, file = "artdata/volysummary.RDS")
+
+volm_smr <- volume_summary_func("month")
+saveRDS(volm_smr, file = "artdata/volmsummary.RDS")
+
+
+####################################
+####### Analysis Db Builder ########
+####################################
 
 # Transaction data with Location Data merge function
-locations_merger <- function (database) {
-  loc_merged_db <- database |>
-    left_join(
-      Locations |> 
-        mutate(
-          CPX = factor(if_else(DIST_NRS_PLAZA > 10, "No", "Yes"), levels = c("No", "Yes")),
-          CRD = factor(if_else(DIST_ROAD > 10, "No", "Yes"), levels = c("No", "Yes")),
-          CDX = factor(if_else(DIST_NRS_DISTRICT_CAT > 10, "No", "Yes"), levels = c("No", "Yes")),
-          North = factor(if_else(Y < 0, "No", "Yes"), levels = c("No", "Yes")),
-          IDX = factor(if_else(TYPE != "district" & DIST_NRS_DISTRICT_CAT > 0, "No", "Yes"), levels = c("No", "Yes"))
-        ) |>
-        select(
-          asset_id = TOKEN_ID,
-          DPC      = DIST_PLAZA_central,
-          CPX,
-          CRD,
-          CDX,
-          North,
-          IDX
-          # DPX      = DIST_NRS_PLAZA,
-          # NPX      = NAME_NRS_PLAZA,
-          # DRD      = DIST_ROAD,
-          # DDX      = DIST_NRS_DISTRICT_CAT,
-          # NDX      = NAME_NRS_DISTRICT_CAT,
-          # DPXn     = DIST_PLAZA_north,
-          # DPXs     = DIST_PLAZA_south,
-          # DPXe     = DIST_PLAZA_east,
-          # DPXw     = DIST_PLAZA_west,
-          # DPXne    = `DIST_PLAZA_north-east`,
-          # DPXse    = `DIST_PLAZA_south-east`,
-          # DPXnw    = `DIST_PLAZA_north-west`,
-          # DPXsw    = `DIST_PLAZA_south-west`
-        ) |>
-        mutate(
-          DPC = log1p(DPC) #,
-          # DPX = log1p(DPX),
-          # DRD = log1p(DRD),
-          # DDX = log1p(DDX),
-          # DPXn = log1p(DPXn),
-          # DPXs = log1p(DPXs),
-          # DPXe = log1p(DPXe),
-          # DPXw = log1p(DPXw),
-          # DPXne = log1p(DPXne),
-          # DPXse = log1p(DPXse),
-          # DPXnw = log1p(DPXnw),
-          # DPXsw = log1p(DPXsw),
-        ),
-      by = "asset_id"
-    )
-  
+locations_merger <- function (database, assetType = "land") {
+  loc_merged_db <- NULL
+  tp_threshold <- 12
+  if (assetType == "land") {
+    loc_merged_db <- database |>
+      left_join(
+        Locations |> 
+          mutate(
+            CPX = factor(if_else(DIST_NRS_PLAZA > tp_threshold, "No", "Yes"), levels = c("No", "Yes")),
+            CRD = factor(if_else(DIST_ROAD > tp_threshold, "No", "Yes"), levels = c("No", "Yes")),
+            CDX = factor(if_else(DIST_NRS_DISTRICT_CAT > tp_threshold, "No", "Yes"), levels = c("No", "Yes")),
+            North = factor(if_else(Y < 0, "No", "Yes"), levels = c("No", "Yes")),
+            IDX = factor(if_else(TYPE != "district" & DIST_NRS_DISTRICT_CAT > 0, "No", "Yes"), levels = c("No", "Yes"))
+          ) |>
+          select(
+            asset_id = TOKEN_ID,
+            DPC      = DIST_PLAZA_central,
+            CPX,
+            CRD,
+            CDX,
+            North,
+            IDX
+          ) |>
+          mutate(
+            DPC = log1p(DPC)
+          ),
+        by = "asset_id"
+      ) 
+  }
+  else if (assetType == "estate") {
+    loc_merged_db <- database |>
+      select(asset_id, date) |>
+      left_join(
+        LocationsEstates |> 
+          mutate(
+            CPX = factor(if_else(DIST_NRS_PLAZA > tp_threshold, "No", "Yes"), levels = c("No", "Yes")),
+            CRD = factor(if_else(DIST_ROAD > tp_threshold, "No", "Yes"), levels = c("No", "Yes")),
+            CDX = factor(if_else(DIST_NRS_DISTRICT_CAT > tp_threshold, "No", "Yes"), levels = c("No", "Yes")),
+            #North = factor(if_else(Y < 0, "No", "Yes"), levels = c("No", "Yes")),
+            IDX = factor(if_else(DIST_NRS_DISTRICT_CAT > 0, "No", "Yes"), levels = c("No", "Yes"))
+          ) |>
+          select(
+            asset_id = TOKEN_ID,
+            loc_date = UPDATED_AT,
+            size     = NEW_SIZE,
+            DPC      = DIST_PLAZA_central,
+            CPX,
+            CRD,
+            CDX,
+            #North,
+            IDX
+          ) |>
+          mutate(
+            DPC = log1p(DPC)
+          ),
+        by = join_by(asset_id, date > loc_date),
+        relationship = "many-to-many"
+      ) |>
+      summarise(
+        loc_date = last(loc_date, na_rm = T),
+        size = last(size, na_rm = T),
+        DPC = last(DPC, na_rm = T),
+        CPX = last(CPX, na_rm = T),
+        CRD = last(CRD, na_rm = T),
+        CDX = last(CDX, na_rm = T),
+        #North = last(North, na_rm = T),
+        IDX = last(IDX, na_rm = T),
+        .by = c("asset_id", "date")
+      )
+    loc_merged_db <- database |>
+      right_join(
+        loc_merged_db,
+        by = c("asset_id", "date")
+      )
+  }
   return(loc_merged_db)
 }
 
 # Listing Database builder
-listings_db_builder <- function () {
+listings_db_builder <- function (assetType = "land") {
+  
+  assetContract = ""
+  if (assetType == "land") {
+    assetContract = LandContract
+  } else if (assetType == "estate") {
+    assetContract = EstateContract
+  }
   
   # Step 1: Listings extraction & edited listings (less than 60min after listing posted) correction
   date_now <- lubridate::now()
   listings_base <- Tx_DclMkp |>
-    filter(asset_contract == LandContract & type == "order" & order_type == "list" & order_market == "dcl-marketplace-1") |>
+    filter(asset_contract == assetContract & type == "order" & order_type == "list" & order_market == "dcl-marketplace-1") |>
     select(hash, order_id, asset_id, maker, date, order_time_on_market, order_status, order_canceled_by, amount_usd, currency, amount) |>
     transmute( 
       # Rearrange listing database, create listing period (interval [Date, Date+Tom)), and 30 days lookback interval
@@ -152,11 +320,19 @@ listings_db_builder <- function () {
     filter(tom > 0) |>
     mutate(
       day = floor_date(date, unit = "day"),
+      # regime = case_when(
+      #   year(date) %in% 2019:2020 ~ "Normal",
+      #   year(date) %in% 2021 ~ "Boom",
+      #   year(date) %in% 2022 ~ "Crash",
+      #   year(date) %in% 2023:2024 ~ "Desert",
+      #   TRUE ~ NA_character_
+      # )
       regime = case_when(
-        year(date) %in% 2019:2020 ~ "Normal",
-        year(date) %in% 2021 ~ "Boom",
-        year(date) %in% 2022 ~ "Crash",
-        year(date) %in% 2023:2024 ~ "Desert",
+        as.numeric(date) < as.numeric(as.POSIXct("2019-04-01", tz = "UTC")) ~ NA_character_,
+        as.numeric(date) < as.numeric(as.POSIXct("2021-03-01", tz = "UTC")) ~ "Normal",
+        as.numeric(date) < as.numeric(as.POSIXct("2022-03-01", tz = "UTC")) ~ "Boom",
+        as.numeric(date) < as.numeric(as.POSIXct("2023-04-01", tz = "UTC")) ~ "Crash",
+        as.numeric(date) < as.numeric(as.POSIXct("2025-01-01", tz = "UTC")) ~ "Desert",
         TRUE ~ NA_character_
       )
     )
@@ -171,7 +347,7 @@ listings_db_builder <- function () {
   
   # Step 3: Sollicitations (Asks) database extraction
   asks_base <- Tx_DclMkp |>
-    filter(asset_contract == LandContract, type == "order", order_type == "ask", order_market == "dcl-marketplace-1") |>
+    filter(asset_contract == assetContract, type == "order", order_type == "ask", order_market == "dcl-marketplace-1") |>
     select(hash, order_id, asset_id, date, taker, order_time_on_market, order_status, order_canceled_by, amount_usd, currency, amount) |>
     transmute( 
       # Rearrange asks database, create asks periods (interval [Date, Date+Tom))
@@ -315,30 +491,35 @@ listings_db_builder <- function () {
     )
   
   # Step 10: Global Investors attention measure
-  listings <- listings |>
-    left_join(
-      readRDS("glt_db.RDS") |>
-        rename(day = date, att_vol = vol_tot) |>
-        select(day, att_vol), 
-      by = c("day")
-    ) |>
-    left_join(
-      readRDS("gtt_db.RDS") |>
-        rename(day = date, att_gt = lagged.wtrend) |>
-        select(day, att_gt), 
-      by = c("day")
-    )
+  # listings <- listings |>
+  #   left_join(
+  #     readRDS("glt_db.RDS") |>
+  #       rename(day = date, att_vol = vol_tot) |>
+  #       select(day, att_vol), 
+  #     by = c("day")
+  #   ) |>
+  #   left_join(
+  #     readRDS("gtt_db.RDS") |>
+  #       rename(day = date, att_gt = lagged.wtrend) |>
+  #       select(day, att_gt), 
+  #     by = c("day")
+  #   )
   
   # Step 11: Merge locations
-  listings <- locations_merger(listings)
+  listings <- locations_merger(listings, assetType)
   
   return(list(listings_base = listings_base, asks_base = asks_base, listings = listings))
 }
-lst_data <- listings_db_builder()
-saveRDS(lst_data, file = "artdata/artdatalst.RDS")
 
+lst_data <- listings_db_builder("land")
+saveRDS(lst_data, file = "artdata/artdatalst.RDS")
 listings <- lst_data$listings
 View(lst_data$asks_base)
+
+elst_data <- listings_db_builder("estate")
+saveRDS(elst_data, file = "artdata/artdataelst.RDS")
+elistings <- elst_data$listings
+View(elst_data$asks_base)
 
 
 
