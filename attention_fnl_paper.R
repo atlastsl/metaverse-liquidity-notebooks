@@ -38,7 +38,7 @@ Locations <- read_excel(
   )
 )
 LocationsEstates <- read_excel(
-  "../Donnees/LocationsEstates.xlsx"
+  "../Donnees/LocationsEstates2.xlsx"
 )
 
 ####################################
@@ -212,7 +212,7 @@ locations_merger <- function (database, assetType = "land") {
             CPX = factor(if_else(DIST_NRS_PLAZA > tp_threshold, "No", "Yes"), levels = c("No", "Yes")),
             CRD = factor(if_else(DIST_ROAD > tp_threshold, "No", "Yes"), levels = c("No", "Yes")),
             CDX = factor(if_else(DIST_NRS_DISTRICT_CAT > tp_threshold, "No", "Yes"), levels = c("No", "Yes")),
-            #North = factor(if_else(Y < 0, "No", "Yes"), levels = c("No", "Yes")),
+            North = factor(if_else(NORTH == FALSE, "No", "Yes"), levels = c("No", "Yes")),
             IDX = factor(if_else(DIST_NRS_DISTRICT_CAT > 0, "No", "Yes"), levels = c("No", "Yes"))
           ) |>
           select(
@@ -223,7 +223,7 @@ locations_merger <- function (database, assetType = "land") {
             CPX,
             CRD,
             CDX,
-            #North,
+            North,
             IDX
           ) |>
           mutate(
@@ -239,7 +239,7 @@ locations_merger <- function (database, assetType = "land") {
         CPX = last(CPX, na_rm = T),
         CRD = last(CRD, na_rm = T),
         CDX = last(CDX, na_rm = T),
-        #North = last(North, na_rm = T),
+        North = last(North, na_rm = T),
         IDX = last(IDX, na_rm = T),
         .by = c("asset_id", "date")
       )
