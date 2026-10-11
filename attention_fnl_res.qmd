@@ -1,0 +1,1508 @@
+---
+title: "Tableaux de résultats principaux pour le chapitre 1"
+author:
+  name:
+    given: Aurélien
+    family: Simo
+  email: aurelien-yannick.simo-fotso.1@ulaval.ca
+  affiliations:
+    - Département de FAI, FSA, Université Laval
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-title: Table des matières
+    toc-expand: true
+    toc-location: left
+    code-fold: true
+    number-sections: true
+    number-depth: 4
+    css: styles.css
+---
+
+# Statistiques descriptives
+
+## Volumes de ventes hebdomadaires
+
+```{r fig.width=10, fig.height=4}
+#| label: fig-stats-sales-volumes
+#| layout-nrow: 1
+#| fig-cap: "Volumes de ventes hebdomadaires de parcelles Decentraland dans le temps<br> Source: Données collectées par les auteurs"
+#| warning: false
+
+library(dplyr)
+library(tidyr)
+library(lubridate)
+library(ggplot2)
+
+tmp <- readRDS(file = "artdata/transactions.RDS")
+p <- tmp |>
+  filter(
+    type == "transfer", 
+    #asset_contract == "0xf87e31492faf9a91b02ee0deaad50d51d56d5d4d", 
+    is_sale == T, 
+    !is.na(amount_usd)
+  ) |>
+  select(date, amount_usd) |>
+  mutate(
+    week = lubridate::floor_date(date, unit = "week", week_start = 1)
+  ) |>
+  summarise(
+    vol = sum(amount_usd, na.rm=T),
+    .by = c("week")
+  ) |>
+  mutate(
+    vol = vol/1000
+  ) |>
+  ggplot(aes(x = week)) +
+  geom_line(aes(y = vol), color = "#333", linewidth = 0.7) +
+  labs(
+    x = "Time (in years)",
+    y = "Volume (K US$)"
+  ) +
+  scale_y_log10() +
+  theme_minimal()
+rm(list = c("tmp"))
+
+p
+```
+
+
+## Volumes de ventes annuels
+
+```{r}
+#| label: tbl-vol-summary-1
+#| tbl-cap: "Volumes annuels de vente en marché primaire et en marchés secondaires"
+#| warning: false
+#| echo: false
+#| 
+library(tinytable)
+library(labelled) 
+
+vol_smr <- readRDS(file = "artdata/volysummary.RDS") |>
+  select(year, fsales, ssales_l1, ssales_e1, ssales_l2, ssales_e2)
+colnames(vol_smr) <- c("Year", "Lands", "Lands", "Estates", "Lands", "Estates")
+
+tt(
+  vol_smr,
+  digits = 2,
+  notes = "L'année 2026 inclut uniquement les données de janvier à mai 2026.<br> Les volumes sont exprimés en milliers de dollars.<br>Source: Données collectées par les auteurs", 
+  replace = "-"
+) |> 
+style_tt(fontsize = 0.9) |>
+style_tt(i = 9, line = "b", line_width = 0.1) |>
+format_tt(replace = "-") |>
+group_tt(
+  j = list(
+    "1st Sales<br>   " = 2, 
+    "2nd Market<br>Dcl Marketplace" = 3:4, 
+    "2nd Market<br>3rd Party Marketplaces" = 5:6
+  )
+)
+```
+
+
+## Annonces de vente et offres d'achat
+
+```{r}
+#| label: tbl-vol-summary-2
+#| tbl-cap: "Nombres annuels de listings et de demandes sur Dcl Marketplace"
+#| warning: false
+#| echo: false
+
+library(tinytable)
+library(labelled) 
+
+vol_smr <- readRDS(file = "artdata/volysummary.RDS") |>
+  select(year, lsts_l, lsts_e, asks_l, asks_e)
+colnames(vol_smr) <- c("Year", "Lands", "Estates", "Lands", "Estates")
+
+tt(
+  vol_smr,
+  digits = 2,
+  notes = "L'année 2026 inclut uniquement les données de janvier à mai 2026.<br>Source: Données collectées par les auteurs", 
+  replace = "-"
+) |> 
+style_tt(fontsize = 0.9) |>
+style_tt(i = 9, line = "b", line_width = 0.1) |>
+format_tt(replace = "-") |>
+group_tt(
+  j = list(
+    "Listings" = 2:3, 
+    "Demandes" = 4:5
+  )
+)
+```
+
+
+## Statistiques descriptives
+
+### Parcelles
+
+```{r}
+#| label: tbl-desc-summary-liq-lands
+#| tbl-cap: "Statistiques descriptives des mesures de liquidité des parcelles Decentraland pour les listings de 2019 à 2024"
+#| warning: false
+#| echo: false
+
+library(tinytable)
+
+#listings <- readRDS(file = "artdata/listings.RDS")
+listings <- readRDS(file = "artdata/artdatalst.RDS")$listings
+
+smr <- listings |>
+  filter(!is.na(regime)) |>
+  mutate(
+    DPCt = exp(DPC)-1,
+    exposure = ndays_li_30d/30,
+    mprice = price_usd/1000
+  ) |>
+  reframe(
+    y = c("q 1%", "q 10%", "Median", "q 90%", "q 99%", "Mean", "Sd"),
+    tom_all = c(
+      quantile(tom, c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(tom), 
+      sd(tom)
+    ),
+    tom_sales = c(
+      quantile(tom[which(status == "filled")], c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(tom[which(status == "filled")]), 
+      sd(tom[which(status == "filled")])
+    ),
+    #n_listings = c(NA, NA, NA, NA, NA, n(), NA),
+    #n_sales = c(NA, NA, NA, NA, NA, sum(status == "filled"), NA),
+    lsr = c(NA, NA, NA, NA, NA, mean(status == "filled")*100, NA),
+    loc_all = c(
+      quantile(DPCt, c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(DPCt), 
+      sd(DPCt)
+    ),
+    loc_sales = c(
+      quantile(DPCt[which(status == "filled")], c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(DPCt[which(status == "filled")]), 
+      sd(DPCt[which(status == "filled")])
+    ),
+    price_all = c(
+      quantile(mprice, c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(mprice), 
+      sd(mprice)
+    ),
+    price_sales = c(
+      quantile(mprice[which(status == "filled")], c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(mprice[which(status == "filled")]), 
+      sd(mprice[which(status == "filled")])
+    ),
+    att_all = c(
+      quantile(asks_ll_30d, c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(asks_ll_30d), 
+      sd(asks_ll_30d)
+    ),
+    att_sales = c(
+      quantile(asks_ll_30d[which(status == "filled")], c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(asks_ll_30d[which(status == "filled")]), 
+      sd(asks_ll_30d[which(status == "filled")])
+    ),
+    expo_all = c(
+      quantile(exposure, c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(exposure), 
+      sd(exposure)
+    ),
+    expo_sales = c(
+      quantile(exposure[which(status == "filled")], c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(exposure[which(status == "filled")]), 
+      sd(exposure[which(status == "filled")])
+    ),
+    #att_vol = c(quantile(att_vol, c(0.01, 0.1, 0.5, 0.9, 0.99))/1000, mean(att_vol)/1000, sd(att_vol)/1000),
+    #att_gt = c(quantile(att_gt, c(0.01, 0.1, 0.5, 0.9, 0.99)), mean(att_gt), sd(att_gt)),
+    .by = "regime"
+  ) |>
+  mutate(
+    tom_all = round(tom_all, digits = 3),
+    tom_sales = round(tom_sales, digits = 3),
+    price_all = round(price_all, digits = 3),
+    price_sales = round(price_sales, digits = 3),
+    expo_all = round(expo_all*100, digits = 3),
+    expo_sales = round(expo_sales*100, digits = 3),
+  ) |>
+  select(-regime)
+#colnames(smr) <- c("Stat.", "All listings", "Converted into sales", "# Listings", "# Sales", "% Sales", "All listings", "Converted into sales", "30 prev. days sales vol (10<sup>3</sup>USD)", "Google Trends Index")
+colnames(smr) <- c(
+  "Stat.", 
+  "All listings", 
+  "Converted into sales", 
+  "% Sales", 
+  "All listings", 
+  "Converted into sales",
+  "All listings", 
+  "Converted into sales",
+  "All listings", 
+  "Converted into sales", 
+  "All listings", 
+  "Converted into sales"
+)
+
+p = tt(
+  smr,
+  digits = 3,
+  notes = "Les échelles des indices Google Trends diffèrent suivant les régimes, et les volumes de ventes sont en milliers de dollars.", 
+  replace = "-",
+  width = rep(1/12, 12)
+) |> 
+style_tt(fontsize = 0.9) |>
+format_tt(replace = "-") |>
+group_tt(
+  j = list(
+    "Time on market (days)" = 2:3, 
+    "% Sales" = 4:4,
+    "Distance to Central Plaza (# parcels)" = 5:6, 
+    "Listing price (10^3 US$)" = 7:8, 
+    "Attention (# bids)" = 9:10, 
+    "Past exposure (% on 30d)" = 11:12
+  )
+) |>
+group_tt(
+  i = list(
+    "Normal Regime (Avril 2019 - Février 2021)" = 1,
+    "Expansion/Boom Regime (Mars 2021 - Février 2022)" = 8,
+    "Recession/Crash Regime (Mars 2022 - Mars 2023)" = 15,
+    "Low recession/Desert Regime (Avril 2023 - Décembre 2024)" = 22
+  )
+) |>
+format_tt(j = 2:3, digits = 3) |>
+format_tt(j = 7:8, digits = 3) |>
+format_tt(j = 9:10, digits = 3) |>
+format_tt(j = 11:12, digits = 3) |>
+style_tt(i = 8, line = "b", line_width = 0.1) |>
+style_tt(i = 16, line = "b", line_width = 0.1) |>
+style_tt(i = 24, line = "b", line_width = 0.1)
+
+p
+```
+
+
+```{r}
+print(p, "latex")
+```
+
+
+### Domaines
+
+```{r}
+#| label: tbl-desc-summary-liq-estates
+#| tbl-cap: "Statistiques descriptives des mesures de liquidité des domaines Decentraland pour les listings de 2019 à 2024"
+#| warning: false
+#| echo: false
+
+library(tinytable)
+
+elistings <- readRDS(file = "artdata/artdataelst.RDS")$listings
+
+smr <- elistings |>
+  filter(!is.na(regime)) |>
+  filter(DPC >= 0 & size > 0) |>
+  mutate(
+    DPCt = exp(DPC)-1,
+    exposure = ndays_li_30d/30,
+    mprice = price_usd/(size*1000)
+  ) |>
+  reframe(
+    y = c("q 1%", "q 10%", "Median", "q 90%", "q 99%", "Mean", "Sd"),
+    tom_all = c(
+      quantile(tom, c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(tom), 
+      sd(tom)
+    ),
+    tom_sales = c(
+      quantile(tom[which(status == "filled")], c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(tom[which(status == "filled")]), 
+      sd(tom[which(status == "filled")])
+    ),
+    #n_listings = c(NA, NA, NA, NA, NA, n(), NA),
+    #n_sales = c(NA, NA, NA, NA, NA, sum(status == "filled"), NA),
+    lsr = c(NA, NA, NA, NA, NA, mean(status == "filled")*100, NA),
+    loc_all = c(
+      quantile(DPCt, c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(DPCt), 
+      sd(DPCt)
+    ),
+    loc_sales = c(
+      quantile(DPCt[which(status == "filled")], c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(DPCt[which(status == "filled")]), 
+      sd(DPCt[which(status == "filled")])
+    ),
+    size_all = c(
+      quantile(size, c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(size), 
+      sd(size)
+    ),
+    size_sales = c(
+      quantile(size[which(status == "filled")], c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(size[which(status == "filled")]), 
+      sd(size[which(status == "filled")])
+    ),
+    price_all = c(
+      quantile(mprice, c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(mprice), 
+      sd(mprice)
+    ),
+    price_sales = c(
+      quantile(mprice[which(status == "filled")], c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(mprice[which(status == "filled")]), 
+      sd(mprice[which(status == "filled")])
+    ),
+    att_all = c(
+      quantile(asks_ll_30d, c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(asks_ll_30d), 
+      sd(asks_ll_30d)
+    ),
+    att_sales = c(
+      quantile(asks_ll_30d[which(status == "filled")], c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(asks_ll_30d[which(status == "filled")]), 
+      sd(asks_ll_30d[which(status == "filled")])
+    ),
+    expo_all = c(
+      quantile(exposure, c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(exposure), 
+      sd(exposure)
+    ),
+    expo_sales = c(
+      quantile(exposure[which(status == "filled")], c(0.01, 0.1, 0.5, 0.9, 0.99)), 
+      mean(exposure[which(status == "filled")]), 
+      sd(exposure[which(status == "filled")])
+    ),
+    #att_vol = c(quantile(att_vol, c(0.01, 0.1, 0.5, 0.9, 0.99))/1000, mean(att_vol)/1000, sd(att_vol)/1000),
+    #att_gt = c(quantile(att_gt, c(0.01, 0.1, 0.5, 0.9, 0.99)), mean(att_gt), sd(att_gt)),
+    .by = "regime"
+  ) |>
+  mutate(
+    tom_all = round(tom_all, digits = 3),
+    tom_sales = round(tom_sales, digits = 3),
+    price_all = round(price_all, digits = 3),
+    price_sales = round(price_sales, digits = 3),
+    expo_all = round(expo_all*100, digits = 3),
+    expo_sales = round(expo_sales*100, digits = 3),
+  ) |>
+  select(-regime)
+#colnames(smr) <- c("Stat.", "All listings", "Converted into sales", "# Listings", "# Sales", "% Sales", "All listings", "Converted into sales", "30 prev. days sales vol (10<sup>3</sup>USD)", "Google Trends Index")
+colnames(smr) <- c(
+  "Stat.", 
+  "All listings", 
+  "Converted into sales", 
+  "% Sales", 
+  "All listings", 
+  "Converted into sales",
+  "All listings", 
+  "Converted into sales",
+  "All listings", 
+  "Converted into sales",
+  "All listings", 
+  "Converted into sales", 
+  "All listings", 
+  "Converted into sales"
+)
+
+p = tt(
+  smr,
+  digits = 3,
+  notes = "Les échelles des indices Google Trends diffèrent suivant les régimes, et les volumes de ventes sont en milliers de dollars.", 
+  replace = "-",
+  width = rep(1/14, 14)
+) |> 
+style_tt(fontsize = 0.9) |>
+format_tt(replace = "-") |>
+group_tt(
+  j = list(
+    "Time on market (days)" = 2:3, 
+    "% Sales" = 4:4,
+    "Distance to Central Plaza (# parcels)" = 5:6, 
+    "Size (# parcels)" = 7:8, 
+    "Listing price (10^3 US$)" = 9:10,
+    "Attention (# bids)" = 11:12, 
+    "Past exposure (% on 30d)" = 13:14
+  )
+) |>
+group_tt(
+  i = list(
+    "Normal Regime (Avril 2019 - Février 2021)" = 1,
+    "Expansion/Boom Regime (Mars 2021 - Février 2022)" = 8,
+    "Recession/Crash Regime (Mars 2022 - Mars 2023)" = 15,
+    "Low recession/Desert Regime (Avril 2023 - Décembre 2024)" = 22
+  )
+) |>
+format_tt(j = 2:3, digits = 3) |>
+format_tt(j = 7:8, digits = 3) |>
+format_tt(j = 9:10, digits = 3) |>
+format_tt(j = 11:12, digits = 3) |>
+style_tt(i = 8, line = "b", line_width = 0.1) |>
+style_tt(i = 16, line = "b", line_width = 0.1) |>
+style_tt(i = 24, line = "b", line_width = 0.1)
+
+p
+```
+
+
+# Relation Localisation - Liquidité
+
+## [Parcelles] Résultats principaux
+
+```{r}
+# Librairies loading
+library(broom)
+library(DescTools)
+library(lubridate)
+library(tidyr)
+library(dplyr)
+library(modelsummary)
+library(stringr)
+library(tinytable)
+library(conflicted)
+conflicted::conflicts_prefer(dplyr::select)
+conflict_prefer("filter", "dplyr")
+
+# Models functions loading
+source("models.R")
+artdatalst = readRDS(file = "artdata/artdatalst.RDS")
+
+# Database refine
+liq_db_refiner <- function (att_inc_past_filled = F) {
+  att_base_var <- "att_base"
+  if (att_inc_past_filled) {
+    att_base_var <- "att_plus"
+  }
+  db = artdatalst$listings |> 
+    #filter(!is.na(regime), nfilled_li_30d == 0) |>
+    filter(!is.na(regime)) |>
+    mutate(
+      att_base = asks_ll_30d,
+      att_plus = asks_ll_30d + nfilled_li_30d,
+      attention = .data[[att_base_var]],
+      att_chr = if_else(attention == 0, "Z", if_else(attention <= 3, "L", "H")),
+      att_3of = factor(att_chr, levels = c("Z", "L", "H"), ordered = T),
+      att_3uf = factor(att_chr, levels = c("Z", "L", "H"), ordered = F),
+      att_bin = as.numeric(attention > 0),
+      att_bnf = factor(if_else(attention > 0, "Y", "N"), levels = c("N", "Y")),
+      mkt_expo_time = ndays_li_30d/30,
+      mkt_exposed = factor(if_else(ndays_li_30d > 0, "Y", "N"), levels = c("N", "Y"))
+    ) |>
+    arrange(date)
+  return(db)
+}
+
+# Localisation - Liquidity relation reg models
+liq_model_func <- function (db, reg, type = "aft") {
+  dat = db |> filter(regime == reg) |>
+    filter(!is.na(tom) & tom > 0) |>
+    mutate(
+      sold = as.numeric(status == "filled" & tom <= 365),
+      tom = if_else(tom > 365, 365, tom),
+      LogPrice = log(
+        Winsorize(price_usd, val = quantile(price_usd, probs = c(0.01, 0.99)))
+      ),
+      Attention = att_3uf
+    ) |>
+    mutate(
+      year = year(date),
+      quarter = paste0("Q", quarter(date), "_", year),
+    ) |>
+    mutate(qname = quarter) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+  
+  qlist <- unique(dat$quarter)
+  Xcols <- c("DPC", "CRD", "CPX", "CDX", "North", "LogPrice")
+  Xcols <- c(Xcols, qlist[-1])
+  model <- NULL
+  
+  fit = NULL
+  if(type == "aft") {
+    fit = aft_model(
+      dat,
+      Y_time = "tom",
+      Y_event = "sold",
+      X = Xcols,
+      error_cluster = "asset_id"
+    )
+  } else {
+    fit = cox_model(
+      dat,
+      Y_time = "tom",
+      Y_event = "sold",
+      X = Xcols,
+      error_cluster = "asset_id"
+    )
+  }
+  return(fit)
+}
+
+liq_model_summ <- function (db, type = "aft") {
+  regs <- c("Normal", "Boom", "Crash", "Desert")
+  my_gof <- list(
+    list("raw" = "qt.fe",    "clean" = "FE Quarters", fmt = 0),
+    list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+    list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
+    list("raw" = "concordance",   "clean" = "Concordance",    "fmt" = 2),
+    list("raw" = "concordance.std",   "clean" = "Concordance Std",    "fmt" = 3),
+    list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+    list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+  )
+  
+  results <- vector(mode = "list", length = length(regs))
+  for (k in seq_along(regs)) {
+    fit_raw = liq_model_func(db, regs[k], type)
+    td_raw = get_estimates(fit_raw, ci_method = "wald") |>
+      filter(!str_detect(term, "^Q\\d+_\\d+"))
+    gf_raw = get_gof(fit_raw)
+    gf_raw[["qt.fe"]] = "Yes"
+    if (type == "cox") {
+      gf_raw[["concordance"]] = fit_raw$concordance[6]
+      gf_raw[["concordance.std"]] = fit_raw$concordance[7]
+    }
+    mod_raw = list(tidy = td_raw, glance = gf_raw)
+    class(mod_raw) <- "modelsummary_list"
+    
+    results[[k]] = mod_raw
+  }
+  
+  names(results) <- regs
+  
+  tab <- modelsummary(
+    results, 
+    gof_map = my_gof,
+    stars = TRUE, statistic = "p.value", output = "tinytable"
+  ) |> style_tt(fontsize = 0.8)
+  colnames(tab) <- c(" ", colnames(tab)[-1])
+  
+  tab
+}
+
+# Convexity analysis reg models
+convanl_model_func <- function (db, reg, type = "aft") {
+  dat = db |> filter(regime == reg) |>
+    filter(!is.na(tom) & tom > 0) |>
+    mutate(
+      sold = as.numeric(status == "filled" & tom <= 365),
+      tom = if_else(tom > 365, 365, tom),
+      LogPrice = log(
+        Winsorize(price_usd, val = quantile(price_usd, probs = c(0.01, 0.99)))
+      ),
+      Attention = att_3uf,
+      DPCd = paste0("DPC_d", ntile(DPC, n = 5))
+    ) |>
+    mutate(
+      year = year(date),
+      quarter = paste0("Q", quarter(date), "_", year),
+    ) |>
+    mutate(qname = quarter) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0) |>
+    mutate(v = 1) |>
+    pivot_wider(names_from = DPCd, values_from = v, values_fill = 0)
+  
+  qlist <- unique(dat$quarter)
+  dlist <- paste0("DPC_d", 1:5)
+  Xcols <- c(dlist[-5], "CRD", "CPX", "CDX", "North", "LogPrice")
+  Xcols <- c(Xcols, qlist[-1])
+  model <- NULL
+  
+  fit = NULL
+  if(type == "aft") {
+    fit = aft_model(
+      dat,
+      Y_time = "tom",
+      Y_event = "sold",
+      X = Xcols,
+      error_cluster = "asset_id"
+    )
+  } else {
+    fit = cox_model(
+      dat,
+      Y_time = "tom",
+      Y_event = "sold",
+      X = Xcols,
+      error_cluster = "asset_id"
+    )
+  }
+  return(fit)
+}
+
+convanl_model_summ <- function (db, type = "aft") {
+  regs <- c("Normal", "Boom", "Crash", "Desert")
+  my_gof <- list(
+    list("raw" = "qt.fe",     "clean" = "FE Quarters", fmt = 0),
+    list("raw" = "oth.ctrl",     "clean" = "Controls", fmt = 0),
+    list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+    list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
+    list("raw" = "concordance",   "clean" = "Concordance",    "fmt" = 2),
+    list("raw" = "concordance.std",   "clean" = "Concordance Std",    "fmt" = 3),
+    list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+    list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+  )
+  
+  results <- vector(mode = "list", length = length(regs))
+  for (k in seq_along(regs)) {
+    fit_raw = convanl_model_func(db, regs[k], type)
+    td_raw = get_estimates(fit_raw, ci_method = "wald") |>
+      #filter(!str_detect(term, "^Q\\d+_\\d+"))
+      filter(str_detect(term, "^DPC_d*"))
+    gf_raw = get_gof(fit_raw)
+    gf_raw[["qt.fe"]] = "Yes"
+    gf_raw[["oth.ctrl"]] = "Yes"
+    if (type == "cox") {
+      gf_raw[["concordance"]] = fit_raw$concordance[6]
+      gf_raw[["concordance.std"]] = fit_raw$concordance[7]
+    }
+    mod_raw = list(tidy = td_raw, glance = gf_raw)
+    class(mod_raw) <- "modelsummary_list"
+    
+    results[[k]] = mod_raw
+  }
+  
+  names(results) <- regs
+  
+  tab <- modelsummary(
+    results, 
+    gof_map = my_gof,
+    stars = TRUE, statistic = "p.value", output = "tinytable"
+  ) |> style_tt(fontsize = 0.8)
+  colnames(tab) <- c(" ", colnames(tab)[-1])
+  
+  tab
+}
+```
+
+### Hypothèses H1 et H2
+
+**Time-on-Market**
+
+```{r}
+#| label: tbl-res1-tom
+#| tbl-cap: "Lien Liquidité (Time-on-market) - Localisation suivant les régimes de marché."
+#| warning: false
+#| echo: false
+
+db <- liq_db_refiner(FALSE)
+liq_model_summ(db, "aft")
+```
+
+**Probabilité instantanée de vente**
+
+```{r}
+#| label: tbl-res1-lsr
+#| tbl-cap: "Lien Liquidité (Probabilité de vente) - Localisation suivant les régimes de marché."
+#| warning: false
+#| echo: false
+
+db <- liq_db_refiner(FALSE)
+liq_model_summ(db, "cox")
+```
+
+### Hypothèse H3
+
+```{r}
+#| label: tbl-res2-conv-a
+#| tbl-cap: "Convexité du lien localisation-liquidité en régime de marché normal"
+#| warning: false
+#| echo: false
+
+db <- liq_db_refiner(FALSE)
+convanl_model_summ(db, "aft")
+```
+
+
+
+## [Domaines] Résultats principaux
+
+```{r}
+# Librairies loading
+library(broom)
+library(DescTools)
+library(lubridate)
+library(tidyr)
+library(dplyr)
+library(modelsummary)
+library(stringr)
+library(tinytable)
+library(conflicted)
+conflicted::conflicts_prefer(dplyr::select)
+conflict_prefer("filter", "dplyr")
+
+# Models functions loading
+source("models.R")
+artdataelst = readRDS(file = "artdata/artdataelst.RDS")
+
+# Database refine
+eliq_db_refiner <- function (att_inc_past_filled = F) {
+  att_base_var <- "att_base"
+  if (att_inc_past_filled) {
+    att_base_var <- "att_plus"
+  }
+  db = artdataelst$listings |> 
+    #filter(!is.na(regime), nfilled_li_30d == 0) |>
+    filter(!is.na(regime)) |>
+    filter(DPC >= 0 & size > 0) |>
+    mutate(
+      att_base = asks_ll_30d,
+      att_plus = asks_ll_30d + nfilled_li_30d,
+      uprice_usd = price_usd / size,
+      attention = .data[[att_base_var]],
+      att_chr = if_else(attention == 0, "Z", if_else(attention <= 3, "L", "H")),
+      att_3of = factor(att_chr, levels = c("Z", "L", "H"), ordered = T),
+      att_3uf = factor(att_chr, levels = c("Z", "L", "H"), ordered = F),
+      att_bin = as.numeric(attention > 0),
+      att_bnf = factor(if_else(attention > 0, "Y", "N"), levels = c("N", "Y")),
+      mkt_expo_time = ndays_li_30d/30,
+      mkt_exposed = factor(if_else(ndays_li_30d > 0, "Y", "N"), levels = c("N", "Y"))
+    ) |>
+    arrange(date)
+  return(db)
+}
+
+# Localisation - Liquidity relation reg models
+eliq_model_func <- function (db, reg, type = "aft") {
+  dat = db |> filter(regime == reg) |>
+    filter(!is.na(tom) & tom > 0) |>
+    mutate(
+      sold = as.numeric(status == "filled" & tom <= 365),
+      tom = if_else(tom > 365, 365, tom),
+      uprice_usd = price_usd / size,
+      LogPrice = log(
+        Winsorize(uprice_usd, val = quantile(uprice_usd, probs = c(0.01, 0.99)))
+      ),
+      LogSize = log(size),
+      Attention = att_3uf
+    ) |>
+    mutate(
+      year = year(date),
+      quarter = paste0("Q", quarter(date), "_", year),
+    ) |>
+    mutate(qname = quarter) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+  
+  qlist <- unique(dat$quarter)
+  Xcols <- c("DPC", "CRD", "CPX", "CDX", "LogSize", "LogPrice")
+  Xcols <- c(Xcols, qlist[-1])
+  model <- NULL
+  
+  fit = NULL
+  if(type == "aft") {
+    fit = aft_model(
+      dat,
+      Y_time = "tom",
+      Y_event = "sold",
+      X = Xcols,
+      error_cluster = "asset_id"
+    )
+  } else {
+    fit = cox_model(
+      dat,
+      Y_time = "tom",
+      Y_event = "sold",
+      X = Xcols,
+      error_cluster = "asset_id"
+    )
+  }
+  return(fit)
+}
+
+eliq_model_summ <- function (db, type = "aft") {
+  regs <- c("Normal", "Boom", "Crash", "Desert")
+  my_gof <- list(
+    list("raw" = "qt.fe",    "clean" = "FE Quarters", fmt = 0),
+    list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+    list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
+    list("raw" = "concordance",   "clean" = "Concordance",    "fmt" = 2),
+    list("raw" = "concordance.std",   "clean" = "Concordance Std",    "fmt" = 3),
+    list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+    list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+  )
+  
+  results <- vector(mode = "list", length = length(regs))
+  for (k in seq_along(regs)) {
+    fit_raw = eliq_model_func(db, regs[k], type)
+    td_raw = get_estimates(fit_raw, ci_method = "wald") |>
+      filter(!str_detect(term, "^Q\\d+_\\d+"))
+    gf_raw = get_gof(fit_raw)
+    gf_raw[["qt.fe"]] = "Yes"
+    if (type == "cox") {
+      gf_raw[["concordance"]] = fit_raw$concordance[6]
+      gf_raw[["concordance.std"]] = fit_raw$concordance[7]
+    }
+    mod_raw = list(tidy = td_raw, glance = gf_raw)
+    class(mod_raw) <- "modelsummary_list"
+    
+    results[[k]] = mod_raw
+  }
+  
+  names(results) <- regs
+  
+  tab <- modelsummary(
+    results, 
+    gof_map = my_gof,
+    stars = TRUE, statistic = "p.value", output = "tinytable"
+  ) |> style_tt(fontsize = 0.8)
+  colnames(tab) <- c(" ", colnames(tab)[-1])
+  
+  tab
+}
+
+# Convexity analysis reg models
+econvanl_model_func <- function (db, reg, type = "aft") {
+  dat = db |> filter(regime == reg) |>
+    filter(!is.na(tom) & tom > 0) |>
+    mutate(
+      sold = as.numeric(status == "filled" & tom <= 365),
+      tom = if_else(tom > 365, 365, tom),
+      uprice_usd = price_usd / size,
+      LogPrice = log(
+        Winsorize(uprice_usd, val = quantile(uprice_usd, probs = c(0.01, 0.99)))
+      ),
+      LogSize = log(size),
+      Attention = att_3uf,
+      DPCd = paste0("DPC_d", ntile(DPC, n = 5))
+    ) |>
+    mutate(
+      year = year(date),
+      quarter = paste0("Q", quarter(date), "_", year),
+    ) |>
+    mutate(qname = quarter) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0) |>
+    mutate(v = 1) |>
+    pivot_wider(names_from = DPCd, values_from = v, values_fill = 0)
+  
+  qlist <- unique(dat$quarter)
+  dlist <- paste0("DPC_d", 1:5)
+  Xcols <- c(dlist[-5], "CRD", "CPX", "CDX", "LogSize", "LogPrice")
+  Xcols <- c(Xcols, qlist[-1])
+  model <- NULL
+  
+  fit = NULL
+  if(type == "aft") {
+    fit = aft_model(
+      dat,
+      Y_time = "tom",
+      Y_event = "sold",
+      X = Xcols,
+      error_cluster = "asset_id"
+    )
+  } else {
+    fit = cox_model(
+      dat,
+      Y_time = "tom",
+      Y_event = "sold",
+      X = Xcols,
+      error_cluster = "asset_id"
+    )
+  }
+  return(fit)
+}
+
+econvanl_model_summ <- function (db, type = "aft") {
+  regs <- c("Normal", "Boom", "Crash", "Desert")
+  my_gof <- list(
+    list("raw" = "qt.fe",     "clean" = "FE Quarters", fmt = 0),
+    list("raw" = "oth.ctrl",     "clean" = "Controls", fmt = 0),
+    list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+    list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel.", "fmt" = 3),
+    list("raw" = "concordance",   "clean" = "Concordance",    "fmt" = 2),
+    list("raw" = "concordance.std",   "clean" = "Concordance Std",    "fmt" = 3),
+    list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+    list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+  )
+  
+  results <- vector(mode = "list", length = length(regs))
+  for (k in seq_along(regs)) {
+    fit_raw = econvanl_model_func(db, regs[k], type)
+    td_raw = get_estimates(fit_raw, ci_method = "wald") |>
+      #filter(!str_detect(term, "^Q\\d+_\\d+"))
+      filter(str_detect(term, "^DPC_d*"))
+    gf_raw = get_gof(fit_raw)
+    gf_raw[["qt.fe"]] = "Yes"
+    gf_raw[["oth.ctrl"]] = "Yes"
+    if (type == "cox") {
+      gf_raw[["concordance"]] = fit_raw$concordance[6]
+      gf_raw[["concordance.std"]] = fit_raw$concordance[7]
+    }
+    mod_raw = list(tidy = td_raw, glance = gf_raw)
+    class(mod_raw) <- "modelsummary_list"
+    
+    results[[k]] = mod_raw
+  }
+  
+  names(results) <- regs
+  
+  tab <- modelsummary(
+    results, 
+    gof_map = my_gof,
+    stars = TRUE, statistic = "p.value", output = "tinytable"
+  ) |> style_tt(fontsize = 0.8)
+  colnames(tab) <- c(" ", colnames(tab)[-1])
+  
+  tab
+}
+```
+
+### Hypothèses H1 et H2
+
+**Time-on-Market**
+
+```{r}
+#| label: tbl-res1-tom
+#| tbl-cap: "Lien Liquidité (Time-on-market) - Localisation suivant les régimes de marché."
+#| warning: false
+#| echo: false
+
+db <- eliq_db_refiner(FALSE)
+eliq_model_summ(db, "aft")
+```
+
+**Probabilité instantanée de vente**
+
+```{r}
+#| label: tbl-res1-lsr
+#| tbl-cap: "Lien Liquidité (Probabilité de vente) - Localisation suivant les régimes de marché."
+#| warning: false
+#| echo: false
+
+db <- eliq_db_refiner(FALSE)
+eliq_model_summ(db, "cox")
+```
+
+### Hypothèse H3
+
+```{r}
+#| label: tbl-res2-conv-a
+#| tbl-cap: "Convexité du lien localisation-liquidité en régime de marché normal"
+#| warning: false
+#| echo: false
+
+db <- eliq_db_refiner(FALSE)
+econvanl_model_summ(db, "aft")
+```
+
+
+# Analyse de médiation
+
+##
+
+```{r}
+#| echo: false
+
+att_model_func <- function (reg) {
+  dat = db |> filter(regime == reg) |>
+    mutate(
+      MktExpoLogPrice = log1p(
+        Winsorize(
+          mvalue_li_30d,
+          val = quantile(mvalue_li_30d, probs = c(0, 0.99))
+        )
+      ),
+      MktExpoOn = as.numeric(mvalue_li_30d > 0),
+      Attention = att_ll_f
+    ) |>
+    mutate(
+      year = year(date),
+      quarter = paste0("Q", quarter(date), "_", year)
+    ) |>
+    mutate(qname = quarter) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0) 
+
+  qlist <- unique(dat$quarter)
+  Xcols <- c(
+    "DPC", "CRD", "CPX", "CDX", "North", 
+    "MktExpoOn", "MktExpoTime", "MktExpoTime:DPC", "MktExpoLogPrice"
+  )
+  Xcols <- c(Xcols, qlist[-1])
+  fit <- ord_model(dataset = dat, Y = c("Attention"), X = Xcols)
+  return(fit)
+}
+
+liq_model_func <- function (reg, type = "aft", att = F) {
+  dat = db |> filter(regime == reg) |>
+    filter(!is.na(tom) & tom > 0) |>
+    mutate(
+      sold = as.numeric(status == "filled" & tom <= 365),
+      tom = if_else(tom > 365, 365, tom),
+      LogPrice = log(
+        Winsorize(price_usd, val = quantile(price_usd, probs = c(0.01, 0.99)))
+      ),
+      Attention = att_ll_u
+    ) |>
+    mutate(
+      year = year(date),
+      quarter = paste0("Q", quarter(date), "_", year),
+    ) |>
+    mutate(qname = quarter) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+  
+  qlist <- unique(dat$quarter)
+  Xcols <- c("DPC", "CRD", "CPX", "CDX", "North", "LogPrice")
+  if (att) {
+    Xcols <- c(Xcols, c("Attention", "Attention:MktExpoTime"))
+  }
+  Xcols <- c(Xcols, qlist[-1])
+  model <- NULL
+  
+  fit = NULL
+  if(type == "aft") {
+    fit = aft_model(
+      dat,
+      Y_time = "tom",
+      Y_event = "sold",
+      X = Xcols,
+      error_cluster = "asset_id"
+    )
+  } else {
+    fit = cox_model(
+      dat,
+      Y_time = "tom",
+      Y_event = "sold",
+      X = Xcols,
+      error_cluster = "asset_id"
+    )
+  }
+  return(fit)
+}
+```
+
+
+## Lien Localisation - Attention
+
+```{r}
+#| label: tbl-res3-attloc
+#| tbl-cap: "Lien Localisation - Attention"
+#| warning: false
+#| echo: false
+
+regs <- c("Normal", "Boom", "Crash", "Desert")
+
+my_gof <- list(
+  list("raw" = "qt.fe",     "clean" = "Quarters FE", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "mcfadden", "clean" = "R2 McFadden", "fmt" = 3),
+  list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel", "fmt" = 3),
+  list("raw" = "r.squared", "clean" = "R2", "fmt" = 3),
+  list("raw" = "r.squared.adj", "clean" = "R2 Adj", "fmt" = 3),
+  list("raw" = "logLik",   "clean" = "Log Lik.",    "fmt" = 2),
+  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+)
+
+results <- vector(mode = "list", length = length(regs))
+for (k in seq_along(regs)) {
+  fit = att_model_func(regs[k])
+  td = get_estimates(fit, ci_method = "wald") |>
+    filter(!str_detect(term, "^Q\\d+_\\d+"))
+  gf = get_gof(fit)
+  gf[["qt.fe"]] = "Yes"
+  gf[["mcfadden"]] = PseudoR2(fit)
+  mod = list(tidy = td, glance = gf)
+  class(mod) <- "modelsummary_list"
+  results[[k]] = mod
+}
+
+names(results) <- regs
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(fontsize = 0.8)
+colnames(tab) <- c(" ", colnames(tab)[-1])
+
+tab
+```
+
+## Lien Localisation - Attention - Liquidité
+
+```{r}
+#| label: tbl-res3-attlocliq
+#| tbl-cap: "Lien Localisation - Attention - Liquidité"
+#| warning: false
+#| echo: false
+
+regs <- c("Normal", "Boom", "Crash", "Desert")
+rnames <- c("Normal", "Normal<br>+Attention", 
+            "Boom", "Boom<br>+Attention", 
+            "Crash", "Crash<br>+Attention", 
+            "Desert", "Desert<br>+Attention")
+
+my_gof <- list(
+  list("raw" = "qt.fe",     "clean" = "Quarters FE", fmt = 0),
+  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
+  list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel", "fmt" = 3),
+  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
+  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
+)
+results <- vector(mode = "list", length = length(regs)*2)
+for (k in seq_along(regs)) {
+  fit_raw = liq_model_func(regs[k], "aft", F)
+  td_raw = get_estimates(fit_raw, ci_method = "wald") |>
+    filter(!str_detect(term, "^Q\\d+_\\d+"))
+  gf_raw = get_gof(fit_raw)
+  gf_raw[["qt.fe"]] = "Yes"
+  mod_raw = list(tidy = td_raw, glance = gf_raw)
+  class(mod_raw) <- "modelsummary_list"
+  
+  fit_att = liq_model_func(regs[k], "aft", T)
+  td_att = get_estimates(fit_att, ci_method = "wald") |>
+    filter(!str_detect(term, "^Q\\d+_\\d+"))
+  gf_att = get_gof(fit_att)
+  gf_att[["qt.fe"]] = "Yes"
+  mod_att = list(tidy = td_att, glance = gf_att)
+  class(mod_att) <- "modelsummary_list"
+  
+  results[[2*k-1]] = mod_raw
+  results[[2*k]] = mod_att
+}
+
+names(results) <- rnames
+tab <- modelsummary(
+  results, 
+  gof_map = my_gof,
+  stars = TRUE, statistic = "p.value", output = "tinytable"
+) |> style_tt(fontsize = 0.8)
+colnames(tab) <- c(" ", colnames(tab)[-1])
+
+tab
+```
+
+## Test de médiation, effets indirect de la localisation sur la liquidité
+
+```{r}
+#| echo: false
+
+predict_liq <- function (fit, dat, t, what = NULL) {
+  eta <- predict(fit, newdata = dat, type = "lp")
+  lambda <- exp(eta)
+  shape <- 1 / (fit$scale)
+  if (what == "sale") {
+    1-exp(-(t/lambda)^shape)
+  }
+  else if (what == "rmst") {
+    sapply(lambda, function(l){
+      integrate(
+        f = function(x) exp(-(x/l)^shape),
+        lower = 0,
+        upper = t
+      )$value
+    })
+  }
+  else{
+    exp(-(t/lambda)^shape)
+  }
+}
+
+med_anl_once_func <- function (
+    boot_idx, 
+    dat, 
+    u_eval_func = function(x) median(x[x > 0]),
+    x_eval_func = median,
+    xstar_eval_func = function(x) quantile(x, 0.1),
+    liq_params = NULL, 
+    predict_mode = "sim", 
+    n_sims = 1000
+  ) {
+  # ================================================================
+  # Params:
+  # - `boot_idx`: Bootstrap indexes
+  # - `dat`: Full database
+  # - `u_eval_func`: Function for instantiate moderation variable
+  # - `x_eval_func`: Function for instantiate control value of interest variable
+  # - `xstar_eval_func`: Function for instantiate treatment value of interest variable
+  # - `liq_params`: Liquidity parameters (measure: sale | rmst; sale = probability of sale after `t` days on market; rmst = restricted mean days on market until `t` days)
+  # - `predict_mode`: Either `sim` for simulation or `exp` for expectation
+  # - `n_sims`: Number of Monte-Carlo simulations
+  # ================================================================
+  
+  # ================================================================
+  # Variables:
+  # ================================================================
+  # current bootstrap loop database
+  boot_dat = dat[boot_idx, ]
+  
+  # mediator model main regressors
+  X_med_vars = c("DPC*MktExpoTime")
+  # mediator model controls
+  Ct_med_vars = c("MktExpoLogPrice", "MktExpoOn")
+  # outcome model main regressors
+  X_out_vars = c("DPC", "att_ll_u", "att_ll_u:MktExpoTime")
+  # outcome model controls
+  Ct_out_vars = c("LogPrice")
+  # all (mediator and outcome) models controls
+  Ct_loc_vars = c("CRD", "CPX", "CDX", "North")
+  # quarters fixed effects
+  qlist <- unique(boot_dat$quarter)[-1]
+  
+  # mediator variable
+  Y_med_var = c("att_ll_f")
+  Y_med_exp_var = c("att_ll_u")
+  
+  # outcome variable
+  Y_out_time_var = "tom"
+  Y_out_event_var = "sold"
+  
+  # moderation variable
+  mod_var = "MktExpoTime"
+  
+  # X variable
+  x_var = "DPC"
+  
+  # Liquidity params
+  liq_measure = "sale"
+  liq_horizon = 30
+  if (!is.null(liq_params)) {
+    if (!is.null(liq_params$measure)){
+      liq_measure = liq_params$measure
+    }
+    if (!is.null(liq_params$horizon)){
+      liq_horizon = liq_params$horizon
+    }
+  }
+  
+  # ================================================================
+  # STEP 1 - Initialization, fitting mediation & outcome models
+  # ================================================================
+  # fitting mediator model
+  med_fit <- ord_model(
+    dataset = boot_dat, 
+    Y = Y_med_var, 
+    X = c(X_med_vars, Ct_loc_vars, Ct_med_vars, qlist)
+  )
+  # fitting outcome model
+  out_fit <- aft_model(
+    boot_dat,
+    Y_time = Y_out_time_var,
+    Y_event = Y_out_event_var,
+    X = c(X_out_vars, Ct_loc_vars, Ct_out_vars, qlist),
+    error_cluster = "asset_id"
+  )
+  
+  # ================================================================
+  # STEP 2 - Counterfactual worlds variables
+  # ================================================================
+  # x       = "control" value of DPC
+  x = x_eval_func(boot_dat[[x_var]])
+  # x_star  = "treatment" value of DPC
+  x_star = xstar_eval_func(boot_dat[[x_var]])
+  # u_eval  = "level" of moderation variable at which we eval mediation
+  u_eval = u_eval_func(boot_dat[[mod_var]])
+  
+  # ================================================================
+  # STEP 3 - Counterfactual worlds databases
+  # ================================================================
+  # counterfactuals databases: one with `x` and one with `xstar`
+  # and all other covariates stay at observed values
+  boot_dat_x <- boot_dat
+  boot_dat_x[[x_var]] <- x
+  boot_dat_x[[mod_var]] = u_eval
+  boot_dat_xstar <- boot_dat
+  boot_dat_xstar[[x_var]] <- x_star
+  boot_dat_xstar[[mod_var]] = u_eval
+  
+  # ================================================================
+  # STEP 4 - Mediator predictions across all counterfactuals db
+  # ================================================================
+  Y_med_probs_x <- NULL
+  Y_med_probs_xstar <- NULL
+  # if reg mediator has more than 2 categories
+  if (is.factor(boot_dat[[Y_med_var]])) {
+    Y_med_probs_x <- predict(med_fit, newdata = boot_dat_x, type = "probs")
+    Y_med_probs_xstar <- predict(med_fit, newdata = boot_dat_xstar, type = "probs")
+  }
+  # else, reg mediator is binary
+  else {
+    Y_med_probs_x <- predict(med_fit, newdata = boot_dat_x, type = "response")
+    Y_med_probs_x <- cbind(1-Y_med_probs_x, Y_med_probs_x)
+    colnames(Y_med_probs_x) <- levels(boot_dat[[Y_med_exp_var]])
+    Y_med_probs_xstar <- predict(med_fit, newdata = boot_dat_xstar, type = "response")
+    Y_med_probs_xstar <- cbind(1-Y_med_probs_xstar, Y_med_probs_xstar)
+    colnames(Y_med_probs_xstar) <- levels(boot_dat[[Y_med_exp_var]])
+  }
+  
+  # ================================================================
+  # STEP 5 - Outcome prediction utility function
+  # ================================================================
+  # Categories of mediator
+  levels_med <- colnames(Y_med_probs_x)
+  
+  # predict liquidity outcome for a counterfactual world
+  predict_liq_func <- function (med_val, dpc_val) {
+    med_val_vec <- NULL
+    if (length(med_val) == 1) {
+      med_val_vec <- rep(med_val, nrow(boot_dat))
+    } else {
+      med_val_vec <- med_val
+    }
+    d <- boot_dat
+    d[[Y_med_exp_var]] <- factor(med_val_vec, levels = levels_med)
+    d[[x_var]] = dpc_val
+    d[[mod_var]] = u_eval
+    predict_liq(out_fit, dat = d, t = liq_horizon, what = liq_measure)
+  }
+  
+  # ================================================================
+  # STEP 6-A1 - Predict mediator & outcome by Monte carlo simulation 
+  # ================================================================
+  liq_x_med_x <- NULL
+  liq_x_med_xstar <- NULL
+  liq_xstar_med_xstar <- NULL
+  liq_xstar_med_x <- NULL
+  # browser()
+  if (predict_mode == "sim") {
+    
+    # build random value of mediator according predicted probabilities of categories
+    random_Y_med_func <- function (probs_mat) {
+      apply(probs_mat, 1, function (p) sample(levels_med, size = 1, prob = p))
+    }
+    # simulations of mediator given `x` and `xstar`
+    sim_med_given_x <- replicate(n_sims, random_Y_med_func(Y_med_probs_x), simplify = F)
+    sim_med_given_xstar <- replicate(n_sims, random_Y_med_func(Y_med_probs_xstar), simplify = F)
+    
+    # prediction of liquidity outcomes for all counter factual worlds
+    liq_x_med_x <- mean(sapply(sim_med_given_x, predict_liq_func, dpc_val = x))
+    liq_x_med_xstar <- mean(sapply(sim_med_given_xstar, predict_liq_func, dpc_val = x))
+    liq_xstar_med_xstar <- mean(sapply(sim_med_given_xstar, predict_liq_func, dpc_val = x_star))
+    liq_xstar_med_x <- mean(sapply(sim_med_given_x, predict_liq_func, dpc_val = x_star))
+    
+  }
+  # ================================================================
+  # STEP 6-A2 - Predict mediator & outcome by Expectations 
+  # ================================================================
+  else {
+    
+    # prediction of liquidity outcomes for all counter factual worlds
+    liq_x_med_all <- sapply(levels_med, predict_liq_func, dpc_val = x)
+    liq_xstar_med_all <- sapply(levels_med, predict_liq_func, dpc_val = x_star)
+    
+    liq_x_med_x <- mean(rowSums(liq_x_med_all * Y_med_probs_x))
+    liq_x_med_xstar <- mean(rowSums(liq_x_med_all * Y_med_probs_xstar))
+    liq_xstar_med_xstar <- mean(rowSums(liq_xstar_med_all * Y_med_probs_xstar))
+    liq_xstar_med_x <- mean(rowSums(liq_xstar_med_all * Y_med_probs_x))
+    
+  }
+  
+  # ================================================================
+  # STEP 7 - Evaluate mediation effets
+  # ================================================================
+  TE = liq_xstar_med_xstar - liq_x_med_x
+  TNIE = liq_xstar_med_xstar - liq_xstar_med_x
+  PNDE = liq_xstar_med_x - liq_x_med_x
+  PNIE = liq_x_med_xstar - liq_x_med_x
+  TNDE = liq_xstar_med_xstar - liq_x_med_xstar
+  
+  eff <- c(TE, TNIE, PNDE, PNIE, TNDE)
+  names(eff) <- c("TE", "TNIE", "PNDE", "PNIE", "TNDE")
+  
+  return(eff)
+}
+
+
+med_anl_bootstrap <- function (
+    reg, 
+    mkt_exposure = 0, 
+    liq_measure = "sale"
+    ) {
+  u_eval_func <- NULL
+  if (mkt_exposure > 0) {
+    if (mkt_exposure >= 1) {
+      u_eval_func <- function(x) 1
+    } else {
+      u_eval_func <- function(x) median(x[x > 0])
+    }
+  } else {
+    u_eval_func <- function(x) 0
+  }
+  
+  dat = db |> filter(regime == reg) |>
+    filter(!is.na(tom) & tom > 0) |>
+    mutate(
+      sold = as.numeric(status == "filled" & tom <= 365),
+      tom = if_else(tom > 365, 365, tom),
+      LogPrice = log(
+        Winsorize(price_usd, val = quantile(price_usd, probs = c(0.01, 0.99)))
+      ),
+      MktExpoLogPrice = log1p(
+        Winsorize(
+          mvalue_li_30d,
+          val = quantile(mvalue_li_30d, probs = c(0, 0.99))
+        )
+      ),
+      MktExpoOn = as.numeric(mvalue_li_30d > 0)
+    ) |>
+    mutate(
+      year = year(date),
+      quarter = paste0("Q", quarter(date), "_", year)
+    ) |>
+    mutate(qname = quarter) |> 
+    mutate(v = 1) |> 
+    pivot_wider(names_from = qname, values_from = v, values_fill = 0)
+  
+  i <- 0
+  boot_results <- replicate(499, {
+    idx <- sample(seq_len(nrow(dat)), replace = TRUE)
+    r = med_anl_once_func(
+      boot_idx = idx,
+      dat,
+      u_eval_func = u_eval_func,
+      predict_mode = "exp",
+      liq_params = list(horizon=30, measure=liq_measure)
+    )
+    i <<- i + 1
+    cat("Running bootstrap replicate:", i, "of", 499, "\r")
+    r
+  })
+  
+  return(boot_results)
+}
+```
+
+
+### Régime normal
+
+```{r}
+set.seed(117)
+brf <- med_anl_bootstrap("Normal", mkt_exposure = 0, liq_measure = "sale")
+set.seed(117)
+brt <- med_anl_bootstrap("Normal", mkt_exposure = 0.5, liq_measure = "sale")
+set.seed(117)
+brl <- med_anl_bootstrap("Normal", mkt_exposure = 1, liq_measure = "sale")
+```
+```{r}
+set.seed(117)
+brf2 <- med_anl_bootstrap("Normal", mkt_exposure = 0, liq_measure = "rmst")
+set.seed(117)
+brt2 <- med_anl_bootstrap("Normal", mkt_exposure = 0.5, liq_measure = "rmst")
+set.seed(117)
+brl2 <- med_anl_bootstrap("Normal", mkt_exposure = 1, liq_measure = "rmst")
+```
+
+
+
+**Intervalle de confiance effet total**
+
+```{r}
+bootres = readRDS("artdata/boot_results.RDS")
+quantile(bootres[1, ], c(0.025, 0.975))
+```
+
+**Intervalle de confiance effet direct**
+
+```{r}
+quantile(bootres[3, ], c(0.025, 0.975))
+```
+
+**Intervalle de confiance effet indirect**
+
+```{r}
+quantile(bootres[2, ], c(0.025, 0.975))
+```
+
+
+
+
+
+

@@ -1004,13 +1004,14 @@ predict_liq <- function (fit, dat, t, what = NULL) {
     1-exp(-(t/lambda)^shape)
   }
   else if (what == "rmst") {
-    sapply(lambda, function(l){
-      integrate(
-        f = function(x) exp(-(x/l)^shape),
-        lower = 0,
-        upper = t
-      )$value
-    })
+    # sapply(lambda, function(l){
+    #   integrate(
+    #     f = function(x) exp(-(x/l)^shape),
+    #     lower = 0,
+    #     upper = t
+    #   )$value
+    # })
+    lambda * gamma(1 + 1/shape) * pgamma((t/lambda)^shape, shape = 1/shape)
   }
   else{
     exp(-(t/lambda)^shape)
@@ -1024,7 +1025,7 @@ med_anl_once_func <- function (
     att_type = "bin",
     att_mode = "base",
     u_eval_func = function(x) median(x[x > 0]),
-    x_eval_func = median,
+    x_eval_func = function(x) quantile(x, 0.5),
     xstar_eval_func = function(x) quantile(x, 0.1),
     liq_params = NULL, 
     predict_mode = "sim", 
@@ -1094,11 +1095,11 @@ med_anl_once_func <- function (
   x_var = "DPC"
   
   # Liquidity params
-  liq_measure = "sale"
-  liq_horizon = 30
+  liq_measures = c("sale", "rmst")
+  liq_horizon = 7
   if (!is.null(liq_params)) {
-    if (!is.null(liq_params$measure)){
-      liq_measure = liq_params$measure
+    if (!is.null(liq_params$measures)){
+      liq_measures = liq_params$measures
     }
     if (!is.null(liq_params$horizon)){
       liq_horizon = liq_params$horizon
@@ -1181,7 +1182,7 @@ med_anl_once_func <- function (
   levels_med <- colnames(Y_med_probs_x)
   
   # predict liquidity outcome for a counterfactual world
-  predict_liq_func <- function (med_val, dpc_val) {
+  predict_liq_func <- function (med_val, dpc_val, liq_measure = NULL) {
     med_val_vec <- NULL
     if (length(med_val) == 1) {
       med_val_vec <- rep(med_val, nrow(boot_dat))
@@ -1195,70 +1196,78 @@ med_anl_once_func <- function (
     predict_liq(out_fit, dat = d, t = liq_horizon, what = liq_measure)
   }
   
-  # ================================================================
-  # STEP 6-A1 - Predict mediator & outcome by Monte carlo simulation 
-  # ================================================================
-  liq_x_med_x <- NULL
-  liq_x_med_xstar <- NULL
-  liq_xstar_med_xstar <- NULL
-  liq_xstar_med_x <- NULL
-  # browser()
-  if (predict_mode == "sim") {
+  effs <- vector(mode = "list", length = length(liq_measures))
+  #browser()
+  for (k in seq_along(liq_measures)) {
     
-    # build random value of mediator according predicted probabilities of categories
-    random_Y_med_func <- function (probs_mat) {
-      apply(probs_mat, 1, function (p) sample(levels_med, size = 1, prob = p))
+    liq_measure <- liq_measures[k]
+    liq_x_med_x <- NULL
+    liq_x_med_xstar <- NULL
+    liq_xstar_med_xstar <- NULL
+    liq_xstar_med_x <- NULL
+    # ================================================================
+    # STEP 6-A1 - Predict mediator & outcome by Monte carlo simulation 
+    # ================================================================
+    if (predict_mode == "sim") {
+      
+      # build random value of mediator according predicted probabilities of categories
+      random_Y_med_func <- function (probs_mat) {
+        apply(probs_mat, 1, function (p) sample(levels_med, size = 1, prob = p))
+      }
+      # simulations of mediator given `x` and `xstar`
+      sim_med_given_x <- replicate(n_sims, random_Y_med_func(Y_med_probs_x), simplify = F)
+      sim_med_given_xstar <- replicate(n_sims, random_Y_med_func(Y_med_probs_xstar), simplify = F)
+      
+      # prediction of liquidity outcomes for all counter factual worlds
+      liq_x_med_x <- mean(sapply(sim_med_given_x, predict_liq_func, dpc_val = x, liq_measure = liq_measure))
+      liq_x_med_xstar <- mean(sapply(sim_med_given_xstar, predict_liq_func, dpc_val = x, liq_measure = liq_measure))
+      liq_xstar_med_xstar <- mean(sapply(sim_med_given_xstar, predict_liq_func, dpc_val = x_star, liq_measure = liq_measure))
+      liq_xstar_med_x <- mean(sapply(sim_med_given_x, predict_liq_func, dpc_val = x_star, liq_measure = liq_measure))
+      
     }
-    # simulations of mediator given `x` and `xstar`
-    sim_med_given_x <- replicate(n_sims, random_Y_med_func(Y_med_probs_x), simplify = F)
-    sim_med_given_xstar <- replicate(n_sims, random_Y_med_func(Y_med_probs_xstar), simplify = F)
+    # ================================================================
+    # STEP 6-A2 - Predict mediator & outcome by Expectations 
+    # ================================================================
+    else {
+      
+      # prediction of liquidity outcomes for all counter factual worlds
+      liq_x_med_all <- sapply(levels_med, predict_liq_func, dpc_val = x, liq_measure = liq_measure)
+      liq_xstar_med_all <- sapply(levels_med, predict_liq_func, dpc_val = x_star, liq_measure = liq_measure)
+      
+      liq_x_med_x <- mean(rowSums(liq_x_med_all * Y_med_probs_x))
+      liq_x_med_xstar <- mean(rowSums(liq_x_med_all * Y_med_probs_xstar))
+      liq_xstar_med_xstar <- mean(rowSums(liq_xstar_med_all * Y_med_probs_xstar))
+      liq_xstar_med_x <- mean(rowSums(liq_xstar_med_all * Y_med_probs_x))
+      
+    }
     
-    # prediction of liquidity outcomes for all counter factual worlds
-    liq_x_med_x <- mean(sapply(sim_med_given_x, predict_liq_func, dpc_val = x))
-    liq_x_med_xstar <- mean(sapply(sim_med_given_xstar, predict_liq_func, dpc_val = x))
-    liq_xstar_med_xstar <- mean(sapply(sim_med_given_xstar, predict_liq_func, dpc_val = x_star))
-    liq_xstar_med_x <- mean(sapply(sim_med_given_x, predict_liq_func, dpc_val = x_star))
+    # ================================================================
+    # STEP 7 - Evaluate mediation effets
+    # ================================================================
+    TE = liq_xstar_med_xstar - liq_x_med_x
+    TNIE = liq_xstar_med_xstar - liq_xstar_med_x
+    PNDE = liq_xstar_med_x - liq_x_med_x
+    PNIE = liq_x_med_xstar - liq_x_med_x
+    TNDE = liq_xstar_med_xstar - liq_x_med_xstar
     
+    eff <- c(TE, TNIE, PNDE, PNIE, TNDE)
+    names(eff) <- c("TE", "TNIE", "PNDE", "PNIE", "TNDE")
+    effs[[k]] <- eff
   }
-  # ================================================================
-  # STEP 6-A2 - Predict mediator & outcome by Expectations 
-  # ================================================================
-  else {
+  names(effs) <- liq_measures
     
-    # prediction of liquidity outcomes for all counter factual worlds
-    liq_x_med_all <- sapply(levels_med, predict_liq_func, dpc_val = x)
-    liq_xstar_med_all <- sapply(levels_med, predict_liq_func, dpc_val = x_star)
-    
-    liq_x_med_x <- mean(rowSums(liq_x_med_all * Y_med_probs_x))
-    liq_x_med_xstar <- mean(rowSums(liq_x_med_all * Y_med_probs_xstar))
-    liq_xstar_med_xstar <- mean(rowSums(liq_xstar_med_all * Y_med_probs_xstar))
-    liq_xstar_med_x <- mean(rowSums(liq_xstar_med_all * Y_med_probs_x))
-    
-  }
-  
-  # ================================================================
-  # STEP 7 - Evaluate mediation effets
-  # ================================================================
-  TE = liq_xstar_med_xstar - liq_x_med_x
-  TNIE = liq_xstar_med_xstar - liq_xstar_med_x
-  PNDE = liq_xstar_med_x - liq_x_med_x
-  PNIE = liq_x_med_xstar - liq_x_med_x
-  TNDE = liq_xstar_med_xstar - liq_x_med_xstar
-  
-  eff <- c(TE, TNIE, PNDE, PNIE, TNDE)
-  names(eff) <- c("TE", "TNIE", "PNDE", "PNIE", "TNDE")
-  
-  return(eff)
+  return(effs)
 }
 
 
 med_anl_bootstrap <- function (
-    regime, 
+    reg, 
     asset_type = "land", 
     att_type = "bin", 
     att_mode = "base",
     mkt_exposure = 0, 
-    liq_measure = "sale",
+    liq_measures = NULL,
+    liq_horizon = NULL,
     boot_mode = "seq",
     boot_N = 499
     ) {
@@ -1274,10 +1283,11 @@ med_anl_bootstrap <- function (
     u_eval_func <- function(x) 0
   }
   
+  #browser()
   db <- liq_db_refiner(asset_type, att_mode)
   
   dat = db |> filter(!is.na(tom) & tom > 0) |>
-    filter(regime == regime) |>
+    filter(regime == reg) |>
     mutate(
       sold = as.numeric(status == "filled" & tom <= 365),
       tom = if_else(tom > 365, 365, tom)
@@ -1324,39 +1334,45 @@ med_anl_bootstrap <- function (
   
   boot_results <- NULL
   B <- boot_N
+  #browser()
   if (boot_mode == "seq") {
     set.seed(117)
     
     i <- 0
-    boot_results <- replicate(B, {
-      idx <- sample(seq_len(nrow(dat)), replace = TRUE)
-      r = med_anl_once_func(
-        boot_idx = idx,
-        dat,
-        asset_type = asset_type,
-        att_type = att_type,
-        att_mode = att_mode,
-        u_eval_func = u_eval_func,
-        predict_mode = "exp",
-        liq_params = list(horizon=30, measure=liq_measure)
-      )
-      i <<- i + 1
-      cat("Running bootstrap replicate:", i, "of", B, "\r")
-      r
-    })
+    boot_results <- replicate(
+      B, 
+      {
+        idx <- sample(seq_len(nrow(dat)), replace = TRUE)
+        r = med_anl_once_func(
+          boot_idx = idx,
+          dat,
+          asset_type = asset_type,
+          att_type = att_type,
+          att_mode = att_mode,
+          u_eval_func = u_eval_func,
+          predict_mode = "exp",
+          liq_params = list(horizon=30, measures=liq_measures)
+        )
+        i <<- i + 1
+        cat("Running bootstrap replicate:", i, "of", B, "\r")
+        r
+      },
+      simplify = FALSE
+    )
     
   } else {
-    plan(multisession, workers = min(4L, parallelly::availableCores(omit = 1)))
+    plan(multisession, workers = min(16L, parallelly::availableCores(omit = 1)))
     handlers("txtprogressbar")
     set.seed(117)
     
     boot_results <- with_progress(
       {
         p <- progressor(steps = B)
-        future_replicate(
-          B,
-          {
-            idx <- sample(seq_len(nrow(dat)), replace = TRUE)
+        I <- lapply(1:B, function(b) sample(seq_len(nrow(dat)), replace = TRUE))
+        future_lapply(
+          I,
+          function (idx) {
+            #idx <- sample(seq_len(nrow(dat)), replace = TRUE)
             r = med_anl_once_func(
               boot_idx = idx,
               dat,
@@ -1365,12 +1381,13 @@ med_anl_bootstrap <- function (
               att_mode = att_mode,
               u_eval_func = u_eval_func,
               predict_mode = "exp",
-              liq_params = list(horizon=30, measure=liq_measure)
+              liq_params = list(horizon=liq_horizon, measures=liq_measures)
             )
             p()  # Report one completed replicate
             r
           },
-          future.seed = TRUE
+          future.seed = 117#,
+          #simplify = FALSE
         )
       },
       enable = TRUE
@@ -1379,11 +1396,53 @@ med_anl_bootstrap <- function (
     plan(sequential)
   }
   
-  ci <- as.data.frame(do.call(rbind, lapply(seq_len(nrow(boot_results)), function(i){
-    quantile(boot_results[i, ], c(0.025, 0.975))
+  effs <- lapply(1:length(boot_results[[1]]), function(k){
+    as.data.frame(do.call(cbind, lapply(1:length(boot_results), function(i){
+      boot_results[[i]][[k]]
+    })))
+  })
+  names(effs) <- names(boot_results[[1]])
+  
+  ci <- as.data.frame(do.call(rbind, lapply(1:5, function(i){
+    c(
+      quantile(as.numeric(effs[[1]][i, ]), c(0.025, 0.975)), 
+      quantile(as.numeric(effs[[2]][i, ]), c(0.025, 0.975))
+    )
   })))
-  rownames(ci) <- rownames(boot_results)
+  colnames(ci) <- paste0(rep(names(effs), each = 2), "|", c("2.5%", "97.5%"))
+  rownames(ci) <- rownames(effs[[1]])
+  
   return(ci)
+}
+
+ med_anl_print <- function (ci, mkt_exposure) {
+  measures <- unique(as.character(do.call(c, lapply(colnames(ci), function(cni){
+    stringr::str_split(cni, pattern = "\\|")[[1]][1]
+  }))))
+  cn <- stringr::str_remove_all(colnames(ci), pattern = paste(paste0("^", measures, "\\|", "*"),collapse="|"))
+  colnames(ci) <- cn
+  
+  glist <- vector(mode = "list", length = length(measures))
+  for (k in 1:length(measures)) {
+    glist[[k]] = (2*k):(2*k+1)
+  }
+  names(glist) = stringr::str_to_upper(measures)
+  
+  ttci <- tt(
+    cbind(data.frame(v1=rownames(ci)), ci),
+    digits = 3,
+    notes = paste0("[G-computation] Intervalles de confiance des mesures de liquidité - Exposition = ", mkt_exposure), 
+    replace = "-"
+  ) |> 
+  style_tt(fontsize = 0.9) |>
+  format_tt(replace = "-") |>
+  group_tt(
+    j = glist
+  ) |>
+  format_tt(j = 2:5, digits = 3)
+  colnames(ttci) <- c(" ", colnames(ttci)[-1])
+
+  return(ttci)
 }
 ```
 
@@ -1470,18 +1529,182 @@ baron_kenny_summ(
 
 ### G-Computation
 
+**Horizon à 30j et exposition nulle**
+
 ```{r}
-med_anl_bootstrap (
-  regime = "Normal", 
+medanlr_t30_e0 <- med_anl_bootstrap (
+  reg = "Normal", 
   asset_type = "land", 
   att_type = "3f", 
   att_mode = "base",
   mkt_exposure = 0, 
-  liq_measure = "sale",
+  liq_measures = NULL,
+  liq_horizon = 30,
   boot_mode = "par",
   boot_N = 499
 )
+saveRDS(medanlr_t30_e0, file = "artdata/medanlr_t30_e0.RDS")
 ```
+
+```{r}
+med_anl_print(readRDS(file = "artdata/medanlr_t30_e0.RDS"), 0)
+```
+
+
+**Horizon à 30j et exposition médiane**
+
+```{r}
+medanlr_t30_emed <- med_anl_bootstrap (
+  reg = "Normal", 
+  asset_type = "land", 
+  att_type = "3f", 
+  att_mode = "base",
+  mkt_exposure = 0.5, 
+  liq_measures = NULL,
+  liq_horizon = 30,
+  boot_mode = "par",
+  boot_N = 499
+)
+saveRDS(medanlr_t30_emed, file = "artdata/medanlr_t30_emed.RDS")
+```
+
+```{r}
+med_anl_print(readRDS(file = "artdata/medanlr_t30_emed.RDS"), "Mediane")
+```
+
+
+**Horizon à 30j et exposition entière**
+
+```{r}
+medanlr_t30_e1 <- med_anl_bootstrap (
+  reg = "Normal", 
+  asset_type = "land", 
+  att_type = "3f", 
+  att_mode = "base",
+  mkt_exposure = 1, 
+  liq_measures = NULL,
+  liq_horizon = 30,
+  boot_mode = "par",
+  boot_N = 499
+)
+saveRDS(medanlr_t30_e1, file = "artdata/medanlr_t30_e1.RDS")
+```
+
+```{r}
+med_anl_print(readRDS(file = "artdata/medanlr_t30_e1.RDS"), 1)
+```
+
+
+
+
+## [Domaines] Attention = Bids | Ternaire
+
+### Baron & Kenny
+
+**Régime normal**
+
+```{r}
+#| label: tbl-res4-esbt-bk-a
+#| tbl-cap: "[Domaines] Régressions de Baron & Kenny en régime normal<br>L'attention est mesurée par les offres d'achat et est transformée en variable binaire"
+#| warning: false
+#| echo: false
+
+baron_kenny_summ(
+  c("Normal"),
+  asset_type = "estate", 
+  att_type = "3f", 
+  att_mode = "base"
+)
+```
+
+
+
+**Autres régimes**
+
+```{r}
+#| label: tbl-res4-esbt-bk-b
+#| tbl-cap: "[Domaines] Régressions de Baron & Kenny pour les autres régimes<br>L'attention est mesurée par les offres d'achat et est transformée en variable binaire"
+#| warning: false
+#| echo: false
+
+baron_kenny_summ(
+  c("Boom", "Crash", "Desert"),
+  asset_type = "estate", 
+  att_type = "3f", 
+  att_mode = "base"
+)
+```
+
+
+
+
+### G-Computation
+
+**Horizon à 30j et exposition nulle**
+
+```{r}
+medanle_t30_e0 <- med_anl_bootstrap (
+  reg = "Normal", 
+  asset_type = "estate", 
+  att_type = "3f", 
+  att_mode = "base",
+  mkt_exposure = 0, 
+  liq_measures = NULL,
+  liq_horizon = 30,
+  boot_mode = "par",
+  boot_N = 499
+)
+saveRDS(medanle_t30_e0, file = "artdata/medanle_t30_e0.RDS")
+```
+
+```{r}
+med_anl_print(readRDS(file = "artdata/medanle_t30_e0.RDS"), 0)
+```
+
+
+**Horizon à 30j et exposition médiane**
+
+```{r}
+medanle_t30_emed <- med_anl_bootstrap (
+  reg = "Normal", 
+  asset_type = "estate", 
+  att_type = "3f", 
+  att_mode = "base",
+  mkt_exposure = 0.5, 
+  liq_measures = NULL,
+  liq_horizon = 30,
+  boot_mode = "par",
+  boot_N = 499
+)
+saveRDS(medanle_t30_emed, file = "artdata/medanle_t30_emed.RDS")
+```
+
+```{r}
+med_anl_print(readRDS(file = "artdata/medanle_t30_emed.RDS"), "Mediane")
+```
+
+
+**Horizon à 30j et exposition entière**
+
+```{r}
+medanle_t30_e1 <- med_anl_bootstrap (
+  reg = "Normal", 
+  asset_type = "land", 
+  att_type = "3f", 
+  att_mode = "base",
+  mkt_exposure = 1, 
+  liq_measures = NULL,
+  liq_horizon = 30,
+  boot_mode = "par",
+  boot_N = 499
+)
+saveRDS(medanle_t30_e1, file = "artdata/medanle_t30_e1.RDS")
+```
+
+```{r}
+med_anl_print(readRDS(file = "artdata/medanle_t30_e1.RDS"), 1)
+```
+
 
 
 
