@@ -53,6 +53,25 @@ hurdle_model <- function (dataset, Y, X, count_dist = "negbin") {
   return(fit)
 }
 
+count_model <- function (dataset, Y, X, dist = "poisson") {
+  fml <- as.formula(paste0(Y, " ~ ", paste0(X, collapse = " + ")))
+  fit <- NULL
+  if (dist == "poisson") {
+    fit <- glm(
+      fml,
+      data = dataset,
+      family = poisson(link = "log")
+    )
+  }
+  else if (dist == "negbin") {
+    fit <- glm.nb(
+      fml,
+      data = dataset
+    )
+  }
+  return(fit)
+}
+
 aft_model <- function (dataset, Y_time, Y_event, X, error_cluster = NULL, dist = "weibull") {
   fml_str <- paste0("survival::Surv(", Y_time, ", ", Y_event, ") ~ ", paste0(X, collapse = " + "))
   if(!is.null(error_cluster)) {

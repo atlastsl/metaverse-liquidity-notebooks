@@ -450,6 +450,7 @@ library(DescTools)
 library(lubridate)
 library(tidyr)
 library(dplyr)
+library(purrr)
 library(modelsummary)
 library(stringr)
 library(tinytable)
@@ -478,11 +479,17 @@ liq_db_refiner <- function (asset_type = "land", att_mode = "base") {
   if (!is.null(db)) {
     db <- db |>
       filter(!is.na(regime)) |>
+      filter(nfilled_li_30d == 0) |>
       mutate(
         att_base = asks_ll_30d,
-        att_plus = asks_ll_30d + nfilled_li_30d,
+        #att_plus = asks_ll_30d + nfilled_li_30d,
+        att_plus = lengths(pmap(
+          list(nfilled_li_30d_tkrs, askers_ll_30d_add, maker),
+          \(x, y, ex) setdiff(union(x, y), ex)
+        )),
         attention = .data[[att_base_var]],
-        att_chr = if_else(attention == 0, "Z", if_else(attention <= 3, "L", "H")),
+        #own_changed = nfilled_li_30d, #factor(if_else(nfilled_li_30d > 0, "Y", "N"), levels = c("N", "Y")),
+        att_chr = if_else(attention == 0, "Z", if_else(attention <= 4, "L", "H")),
         att_3of = factor(att_chr, levels = c("Z", "L", "H"), ordered = T),
         att_3uf = factor(att_chr, levels = c("Z", "L", "H"), ordered = F),
         att_bin = as.numeric(attention > 0),
@@ -537,6 +544,8 @@ liq_model_func <- function (db, reg, att_type = NULL, asset_type = "land", model
       X_att <- c("att_bnf", "mkt_expo_time:att_bnf")
     } else if (att_type == "3f") {
       X_att <- c("att_3uf", "mkt_expo_time:att_3uf")
+    } else {
+      X_att <- c("attention", "mkt_expo_time:attention")
     }
   }
   Ctr_loc <- c("CRD", "CPX", "CDX", "North")
@@ -571,7 +580,7 @@ liq_model_func <- function (db, reg, att_type = NULL, asset_type = "land", model
 }
 
 # Localisation - Attention relation reg models
-att_model_func <- function (db, reg, att_type, asset_type = "land") {
+att_model_func <- function (db, reg, att_type, att_mode = "base", asset_type = "land") {
   dat = db |> filter(regime == reg) |>
     filter(!is.na(tom) & tom > 0)
   
@@ -610,6 +619,9 @@ att_model_func <- function (db, reg, att_type, asset_type = "land") {
 
   X_loc <- c("DPC")
   X_expo <- c("mkt_exposed", "mkt_expo_time", "mkt_expo_time:DPC", "mkt_expo_log_price")
+  # if (att_mode == "plus") {
+  #   X_expo <- c(X_expo, "own_changed")
+  # }
   Ctr_loc <- c("CRD", "CPX", "CDX", "North")
   Ctr_oth <- c()
   if (asset_type == "estate") {
@@ -624,6 +636,9 @@ att_model_func <- function (db, reg, att_type, asset_type = "land") {
   }
   else if (att_type == "3f") {
     fit <- ord_model(dataset = dat, Y = c("att_3of"), X = Xcols)
+  }
+  else {
+    fit <- count_model(dataset = dat, Y = c("attention"), X = Xcols, dist = "poisson")
   }
   
   return(fit)
@@ -892,7 +907,7 @@ convanl_model_summ(asset_type = "estate", att_mode = "base", model_type = "aft")
 ## Modèles et fonctions utilitaires
 
 ```{r}
-baron_kenny_model <- function (index, db, reg, asset_type, att_type) {
+baron_kenny_model <- function (index, db, reg, asset_type, att_type, att_mode) {
   if (index == 1 || index == 3) {
     att_type_ = NULL
     if (index == 3) {
@@ -919,6 +934,7 @@ baron_kenny_model <- function (index, db, reg, asset_type, att_type) {
       db, 
       reg, 
       att_type = att_type, 
+      att_mode = att_mode,
       asset_type = asset_type
     )
     td = get_estimates(fit, ci_method = "wald") |>
@@ -960,7 +976,8 @@ baron_kenny_summ <- function (regimes, asset_type = "land", att_type = "bin", at
         db = db, 
         reg = regimes[k], 
         asset_type = asset_type, 
-        att_type = att_type
+        att_type = att_type,
+        att_mode = att_mode
       )
       results[[i]] = modi
       i <- i+1
@@ -1062,6 +1079,8 @@ med_anl_once_func <- function (
     X_out_vars = c(X_out_vars, "att_bnf", "att_bnf:mkt_expo_time")
   } else if (att_type == "3f") {
     X_out_vars = c(X_out_vars, "att_3uf", "att_3uf:mkt_expo_time")
+  } else {
+    X_out_vars = c(X_out_vars, "attention", "attention:mkt_expo_time")
   }
   # outcome model controls
   Ct_out_vars = c("LogPrice")
@@ -1082,6 +1101,9 @@ med_anl_once_func <- function (
   } else if (att_type == "3f") {
     Y_med_var = c("att_3of")
     Y_med_exp_var = c("att_3uf")
+  } else if (att_type == "3f") {
+    Y_med_var = c("attention")
+    Y_med_exp_var = c("attention")
   }
   
   # outcome variable
@@ -1121,6 +1143,12 @@ med_anl_once_func <- function (
     med_fit <- ord_model(
       dataset = boot_dat, 
       Y = Y_med_var, 
+      X = c(X_med_vars, Ct_loc_vars, Ct_med_vars, qlist)
+    )
+  } else {
+    med_fit <- count_model(
+      dataset = boot_dat,
+      Y = Y_med_var,
       X = c(X_med_vars, Ct_loc_vars, Ct_med_vars, qlist)
     )
   }
@@ -1173,6 +1201,9 @@ med_anl_once_func <- function (
     Y_med_probs_xstar <- predict(med_fit, newdata = boot_dat_xstar, type = "response")
     Y_med_probs_xstar <- cbind(1-Y_med_probs_xstar, Y_med_probs_xstar)
     colnames(Y_med_probs_xstar) <- levels(boot_dat[[Y_med_exp_var]])
+  } else {
+    # attention
+    # @TODO
   }
   
   # ================================================================
@@ -1480,7 +1511,7 @@ baron_kenny_summ(
   c("Boom", "Crash", "Desert"),
   asset_type = "land", 
   att_type = "bin", 
-  att_mode = "base"
+  att_mode = "plus"
 )
 ```
 
@@ -1502,7 +1533,7 @@ baron_kenny_summ(
   c("Normal"),
   asset_type = "land", 
   att_type = "3f", 
-  att_mode = "base"
+  att_mode = "plus"
 )
 ```
 
@@ -1532,6 +1563,8 @@ baron_kenny_summ(
 **Horizon à 30j et exposition nulle**
 
 ```{r}
+#| echo: false
+
 medanlr_t30_e0 <- med_anl_bootstrap (
   reg = "Normal", 
   asset_type = "land", 
@@ -1554,6 +1587,8 @@ med_anl_print(readRDS(file = "artdata/medanlr_t30_e0.RDS"), 0)
 **Horizon à 30j et exposition médiane**
 
 ```{r}
+#| echo: false
+
 medanlr_t30_emed <- med_anl_bootstrap (
   reg = "Normal", 
   asset_type = "land", 
@@ -1576,6 +1611,8 @@ med_anl_print(readRDS(file = "artdata/medanlr_t30_emed.RDS"), "Mediane")
 **Horizon à 30j et exposition entière**
 
 ```{r}
+#| echo: false
+
 medanlr_t30_e1 <- med_anl_bootstrap (
   reg = "Normal", 
   asset_type = "land", 
@@ -1643,18 +1680,20 @@ baron_kenny_summ(
 **Horizon à 30j et exposition nulle**
 
 ```{r}
-medanle_t30_e0 <- med_anl_bootstrap (
-  reg = "Normal", 
-  asset_type = "estate", 
-  att_type = "3f", 
-  att_mode = "base",
-  mkt_exposure = 0, 
-  liq_measures = NULL,
-  liq_horizon = 30,
-  boot_mode = "par",
-  boot_N = 499
-)
-saveRDS(medanle_t30_e0, file = "artdata/medanle_t30_e0.RDS")
+#| echo: false
+
+# medanle_t30_e0 <- med_anl_bootstrap (
+#   reg = "Normal", 
+#   asset_type = "estate", 
+#   att_type = "3f", 
+#   att_mode = "base",
+#   mkt_exposure = 0, 
+#   liq_measures = NULL,
+#   liq_horizon = 30,
+#   boot_mode = "par",
+#   boot_N = 499
+# )
+# saveRDS(medanle_t30_e0, file = "artdata/medanle_t30_e0.RDS")
 ```
 
 ```{r}
@@ -1665,18 +1704,20 @@ med_anl_print(readRDS(file = "artdata/medanle_t30_e0.RDS"), 0)
 **Horizon à 30j et exposition médiane**
 
 ```{r}
-medanle_t30_emed <- med_anl_bootstrap (
-  reg = "Normal", 
-  asset_type = "estate", 
-  att_type = "3f", 
-  att_mode = "base",
-  mkt_exposure = 0.5, 
-  liq_measures = NULL,
-  liq_horizon = 30,
-  boot_mode = "par",
-  boot_N = 499
-)
-saveRDS(medanle_t30_emed, file = "artdata/medanle_t30_emed.RDS")
+#| echo: false
+
+# medanle_t30_emed <- med_anl_bootstrap (
+#   reg = "Normal", 
+#   asset_type = "estate", 
+#   att_type = "3f", 
+#   att_mode = "base",
+#   mkt_exposure = 0.5, 
+#   liq_measures = NULL,
+#   liq_horizon = 30,
+#   boot_mode = "par",
+#   boot_N = 499
+# )
+# saveRDS(medanle_t30_emed, file = "artdata/medanle_t30_emed.RDS")
 ```
 
 ```{r}
@@ -1687,18 +1728,20 @@ med_anl_print(readRDS(file = "artdata/medanle_t30_emed.RDS"), "Mediane")
 **Horizon à 30j et exposition entière**
 
 ```{r}
-medanle_t30_e1 <- med_anl_bootstrap (
-  reg = "Normal", 
-  asset_type = "land", 
-  att_type = "3f", 
-  att_mode = "base",
-  mkt_exposure = 1, 
-  liq_measures = NULL,
-  liq_horizon = 30,
-  boot_mode = "par",
-  boot_N = 499
-)
-saveRDS(medanle_t30_e1, file = "artdata/medanle_t30_e1.RDS")
+#| echo: false
+
+# medanle_t30_e1 <- med_anl_bootstrap (
+#   reg = "Normal", 
+#   asset_type = "land", 
+#   att_type = "3f", 
+#   att_mode = "base",
+#   mkt_exposure = 1, 
+#   liq_measures = NULL,
+#   liq_horizon = 30,
+#   boot_mode = "par",
+#   boot_N = 499
+# )
+# saveRDS(medanle_t30_e1, file = "artdata/medanle_t30_e1.RDS")
 ```
 
 ```{r}
@@ -1707,156 +1750,6 @@ med_anl_print(readRDS(file = "artdata/medanle_t30_e1.RDS"), 1)
 
 
 
-
-
-
-# [OLD] Analyse de médiation
-
-## Lien Localisation - Attention
-
-```{r}
-#| label: tbl-res3-attloc
-#| tbl-cap: "Lien Localisation - Attention"
-#| warning: false
-#| echo: false
-
-regs <- c("Normal", "Boom", "Crash", "Desert")
-
-my_gof <- list(
-  list("raw" = "qt.fe",     "clean" = "Quarters FE", fmt = 0),
-  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
-  list("raw" = "mcfadden", "clean" = "R2 McFadden", "fmt" = 3),
-  list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel", "fmt" = 3),
-  list("raw" = "r.squared", "clean" = "R2", "fmt" = 3),
-  list("raw" = "r.squared.adj", "clean" = "R2 Adj", "fmt" = 3),
-  list("raw" = "logLik",   "clean" = "Log Lik.",    "fmt" = 2),
-  list("raw" = "rmse",     "clean" = "RMSE",        "fmt" = 2),
-  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
-  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
-)
-
-results <- vector(mode = "list", length = length(regs))
-for (k in seq_along(regs)) {
-  fit = att_model_func(regs[k])
-  td = get_estimates(fit, ci_method = "wald") |>
-    filter(!str_detect(term, "^Q\\d+_\\d+"))
-  gf = get_gof(fit)
-  gf[["qt.fe"]] = "Yes"
-  gf[["mcfadden"]] = PseudoR2(fit)
-  mod = list(tidy = td, glance = gf)
-  class(mod) <- "modelsummary_list"
-  results[[k]] = mod
-}
-
-names(results) <- regs
-tab <- modelsummary(
-  results, 
-  gof_map = my_gof,
-  stars = TRUE, statistic = "p.value", output = "tinytable"
-) |> style_tt(fontsize = 0.8)
-colnames(tab) <- c(" ", colnames(tab)[-1])
-
-tab
-```
-
-## Lien Localisation - Attention - Liquidité
-
-```{r}
-#| label: tbl-res3-attlocliq
-#| tbl-cap: "Lien Localisation - Attention - Liquidité"
-#| warning: false
-#| echo: false
-
-regs <- c("Normal", "Boom", "Crash", "Desert")
-rnames <- c("Normal", "Normal<br>+Attention", 
-            "Boom", "Boom<br>+Attention", 
-            "Crash", "Crash<br>+Attention", 
-            "Desert", "Desert<br>+Attention")
-
-my_gof <- list(
-  list("raw" = "qt.fe",     "clean" = "Quarters FE", fmt = 0),
-  list("raw" = "nobs",     "clean" = "Num.Obs.",    "fmt" = 0),
-  list("raw" = "r2.nagelkerke", "clean" = "R2 Nagel", "fmt" = 3),
-  list("raw" = "aic",      "clean" = "AIC",         "fmt" = 1),
-  list("raw" = "bic",      "clean" = "BIC",         "fmt" = 1)
-)
-results <- vector(mode = "list", length = length(regs)*2)
-for (k in seq_along(regs)) {
-  fit_raw = liq_model_func(regs[k], "aft", F)
-  td_raw = get_estimates(fit_raw, ci_method = "wald") |>
-    filter(!str_detect(term, "^Q\\d+_\\d+"))
-  gf_raw = get_gof(fit_raw)
-  gf_raw[["qt.fe"]] = "Yes"
-  mod_raw = list(tidy = td_raw, glance = gf_raw)
-  class(mod_raw) <- "modelsummary_list"
-  
-  fit_att = liq_model_func(regs[k], "aft", T)
-  td_att = get_estimates(fit_att, ci_method = "wald") |>
-    filter(!str_detect(term, "^Q\\d+_\\d+"))
-  gf_att = get_gof(fit_att)
-  gf_att[["qt.fe"]] = "Yes"
-  mod_att = list(tidy = td_att, glance = gf_att)
-  class(mod_att) <- "modelsummary_list"
-  
-  results[[2*k-1]] = mod_raw
-  results[[2*k]] = mod_att
-}
-
-names(results) <- rnames
-tab <- modelsummary(
-  results, 
-  gof_map = my_gof,
-  stars = TRUE, statistic = "p.value", output = "tinytable"
-) |> style_tt(fontsize = 0.8)
-colnames(tab) <- c(" ", colnames(tab)[-1])
-
-tab
-```
-
-## Test de médiation, effets indirect de la localisation sur la liquidité
-
-
-
-
-### Régime normal
-
-```{r}
-set.seed(117)
-brf <- med_anl_bootstrap("Normal", mkt_exposure = 0, liq_measure = "sale")
-set.seed(117)
-brt <- med_anl_bootstrap("Normal", mkt_exposure = 0.5, liq_measure = "sale")
-set.seed(117)
-brl <- med_anl_bootstrap("Normal", mkt_exposure = 1, liq_measure = "sale")
-```
-```{r}
-set.seed(117)
-brf2 <- med_anl_bootstrap("Normal", mkt_exposure = 0, liq_measure = "rmst")
-set.seed(117)
-brt2 <- med_anl_bootstrap("Normal", mkt_exposure = 0.5, liq_measure = "rmst")
-set.seed(117)
-brl2 <- med_anl_bootstrap("Normal", mkt_exposure = 1, liq_measure = "rmst")
-```
-
-
-
-**Intervalle de confiance effet total**
-
-```{r}
-bootres = readRDS("artdata/boot_results.RDS")
-quantile(bootres[1, ], c(0.025, 0.975))
-```
-
-**Intervalle de confiance effet direct**
-
-```{r}
-quantile(bootres[3, ], c(0.025, 0.975))
-```
-
-**Intervalle de confiance effet indirect**
-
-```{r}
-quantile(bootres[2, ], c(0.025, 0.975))
-```
 
 
 

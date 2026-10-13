@@ -3,6 +3,7 @@ library(readxl)
 library(lubridate)
 library(tidyr)
 library(dplyr)
+library(purrr)
 
 #############################################################################
 # Script R de calcul pour le papier final du chapitre 1 v. Attention ########
@@ -266,7 +267,7 @@ listings_db_builder <- function (assetType = "land") {
   date_now <- lubridate::now()
   listings_base <- Tx_DclMkp |>
     filter(asset_contract == assetContract & type == "order" & order_type == "list" & order_market == "dcl-marketplace-1") |>
-    select(hash, order_id, asset_id, maker, date, order_time_on_market, order_status, order_canceled_by, amount_usd, currency, amount) |>
+    select(hash, order_id, asset_id, maker, date, order_time_on_market, order_status, order_canceled_by, amount_usd, currency, amount, taker) |>
     transmute( 
       # Rearrange listing database, create listing period (interval [Date, Date+Tom)), and 30 days lookback interval
       asset_id,
@@ -278,7 +279,8 @@ listings_db_builder <- function (assetType = "land") {
       status = order_status,
       price_usd = amount_usd,
       price_raw = amount,
-      canceled_by = order_canceled_by
+      canceled_by = order_canceled_by,
+      taker
     ) |>
     distinct(asset_id, date, .keep_all = T) |>
     arrange(asset_id, date) |>
@@ -314,6 +316,7 @@ listings_db_builder <- function (assetType = "land") {
       canceled_by = last(canceled_by),
       edit_n = n()-1,
       edit_price = last(price_raw)-first(price_raw),
+      taker = last(taker),
       .by = c("asset_id", "listing")
     ) |>
     select(-listing) |>
@@ -376,7 +379,7 @@ listings_db_builder <- function (assetType = "land") {
   listed_periods <- interval_base |>
     select(asset_id, date, interval_start, interval_end) |>
     left_join(
-      listings_base |> select(asset_id, past_list_start = list_start, past_list_end = list_end, value = price_usd, status),
+      listings_base |> select(asset_id, past_list_start = list_start, past_list_end = list_end, value = price_usd, status, taker),
       by = join_by(asset_id, interval_end > past_list_start, interval_start < past_list_end),
       relationship = "many-to-many"
     ) |>
@@ -403,6 +406,7 @@ listings_db_builder <- function (assetType = "land") {
       bintl_mvalue = mean(value),
       bintl_n = n(),
       bintl_status = last(status),
+      bintl_taker = last(taker),
       .groups = "drop"
     ) |>
     select(-block)
@@ -436,6 +440,11 @@ listings_db_builder <- function (assetType = "land") {
       ndays_li_30d = sum(time_length(bintl_end - bintl_start, unit = "second"), na.rm = T)/86400,
       mvalue_li_30d = sum(bintl_mvalue * bintl_n, na.rm = T) / sum(bintl_n),
       nfilled_li_30d = sum(bintl_status == "filled"),
+      nfilled_li_30d_tkrs = list(unique(bintl_taker[bintl_status == "filled" & !is.na(bintl_taker)])),
+      # nfilled_li_30d_tkrs = {
+      #   s <- unique(bintl_taker[bintl_status == "filled" & !is.na(bintl_taker)])
+      #   list(if (length(s) == 0) NA else s)
+      # },
       .by = c("asset_id", "date")
     )
   
@@ -463,6 +472,7 @@ listings_db_builder <- function (assetType = "land") {
     summarise(
       asks_ll_30d = sum(!is.na(ask_date)),
       askers_ll_30d = n_distinct(asker[!is.na(ask_date)]),
+      askers_ll_30d_add = list(unique(asker[!is.na(ask_date)])),
       .by = c("asset_id", "date")
     ) |>
     left_join(
@@ -484,9 +494,9 @@ listings_db_builder <- function (assetType = "land") {
     mutate(
       across(
         c(
-          ndays_li_30d, mvalue_li_30d, nfilled_li_30d,
+          ndays_li_30d, mvalue_li_30d, nfilled_li_30d, #nfilled_li_30d_tkrs,
           asks_ul_30d, askers_ul_30d,
-          asks_ll_30d, askers_ll_30d, ndays_ll_30d
+          asks_ll_30d, askers_ll_30d, ndays_ll_30d, #askers_ll_30d_add
         ),
         ~ replace_na(.x, 0L)
       )
