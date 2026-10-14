@@ -379,7 +379,7 @@ listings_db_builder <- function (assetType = "land") {
   listed_periods <- interval_base |>
     select(asset_id, date, interval_start, interval_end) |>
     left_join(
-      listings_base |> select(asset_id, past_list_start = list_start, past_list_end = list_end, value = price_usd, status, taker),
+      listings_base |> select(asset_id, past_list_start = list_start, past_list_end = list_end, value = price_usd, status, taker, maker),
       by = join_by(asset_id, interval_end > past_list_start, interval_start < past_list_end),
       relationship = "many-to-many"
     ) |>
@@ -407,6 +407,7 @@ listings_db_builder <- function (assetType = "land") {
       bintl_n = n(),
       bintl_status = last(status),
       bintl_taker = last(taker),
+      bintl_maker = first(maker),
       .groups = "drop"
     ) |>
     select(-block)
@@ -441,6 +442,7 @@ listings_db_builder <- function (assetType = "land") {
       mvalue_li_30d = sum(bintl_mvalue * bintl_n, na.rm = T) / sum(bintl_n),
       nfilled_li_30d = sum(bintl_status == "filled"),
       nfilled_li_30d_tkrs = list(unique(bintl_taker[bintl_status == "filled" & !is.na(bintl_taker)])),
+      nfilled_li_30d_mkrs = list(unique(bintl_maker[bintl_status == "filled" & !is.na(bintl_maker)])),
       # nfilled_li_30d_tkrs = {
       #   s <- unique(bintl_taker[bintl_status == "filled" & !is.na(bintl_taker)])
       #   list(if (length(s) == 0) NA else s)

@@ -463,10 +463,15 @@ source("models.R")
 
 # Database refine
 liq_db_refiner <- function (asset_type = "land", att_mode = "base") {
-  att_base_var <- "att_base"
-  if (att_mode == "plus") {
-    att_base_var <- "att_plus"
+  att_suffix = "asks"
+  att_high_split = 3
+  if (att_mode == "distinct") {
+    att_suffix = "askers"
+  } else if (att_mode == "plus") {
+    att_suffix = "askers_buyers"
+    att_high_split = 3
   }
+  att_base_var <- paste0("att_", att_suffix)
   db <- NULL
   if (asset_type == "land") {
     artdatalst = readRDS(file = "artdata/artdatalst.RDS")
@@ -479,17 +484,30 @@ liq_db_refiner <- function (asset_type = "land", att_mode = "base") {
   if (!is.null(db)) {
     db <- db |>
       filter(!is.na(regime)) |>
-      filter(nfilled_li_30d == 0) |>
+      #filter(nfilled_li_30d == 0) |>
       mutate(
-        att_base = asks_ll_30d,
+        att_asks = asks_ll_30d,
+        att_askers = askers_ll_30d,
+        att_askers_buyers = lengths(
+          pmap(
+            # list(nfilled_li_30d_tkrs, askers_ll_30d_add, nfilled_li_30d_mkrs, maker),
+            # \(x, y, ex1, ex2) setdiff(setdiff(union(x, y), ex1), ex2)
+            list(nfilled_li_30d_tkrs, askers_ll_30d_add, nfilled_li_30d_mkrs, maker),
+            \(x, y, ex1, ex2) union(setdiff(setdiff(x, ex1), ex2), y)
+          )
+        ),
         #att_plus = asks_ll_30d + nfilled_li_30d,
-        att_plus = lengths(pmap(
-          list(nfilled_li_30d_tkrs, askers_ll_30d_add, maker),
-          \(x, y, ex) setdiff(union(x, y), ex)
-        )),
-        attention = .data[[att_base_var]],
+        #att_plus = lengths(pmap(
+        #  list(nfilled_li_30d_tkrs, askers_ll_30d_add, maker),
+        #  \(x, y, ex) setdiff(union(x, y), ex)
+        #)),
         #own_changed = nfilled_li_30d, #factor(if_else(nfilled_li_30d > 0, "Y", "N"), levels = c("N", "Y")),
-        att_chr = if_else(attention == 0, "Z", if_else(attention <= 4, "L", "H")),
+        attention = .data[[att_base_var]],
+        att_chr = if_else(
+          attention == 0, 
+          "Z", 
+          if_else(attention <= att_high_split, "L", "H")
+        ),
         att_3of = factor(att_chr, levels = c("Z", "L", "H"), ordered = T),
         att_3uf = factor(att_chr, levels = c("Z", "L", "H"), ordered = F),
         att_bin = as.numeric(attention > 0),

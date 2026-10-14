@@ -695,3 +695,33 @@ pr_quartiles_att_model_func <- function (reg) {
 
 
 pr_quartiles_att_model_func("Normal")
+
+
+
+
+
+b = lst_data$listings |>
+  #filter(nfilled_li_30d > 0, askers_ll_30d > 0) |>
+  select(maker, regime, asks_ll_30d, askers_ll_30d, askers_ll_30d_add, nfilled_li_30d, nfilled_li_30d_tkrs, nfilled_li_30d_mkrs) |>
+  mutate(
+    att_plus = lengths(
+      pmap(
+        list(nfilled_li_30d_tkrs, askers_ll_30d_add, nfilled_li_30d_mkrs, maker),
+        \(x, y, ex1, ex2) setdiff(setdiff(union(x, y), ex1), ex2) 
+      )
+    ),
+    att_plus_0 = lengths(
+      pmap(
+        list(nfilled_li_30d_tkrs, askers_ll_30d_add, maker),
+        \(x, y, ex1) setdiff(union(x, y), ex1) 
+      )
+    ),
+    att_plus_1 = lengths(
+      pmap(
+        list(nfilled_li_30d_tkrs, askers_ll_30d_add),
+        \(x, y) union(x, y) 
+        )
+    ),
+    att_plus_2 = nfilled_li_30d + asks_ll_30d,
+    att_base = asks_ll_30d
+  )
