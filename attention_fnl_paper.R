@@ -350,7 +350,7 @@ listings_db_builder <- function (assetType = "land") {
       interval_end = floor_date(date, unit = "day")
     )
   
-  # Step 3: Sollicitations (Asks) database extraction
+  # Step 3.A: Sollicitations (Asks) database extraction
   asks_base <- Tx_DclMkp |>
     filter(asset_contract == assetContract, type == "order", order_type == "ask", order_market == "dcl-marketplace-1") |>
     select(hash, order_id, asset_id, date, taker, order_time_on_market, order_status, order_canceled_by, amount_usd, currency, amount) |>
@@ -374,6 +374,64 @@ listings_db_builder <- function (assetType = "land") {
     ) |>
     select(-list_end) |>
     rename(list_date = list_start)
+  
+  # Step 3.B: Extended Attention asks database extraction
+  ext_asks_base <- Tx_DclMkp |>
+    filter(asset_contract == assetContract, type == "order", order_type == "ask", order_market == "dcl-marketplace-1") |>
+    select(hash, order_id, asset_id, date, taker, order_time_on_market, order_status, order_canceled_by, amount_usd, currency, amount) |>
+    transmute( 
+      # Rearrange listing database, create listing period (interval [Date, Date+Tom)), and 30 days lookback interval
+      asset_id,
+      ask_date = date,
+      asker = taker,
+      tom = order_time_on_market,
+      ask_start = date,
+      ask_end = as.POSIXct(ifelse(order_status == "pending", date_now, date + dmilliseconds(floor(order_time_on_market*86400*1000))), tz = "UTC"),
+      ask_imp_end = pmin(ask_end, as.POSIXct(date + lubridate::ddays(90))),
+      status = order_status,
+      price_usd = amount_usd,
+      price_raw = amount,
+      canceled_by = order_canceled_by
+    ) |>
+    distinct(asset_id, ask_date, .keep_all = T) |>
+    arrange(asset_id, ask_date) |>
+    group_by(asset_id) |>
+    mutate(
+      prev_ask_end = dplyr::lag(cummax(as.numeric(ask_end))),
+      prev_status = dplyr::lag(status),
+      prev_canceled_by = dplyr::lag(canceled_by),
+      prev_price_raw = dplyr::lag(price_raw),
+      prev_tom = dplyr::lag(tom),
+      cumm_tom = cumsum(tom),
+      is_new_ask = if_else(
+        is.na(prev_ask_end),
+        1L,
+        if_else(
+          as.numeric(ask_start) <= prev_ask_end + 5 & prev_status == "canceled" & prev_canceled_by != "transfer" & prev_tom < 60*60/86400,
+          0L,
+          1L
+        )
+      ),
+      ask = cumsum(is_new_ask)
+    ) |>
+    ungroup() |>
+    summarise(
+      ask_date = first(ask_date),
+      asker = first(asker),
+      tom = sum(tom),
+      ask_start = first(ask_start),
+      ask_end = last(ask_end),
+      ask_imp_end = last(ask_imp_end),
+      status = last(status),
+      price_usd = last(price_usd),
+      price_raw = last(price_raw),
+      canceled_by = last(canceled_by),
+      edit_n = n()-1,
+      edit_price = last(price_raw)-first(price_raw),
+      .by = c("asset_id", "ask")
+    ) |>
+    select(-ask) |>
+    filter(tom > 0)
   
   # Step 4: Construction of Listed Periods in intervals 
   listed_periods <- interval_base |>
@@ -486,6 +544,28 @@ listings_db_builder <- function (assetType = "land") {
         ),
       by = c("asset_id", "date")
     )
+  whole_interval_stats_2 <- interval_base |>
+    select(asset_id, date, interval_start, interval_end) |>
+    # left_join(
+    #   listings_base |> select(asset_id, date, maker),
+    #   .by = c("asset_id", "date")
+    # ) |>
+    left_join(
+      ext_asks_base |> select(asset_id, ask_date, ask_start, ask_imp_end, asker),
+      by = join_by(asset_id, interval_start < ask_imp_end, interval_end > ask_start),
+      relationship = "many-to-many"
+    ) |>
+    # mutate(
+    #   ask_intl_start = pmax(ask_start, interval_start),
+    #   ask_intl_end = pmin(ask_end, interval_end)
+    # ) |>
+    summarise(
+      asks_ext_ll_30d = sum(!is.na(ask_date)),
+      askers_ext_ll_30d = n_distinct(asker[!is.na(ask_date)]),
+      askers_ext_ll_30d_add = list(unique(asker[!is.na(ask_date)])),
+      #askers
+      .by = c("asset_id", "date")
+    )
   
   # Step 9: Database finalization
   listings <- interval_base |>
@@ -493,12 +573,14 @@ listings_db_builder <- function (assetType = "land") {
     left_join(listed_periods_stats, by = c("asset_id", "date")) |>
     left_join(nonlisted_periods_stats, by = c("asset_id", "date")) |>
     left_join(whole_interval_stats, by = c("asset_id", "date")) |>
+    left_join(whole_interval_stats_2, by = c("asset_id", "date")) |>
     mutate(
       across(
         c(
           ndays_li_30d, mvalue_li_30d, nfilled_li_30d, #nfilled_li_30d_tkrs,
           asks_ul_30d, askers_ul_30d,
-          asks_ll_30d, askers_ll_30d, ndays_ll_30d, #askers_ll_30d_add
+          asks_ll_30d, askers_ll_30d, ndays_ll_30d, #askers_ll_30d_add,
+          asks_ext_ll_30d, askers_ext_ll_30d
         ),
         ~ replace_na(.x, 0L)
       )

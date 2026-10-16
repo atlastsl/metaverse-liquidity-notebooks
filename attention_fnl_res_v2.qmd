@@ -462,16 +462,18 @@ conflict_prefer("filter", "dplyr")
 source("models.R")
 
 # Database refine
-liq_db_refiner <- function (asset_type = "land", att_mode = "base") {
+liq_db_refiner <- function (asset_type = "land", att_mode = "base", center_closeness = 50) {
   att_suffix = "asks"
-  att_high_split = 3
+  att_high_split = 5
   if (att_mode == "distinct") {
     att_suffix = "askers"
-  } else if (att_mode == "plus") {
-    att_suffix = "askers_buyers"
+    att_high_split = 3
+  } else if (att_mode == "extended") {
+    att_suffix = "askers_ext"
     att_high_split = 3
   }
   att_base_var <- paste0("att_", att_suffix)
+  raw_askers_var <- paste0(att_suffix, "_ll_30d")
   db <- NULL
   if (asset_type == "land") {
     artdatalst = readRDS(file = "artdata/artdatalst.RDS")
@@ -487,15 +489,30 @@ liq_db_refiner <- function (asset_type = "land", att_mode = "base") {
       #filter(nfilled_li_30d == 0) |>
       mutate(
         att_asks = asks_ll_30d,
-        att_askers = askers_ll_30d,
-        att_askers_buyers = lengths(
+        att_askers = lengths(
           pmap(
-            # list(nfilled_li_30d_tkrs, askers_ll_30d_add, nfilled_li_30d_mkrs, maker),
-            # \(x, y, ex1, ex2) setdiff(setdiff(union(x, y), ex1), ex2)
-            list(nfilled_li_30d_tkrs, askers_ll_30d_add, nfilled_li_30d_mkrs, maker),
-            \(x, y, ex1, ex2) union(setdiff(setdiff(x, ex1), ex2), y)
+            list(askers_ll_30d_add, maker),
+            \(x, y) setdiff(x, y)
           )
         ),
+        att_askers_ext = lengths(
+          pmap(
+            list(askers_ext_ll_30d_add, maker),
+            \(x, y) setdiff(x, y)
+          )
+        ),
+        only_asked_by_seller = as.numeric(.data[[raw_askers_var]] == 1 & .data[[att_base_var]] == 0),
+        # only_asked_by_seller = as.numeric(askers_ext_ll_30d == 1 & att_askers_ext == 0),
+        # only_asked_by_seller = as.numeric(askers_ll_30d == 1 & att_askers == 0),
+        # att_askers = askers_ll_30d,
+        # att_askers_buyers = lengths(
+        #   pmap(
+        #     # list(nfilled_li_30d_tkrs, askers_ll_30d_add, nfilled_li_30d_mkrs, maker),
+        #     # \(x, y, ex1, ex2) setdiff(setdiff(union(x, y), ex1), ex2)
+        #     list(nfilled_li_30d_tkrs, askers_ll_30d_add, nfilled_li_30d_mkrs, maker),
+        #     \(x, y, ex1, ex2) union(setdiff(setdiff(x, ex1), ex2), y)
+        #   )
+        # ),
         #att_plus = asks_ll_30d + nfilled_li_30d,
         #att_plus = lengths(pmap(
         #  list(nfilled_li_30d_tkrs, askers_ll_30d_add, maker),
@@ -513,15 +530,18 @@ liq_db_refiner <- function (asset_type = "land", att_mode = "base") {
         att_bin = as.numeric(attention > 0),
         att_bnf = factor(if_else(attention > 0, "Y", "N"), levels = c("N", "Y")),
         mkt_expo_time = ndays_li_30d/30,
-        mkt_exposed = factor(if_else(ndays_li_30d > 0, "Y", "N"), levels = c("N", "Y"))
+        mkt_exposed = factor(if_else(ndays_li_30d > 0, "Y", "N"), levels = c("N", "Y")),
+        DPC_close = factor(if_else(DPC <= log1p(center_closeness), "Y", "N"), levels = c("N", "Y")),
+        #DPC_close = 
       ) |>
+      filter(only_asked_by_seller == 0) |>
       arrange(date)
   }
   return(db)
 }
 
 # Localisation - Liquidity relation reg models
-liq_model_func <- function (db, reg, att_type = NULL, asset_type = "land", model_type = "aft") {
+liq_model_func <- function (db, reg, att_type = NULL, asset_type = "land", model_type = "aft", dpc_type = "distance") {
   dat = db |> filter(regime == reg) |>
     filter(!is.na(tom) & tom > 0) |>
     mutate(
@@ -556,14 +576,20 @@ liq_model_func <- function (db, reg, att_type = NULL, asset_type = "land", model
     pivot_wider(names_from = qname, values_from = v, values_fill = 0)
   
   X_loc <- c("DPC")
+  if (!is.null(dpc_type) && dpc_type == "closeness") {
+    X_loc <- c("DPC_close")
+  }
   X_att <- c()
   if (!is.null(att_type)) {
     if (att_type == "bin") {
       X_att <- c("att_bnf", "mkt_expo_time:att_bnf")
+      #X_att <- c("att_bnf")
     } else if (att_type == "3f") {
       X_att <- c("att_3uf", "mkt_expo_time:att_3uf")
+      #X_att <- c("att_3uf")
     } else {
       X_att <- c("attention", "mkt_expo_time:attention")
+      #X_att <- c("attention")
     }
   }
   Ctr_loc <- c("CRD", "CPX", "CDX", "North")
@@ -598,7 +624,7 @@ liq_model_func <- function (db, reg, att_type = NULL, asset_type = "land", model
 }
 
 # Localisation - Attention relation reg models
-att_model_func <- function (db, reg, att_type, att_mode = "base", asset_type = "land") {
+att_model_func <- function (db, reg, att_type, att_mode = "base", asset_type = "land", dpc_type = "distance") {
   dat = db |> filter(regime == reg) |>
     filter(!is.na(tom) & tom > 0)
   
@@ -635,8 +661,13 @@ att_model_func <- function (db, reg, att_type, att_mode = "base", asset_type = "
     mutate(v = 1) |> 
     pivot_wider(names_from = qname, values_from = v, values_fill = 0) 
 
-  X_loc <- c("DPC")
-  X_expo <- c("mkt_exposed", "mkt_expo_time", "mkt_expo_time:DPC", "mkt_expo_log_price")
+  X_loc_var <- "DPC"
+  if (!is.null(dpc_type) && dpc_type == "closeness") {
+    X_loc_var <- "DPC_close"
+  }
+  X_loc <- c(X_loc_var)
+  X_expo <- c("mkt_exposed", "mkt_expo_time", paste0("mkt_expo_time:", X_loc_var) , "mkt_expo_log_price")
+  #X_expo <- c("mkt_exposed", paste0("mkt_expo_time:", X_loc_var) , "mkt_expo_log_price")
   # if (att_mode == "plus") {
   #   X_expo <- c(X_expo, "own_changed")
   # }
@@ -663,13 +694,13 @@ att_model_func <- function (db, reg, att_type, att_mode = "base", asset_type = "
 }
 
 # Convexity analysis reg models
-convanl_model_func <- function (db, reg, asset_type = "land", model_type = "aft") {
+convanl_model_func <- function (db, reg, asset_type = "land", model_type = "aft", nb_tiles = 10) {
   dat = db |> filter(regime == reg) |>
     filter(!is.na(tom) & tom > 0) |>
     mutate(
       sold = as.numeric(status == "filled" & tom <= 365),
       tom = if_else(tom > 365, 365, tom),,
-      DPCd = paste0("DPC_d", ntile(DPC, n = 5))
+      DPCd = paste0("DPC_d", ntile(DPC, n = nb_tiles))
     )
   
   if (asset_type == "land") {
@@ -703,7 +734,7 @@ convanl_model_func <- function (db, reg, asset_type = "land", model_type = "aft"
   
   qlist <- unique(dat$quarter)
   
-  X_loc <- paste0("DPC_d", 1:4)
+  X_loc <- paste0("DPC_d", (1:nb_tiles)[-(nb_tiles)])
   Ctr_loc <- c("CRD", "CPX", "CDX", "North")
   Ctr_oth <- c("LogPrice")
   if (asset_type == "estate") {
@@ -789,7 +820,7 @@ liq_model_summ <- function (asset_type = "land", att_mode = "base", model_type =
   tab
 }
 
-convanl_model_summ <- function (asset_type = "land", att_mode = "base", model_type = "aft") {
+convanl_model_summ <- function (asset_type = "land", att_mode = "base", model_type = "aft", nb_tiles = 10) {
   db <- liq_db_refiner(asset_type, att_mode)
   
   regs <- c("Normal", "Boom", "Crash", "Desert")
@@ -810,7 +841,8 @@ convanl_model_summ <- function (asset_type = "land", att_mode = "base", model_ty
       db, 
       regs[k],
       asset_type = asset_type,
-      model_type = model_type
+      model_type = model_type,
+      nb_tiles = nb_tiles
     )
     td_raw = get_estimates(fit_raw, ci_method = "wald") |>
       #filter(!str_detect(term, "^Q\\d+_\\d+"))
@@ -870,13 +902,27 @@ liq_model_summ(asset_type = "land", att_mode = "base", model_type = "cox")
 
 ### Hypothèse H3
 
+**Time-on-Market**
+
 ```{r}
 #| label: tbl-res2-conv-a
 #| tbl-cap: "Convexité du lien localisation-liquidité en régime de marché normal"
 #| warning: false
 #| echo: false
 
-convanl_model_summ(asset_type = "land", att_mode = "base", model_type = "aft")
+convanl_model_summ(asset_type = "land", att_mode = "base", model_type = "aft", nb_tiles = 5)
+```
+
+
+**Probabilité instantanée de vente**
+
+```{r}
+#| label: tbl-res2-conv-b
+#| tbl-cap: "Convexité du lien localisation-liquidité en régime de marché normal"
+#| warning: false
+#| echo: false
+
+convanl_model_summ(asset_type = "land", att_mode = "base", model_type = "cox", nb_tiles = 5)
 ```
 
 
@@ -916,7 +962,7 @@ liq_model_summ(asset_type = "estate", att_mode = "base", model_type = "cox")
 #| warning: false
 #| echo: false
 
-convanl_model_summ(asset_type = "estate", att_mode = "base", model_type = "aft")
+convanl_model_summ(asset_type = "estate", att_mode = "base", model_type = "aft", nb_tiles = 5)
 ```
 
 
@@ -925,7 +971,7 @@ convanl_model_summ(asset_type = "estate", att_mode = "base", model_type = "aft")
 ## Modèles et fonctions utilitaires
 
 ```{r}
-baron_kenny_model <- function (index, db, reg, asset_type, att_type, att_mode) {
+baron_kenny_model <- function (index, db, reg, asset_type, att_type, att_mode, dpc_type) {
   if (index == 1 || index == 3) {
     att_type_ = NULL
     if (index == 3) {
@@ -936,7 +982,8 @@ baron_kenny_model <- function (index, db, reg, asset_type, att_type, att_mode) {
       reg, 
       att_type = att_type_, 
       asset_type = asset_type, 
-      model_type = "aft"
+      model_type = "aft",
+      dpc_type = dpc_type
     )
     td = get_estimates(fit, ci_method = "wald") |>
       filter(!str_detect(term, "^Q\\d+_\\d+"))
@@ -953,7 +1000,8 @@ baron_kenny_model <- function (index, db, reg, asset_type, att_type, att_mode) {
       reg, 
       att_type = att_type, 
       att_mode = att_mode,
-      asset_type = asset_type
+      asset_type = asset_type,
+      dpc_type = dpc_type
     )
     td = get_estimates(fit, ci_method = "wald") |>
       filter(!str_detect(term, "^Q\\d+_\\d+"))
@@ -968,8 +1016,15 @@ baron_kenny_model <- function (index, db, reg, asset_type, att_type, att_mode) {
   return(NULL)
 }
 
-baron_kenny_summ <- function (regimes, asset_type = "land", att_type = "bin", att_mode = "base") {
-  db <- liq_db_refiner(asset_type, att_mode)
+baron_kenny_summ <- function (
+    regimes, 
+    asset_type = "land", 
+    att_type = "bin", 
+    att_mode = "base", 
+    dpc_type = "distance",
+    center_closeness = 50
+  ) {
+  db <- liq_db_refiner(asset_type, att_mode, center_closeness)
   
   my_gof <- list(
     list("raw" = "qt.fe",     "clean" = "Quarters FE", fmt = 0),
@@ -995,7 +1050,8 @@ baron_kenny_summ <- function (regimes, asset_type = "land", att_type = "bin", at
         reg = regimes[k], 
         asset_type = asset_type, 
         att_type = att_type,
-        att_mode = att_mode
+        att_mode = att_mode,
+        dpc_type = dpc_type
       )
       results[[i]] = modi
       i <- i+1
@@ -1298,9 +1354,10 @@ med_anl_once_func <- function (
     PNDE = liq_xstar_med_x - liq_x_med_x
     PNIE = liq_x_med_xstar - liq_x_med_x
     TNDE = liq_xstar_med_xstar - liq_x_med_xstar
+    TME = TNIE - PNIE
     
-    eff <- c(TE, TNIE, PNDE, PNIE, TNDE)
-    names(eff) <- c("TE", "TNIE", "PNDE", "PNIE", "TNDE")
+    eff <- c(TE, TNIE, PNDE, PNIE, TNDE, TME)
+    names(eff) <- c("TE", "TNIE", "PNDE", "PNIE", "TNDE", "TME")
     effs[[k]] <- eff
   }
   names(effs) <- liq_measures
@@ -1452,13 +1509,30 @@ med_anl_bootstrap <- function (
   })
   names(effs) <- names(boot_results[[1]])
   
-  ci <- as.data.frame(do.call(rbind, lapply(1:5, function(i){
+  # ci <- as.data.frame(do.call(rbind, lapply(1:5, function(i){
+  #   c(
+  #     quantile(as.numeric(effs[[1]][i, ]), c(0.025, 0.975)), 
+  #     quantile(as.numeric(effs[[2]][i, ]), c(0.025, 0.975))
+  #   )
+  # })))
+  # colnames(ci) <- paste0(rep(names(effs), each = 2), "|", c("2.5%", "97.5%"))
+  # rownames(ci) <- rownames(effs[[1]])
+  
+  ci <- as.data.frame(do.call(rbind, lapply(1:6, function(i){
+    psale_m = mean(as.numeric(effs[[1]][i, ]))
+    psale_sd = sd(as.numeric(effs[[1]][i, ]))
+    psale_tstat = psale_m / psale_sd
+    psale_pval = 2 * pt(abs(psale_tstat), df = nrow(dat)-19, lower.tail = FALSE)
+    rmst_m = mean(as.numeric(effs[[2]][i, ]))
+    rmst_sd = sd(as.numeric(effs[[2]][i, ]))
+    rmst_tstat = rmst_m / rmst_sd
+    rmst_pval = 2 * pt(abs(rmst_tstat), df = nrow(dat)-19, lower.tail = FALSE)
     c(
-      quantile(as.numeric(effs[[1]][i, ]), c(0.025, 0.975)), 
-      quantile(as.numeric(effs[[2]][i, ]), c(0.025, 0.975))
+      psale_m, psale_pval,
+      rmst_m, rmst_pval
     )
   })))
-  colnames(ci) <- paste0(rep(names(effs), each = 2), "|", c("2.5%", "97.5%"))
+  colnames(ci) <- paste0(rep(names(effs), each = 2), "|", c("mean", "p.value"))
   rownames(ci) <- rownames(effs[[1]])
   
   return(ci)
@@ -1495,44 +1569,6 @@ med_anl_bootstrap <- function (
 }
 ```
 
-## [Parcelles] Attention = Bids | Binaire
-
-### Baron & Kenny
-
-**Régime normal**
-
-```{r}
-#| label: tbl-res4-pabb-bk-a
-#| tbl-cap: "[Parcelles] Régressions de Baron & Kenny en régime normal<br>L'attention est mesurée par les offres d'achat et est transformée en variable binaire"
-#| warning: false
-#| echo: false
-
-baron_kenny_summ(
-  c("Normal"),
-  asset_type = "land", 
-  att_type = "bin", 
-  att_mode = "base"
-)
-```
-
-
-
-**Autres régimes**
-
-```{r}
-#| label: tbl-res4-pabb-bk-b
-#| tbl-cap: "[Parcelles] Régressions de Baron & Kenny pour les autres régimes<br>L'attention est mesurée par les offres d'achat et est transformée en variable binaire"
-#| warning: false
-#| echo: false
-
-baron_kenny_summ(
-  c("Boom", "Crash", "Desert"),
-  asset_type = "land", 
-  att_type = "bin", 
-  att_mode = "plus"
-)
-```
-
 
 
 ## [Parcelles] Attention = Bids | Ternaire
@@ -1551,7 +1587,9 @@ baron_kenny_summ(
   c("Normal"),
   asset_type = "land", 
   att_type = "3f", 
-  att_mode = "plus"
+  att_mode = "base",
+  dpc_type = "distance",
+  center_closeness = 49.20366
 )
 ```
 
@@ -1569,7 +1607,9 @@ baron_kenny_summ(
   c("Boom", "Crash", "Desert"),
   asset_type = "land", 
   att_type = "3f", 
-  att_mode = "base"
+  att_mode = "base",
+  dpc_type = "distance",
+  center_closeness = 50
 )
 ```
 
@@ -1665,10 +1705,12 @@ med_anl_print(readRDS(file = "artdata/medanlr_t30_e1.RDS"), 1)
 #| echo: false
 
 baron_kenny_summ(
-  c("Normal"),
+  c("Normal", "Crash"),
   asset_type = "estate", 
   att_type = "3f", 
-  att_mode = "base"
+  att_mode = "base",
+  dpc_type = "distance",
+  center_closeness = 49.20366
 )
 ```
 
@@ -1700,18 +1742,18 @@ baron_kenny_summ(
 ```{r}
 #| echo: false
 
-# medanle_t30_e0 <- med_anl_bootstrap (
-#   reg = "Normal", 
-#   asset_type = "estate", 
-#   att_type = "3f", 
-#   att_mode = "base",
-#   mkt_exposure = 0, 
-#   liq_measures = NULL,
-#   liq_horizon = 30,
-#   boot_mode = "par",
-#   boot_N = 499
-# )
-# saveRDS(medanle_t30_e0, file = "artdata/medanle_t30_e0.RDS")
+medanle_t30_e0 <- med_anl_bootstrap (
+  reg = "Normal",
+  asset_type = "estate",
+  att_type = "3f",
+  att_mode = "base",
+  mkt_exposure = 0,
+  liq_measures = NULL,
+  liq_horizon = 30,
+  boot_mode = "par",
+  boot_N = 499
+)
+saveRDS(medanle_t30_e0, file = "artdata/medanle_t30_e0.RDS")
 ```
 
 ```{r}
@@ -1724,18 +1766,18 @@ med_anl_print(readRDS(file = "artdata/medanle_t30_e0.RDS"), 0)
 ```{r}
 #| echo: false
 
-# medanle_t30_emed <- med_anl_bootstrap (
-#   reg = "Normal", 
-#   asset_type = "estate", 
-#   att_type = "3f", 
-#   att_mode = "base",
-#   mkt_exposure = 0.5, 
-#   liq_measures = NULL,
-#   liq_horizon = 30,
-#   boot_mode = "par",
-#   boot_N = 499
-# )
-# saveRDS(medanle_t30_emed, file = "artdata/medanle_t30_emed.RDS")
+medanle_t30_emed <- med_anl_bootstrap (
+  reg = "Normal",
+  asset_type = "estate",
+  att_type = "3f",
+  att_mode = "base",
+  mkt_exposure = 0.5,
+  liq_measures = NULL,
+  liq_horizon = 30,
+  boot_mode = "par",
+  boot_N = 499
+)
+saveRDS(medanle_t30_emed, file = "artdata/medanle_t30_emed.RDS")
 ```
 
 ```{r}
@@ -1748,18 +1790,18 @@ med_anl_print(readRDS(file = "artdata/medanle_t30_emed.RDS"), "Mediane")
 ```{r}
 #| echo: false
 
-# medanle_t30_e1 <- med_anl_bootstrap (
-#   reg = "Normal", 
-#   asset_type = "land", 
-#   att_type = "3f", 
-#   att_mode = "base",
-#   mkt_exposure = 1, 
-#   liq_measures = NULL,
-#   liq_horizon = 30,
-#   boot_mode = "par",
-#   boot_N = 499
-# )
-# saveRDS(medanle_t30_e1, file = "artdata/medanle_t30_e1.RDS")
+medanle_t30_e1 <- med_anl_bootstrap (
+  reg = "Normal",
+  asset_type = "estate",
+  att_type = "3f",
+  att_mode = "base",
+  mkt_exposure = 1,
+  liq_measures = NULL,
+  liq_horizon = 30,
+  boot_mode = "par",
+  boot_N = 499
+)
+saveRDS(medanle_t30_e1, file = "artdata/medanle_t30_e1.RDS")
 ```
 
 ```{r}
@@ -1768,9 +1810,231 @@ med_anl_print(readRDS(file = "artdata/medanle_t30_e1.RDS"), 1)
 
 
 
+# Tests de robustesse - Attentions alternatives
+
+## Attention distincte simple
+
+### [Parcelles] Baron & Kenny
+
+```{r}
+#| label: tbl-rob-ads-lands-bk
+#| tbl-cap: "[Parcelles] Régressions de Baron & Kenny en régime normal<br>L'attention est mesurée par le nombre d'offrants à l'exception du vendeur actuel (Attention distincte simple)"
+#| warning: false
+#| echo: false
+
+baron_kenny_summ(
+  c("Normal"),
+  asset_type = "land", 
+  att_type = "3f", 
+  att_mode = "distinct",
+  dpc_type = "distance"
+)
+```
+
+### [Domaines] Baron & Kenny
+
+```{r}
+#| label: tbl-rob-ads-estates-bk
+#| tbl-cap: "[Domaines] Régressions de Baron & Kenny en régime normal<br>L'attention est mesurée par le nombre d'offrants à l'exception du vendeur actuel (Attention distincte simple)"
+#| warning: false
+#| echo: false
+
+baron_kenny_summ(
+  c("Normal"),
+  asset_type = "estate", 
+  att_type = "3f", 
+  att_mode = "distinct",
+  dpc_type = "distance"
+)
+```
+
+### [Parcelles] G-computation
+
+**Horizon à 30j et exposition nulle**
+
+```{r}
+#| echo: false
+
+medanlr_ads_t30_e0 <- med_anl_bootstrap (
+  reg = "Normal", 
+  asset_type = "land", 
+  att_type = "3f", 
+  att_mode = "distinct",
+  mkt_exposure = 0, 
+  liq_measures = NULL,
+  liq_horizon = 30,
+  boot_mode = "par",
+  boot_N = 499
+)
+saveRDS(medanlr_ads_t30_e0, file = "artdata/medanlr_ads_t30_e0.RDS")
+```
+
+```{r}
+med_anl_print(readRDS(file = "artdata/medanlr_ads_t30_e0.RDS"), 0)
+```
+
+
+**Horizon à 30j et exposition médiane**
+
+```{r}
+#| echo: false
+
+medanlr_ads_t30_emed <- med_anl_bootstrap (
+  reg = "Normal", 
+  asset_type = "land", 
+  att_type = "3f", 
+  att_mode = "distinct",
+  mkt_exposure = 0.5, 
+  liq_measures = NULL,
+  liq_horizon = 30,
+  boot_mode = "par",
+  boot_N = 499
+)
+saveRDS(medanlr_ads_t30_emed, file = "artdata/medanlr_ads_t30_emed.RDS")
+```
+
+```{r}
+med_anl_print(readRDS(file = "artdata/medanlr_ads_t30_emed.RDS"), "Mediane")
+```
+
+
+**Horizon à 30j et exposition entière**
+
+```{r}
+#| echo: false
+
+medanlr_ads_t30_e1 <- med_anl_bootstrap (
+  reg = "Normal", 
+  asset_type = "land", 
+  att_type = "3f", 
+  att_mode = "distinct",
+  mkt_exposure = 1, 
+  liq_measures = NULL,
+  liq_horizon = 30,
+  boot_mode = "par",
+  boot_N = 499
+)
+saveRDS(medanlr_ads_t30_e1, file = "artdata/medanlr_ads_t30_e1.RDS")
+```
+
+```{r}
+med_anl_print(readRDS(file = "artdata/medanlr_ads_t30_e1.RDS"), 1)
+```
+
+
+
+### [Domaines] G-computation
+
+**Horizon à 30j et exposition nulle**
+
+```{r}
+#| echo: false
+
+medanle_ads_t30_e0 <- med_anl_bootstrap (
+  reg = "Normal",
+  asset_type = "estate",
+  att_type = "3f",
+  att_mode = "distinct",
+  mkt_exposure = 0,
+  liq_measures = NULL,
+  liq_horizon = 30,
+  boot_mode = "par",
+  boot_N = 499
+)
+saveRDS(medanle_ads_t30_e0, file = "artdata/medanle_ads_t30_e0.RDS")
+```
+
+```{r}
+med_anl_print(readRDS(file = "artdata/medanle_ads_t30_e0.RDS"), 0)
+```
+
+
+**Horizon à 30j et exposition médiane**
+
+```{r}
+#| echo: false
+
+medanle_ads_t30_emed <- med_anl_bootstrap (
+  reg = "Normal",
+  asset_type = "estate",
+  att_type = "3f",
+  att_mode = "distinct",
+  mkt_exposure = 0.5,
+  liq_measures = NULL,
+  liq_horizon = 30,
+  boot_mode = "par",
+  boot_N = 499
+)
+saveRDS(medanle_ads_t30_emed, file = "artdata/medanle_ads_t30_emed.RDS")
+```
+
+```{r}
+med_anl_print(readRDS(file = "artdata/medanle_ads_t30_emed.RDS"), "Mediane")
+```
+
+
+**Horizon à 30j et exposition entière**
+
+```{r}
+#| echo: false
+
+medanle_ads_t30_e1 <- med_anl_bootstrap (
+  reg = "Normal",
+  asset_type = "estate",
+  att_type = "3f",
+  att_mode = "distinct",
+  mkt_exposure = 1,
+  liq_measures = NULL,
+  liq_horizon = 30,
+  boot_mode = "par",
+  boot_N = 499
+)
+saveRDS(medanle_ads_t30_e1, file = "artdata/medanle_ads_t30_e1.RDS")
+```
+
+```{r}
+med_anl_print(readRDS(file = "artdata/medanle_ads_t30_e1.RDS"), 1)
+```
 
 
 
 
+## Attention distincte étendue
 
+### [Parcelles] Baron & Kenny
 
+```{r}
+#| label: tbl-rob-ade-lands-bk
+#| tbl-cap: "[Parcelles] Régressions de Baron & Kenny en régime normal<br>L'attention est mesurée par le nombre d'offrants à l'exception du vendeur actuel dont les offres sont encore valides 30 jours avant l'annonce (Attention distincte étendue)"
+#| warning: false
+#| echo: false
+
+baron_kenny_summ(
+  c("Normal"),
+  asset_type = "land", 
+  att_type = "3f", 
+  att_mode = "extended",
+  dpc_type = "distance"
+)
+```
+
+### [Domaines] Baron & Kenny
+
+```{r}
+#| label: tbl-rob-ade-estates-bk
+#| tbl-cap: "[Domaines] Régressions de Baron & Kenny en régime normal<br>L'attention est mesurée par le nombre d'offrants à l'exception du vendeur actuel dont les offres sont encore valides 30 jours avant l'annonce (Attention distincte étendue)"
+#| warning: false
+#| echo: false
+
+baron_kenny_summ(
+  c("Normal"),
+  asset_type = "estate", 
+  att_type = "3f", 
+  att_mode = "extended",
+  dpc_type = "distance"
+)
+```
+
+### [Parcelles] G-computation
+
+### [Domaines] G-computation
